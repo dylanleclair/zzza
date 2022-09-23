@@ -22,10 +22,12 @@ start
 	lda	#$00			; a=0x00 (black)
 	sta	$9600			; store in color mem for first screen location
 
+	ldy	#$00			; initialize y
+
 loop
 	; display char
 	lda	#$e0			; a=0xe0 (224, char # for space)
-	sta 	($01)			; store on first chunk of screen mem
+	sta 	($01),y			; store on first chunk of screen mem
 
 	lda	#$f9			; a=0xf9 (249, char # for quarter fill)
 	sta 	$1e00			; store on first chunk of screen mem
