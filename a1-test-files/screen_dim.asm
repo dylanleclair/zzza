@@ -1,3 +1,9 @@
+; ----------------------------------
+;
+; program to change screen dimensions to 16x16, and center it on the background
+;
+; ----------------------------------
+
 ; offsets of important mem
 COLUMNS_ADDR = $9002
 ROWS_ADDR = $9003
@@ -13,7 +19,6 @@ ROWS_ADDR = $9003
 stubend
 	dc.w	0
 
-; program to change screen dimensions to 16x16, and center it on the background
 start
         lda     #$90                    ; bit pattern 10010000, lower 6 bits = 16
         sta     COLUMNS_ADDR            ; store in columns addr to set screen to 16 cols
@@ -25,6 +30,6 @@ start
         sta     $9000                   ; horizontal screen centering
 
         lda     #$20                    ; i don't know why this value works but it does
-	sta     $9001                   ; vertical screen centering
+	sta     $9001                   	; vertical screen centering
 
 	rts

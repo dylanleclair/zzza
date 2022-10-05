@@ -1,3 +1,11 @@
+; ----------------------------------
+;
+; program to fill the screen with patterns of black and white blocks
+; the block patterns are 8*1 meta-tiles that are stored as a bit representation,
+; the screen fill is created by displaying 32 of these 8-bit tiles
+;
+; ----------------------------------
+
 ; assembler deets
 	processor 6502
 

@@ -1,3 +1,9 @@
+; ----------------------------------
+;
+; program that printsthe letter 'A' to the screen using kernal calls
+;
+; ----------------------------------
+	
 	processor 6502
 
 ; KERNAL ROUTINES
