@@ -42,14 +42,14 @@ screen_dim
     ldx #0
     jmp color_test
 color
-    lda #2                      ; set the color to red
+    lda #2              ; set the color to red
     sta COLOR_ADDR,x
-    lda #96                     ; clear the character (write a space)
+    lda #96             ; clear the character (write a space)
     sta SCREEN_ADDR,x
     inx
 color_test
     txa
-    cmp #255                    ; loop until entire screen cleared
+    cmp #255            ; loop until entire screen cleared
     bne color
 ; END SCREENCOLOR    
 
@@ -62,17 +62,17 @@ delay_init
     lda #0
     sta CLOCK_TICKS
 delay
-    lda #1 ; lda #n -> set tick rate (number of ticks before function call)
-    cmp CLOCK_TICKS ; place in memory where ticks are counted
-    beq example ; function to call every n ticks
-    lda $00A2 ; load lower end of clock pulsing @ 1/1th of a second
+    lda #1              ; lda #n -> set tick rate (number of ticks before function call)
+    cmp CLOCK_TICKS     ; place in memory where ticks are counted
+    beq example         ; function to call every n ticks
+    lda $00A2           ; load lower end of clock pulsing @ 1/1th of a second
 delaywait
-    cmp $00A2 ; as soon as clock value changes (1/th of a second passes...)
-    bne delaytick ; increment counter
-    jmp delaywait ; otherwise, keep waiting for clock to update
+    cmp $00A2           ; as soon as clock value changes (1/th of a second passes...)
+    bne delaytick       ; increment counter
+    jmp delaywait       ; otherwise, keep waiting for clock to update
 delaytick
-    inc CLOCK_TICKS ; increment tick counter
-    jmp delay       ; wait for next tick
+    inc CLOCK_TICKS     ; increment tick counter
+    jmp delay           ; wait for next tick
 ; END DELAY
     
     ; example: type hello at screen,y
