@@ -101,27 +101,33 @@ gameloop
     
     jmp     gameloop
 
-    ; delay
+    ; reset the loop counter
+    lda #0
+    sta FRAME_COUNT_ADDR
+    jmp animate_test
 
 ; update all bytes of level on screen by 4 frames (full animation)
 animate
-    lda     FRAME_COUNT_ADDR    ; load loop counter into acc
-    inc     FRAME_COUNT_ADDR    ; increment loop counter for next time
-    cmp     #3                  ; if 4 bytes iterated over
-    beq     gameloop            ; animation is complete, start over
-    
 ; updates all bytes of level on screen by one frame
+    ; reset the loop counter
+    lda #0
+    sta BYTE_COUNT_ADDR
+    
+    ; START OF INNER LOOP
+    jmp byte_test
 animate_byte
 
     ; prepare SCREEN param for pattern_draw
     lda BYTE_COUNT_ADDR
     asl
     asl
-    asl
+    asl ; multiply by 8
+
+    ; store screen location in memory
     
     ; prepare DELTA param for pattern_draw
-    ldx LEVEL_OFF_ADDR          ; load offset from start of level memory
-    lda LEVEL_START,x           ; the level byte at level offset
+    ldx     LEVEL_OFF_ADDR      ; load offset from start of level memory
+    lda     LEVEL_START,x       ; the level byte at level offset
     inx                         ; increment offset to the next level byte
     inx                         ; x is now level_off + 2
 
@@ -129,17 +135,25 @@ animate_byte
     sta DELTA_ADDR
 
     jsr     pattern_draw        ; update a single byte on screen by 1 frame
+    inc     LEVEL_OFF_ADDR      ; increment level pointer offset
     
-    lda     BYTE_COUNT_ADDR     ; load byte count into acc
     inc     BYTE_COUNT_ADDR     ; increment loop count for next time
+byte_test
+    lda     BYTE_COUNT_ADDR     ; load byte count into acc
     ; if
     cmp     #32                 ; all 32 screen bytes re-rendered
     bne     animate_byte        ; if not all rendered, repeat loop
-    ; else
-    lda     #0
-    sta     BYTE_COUNT_ADDR     ; reset byte counter to 0
-   
-    jmp     animate             ; render next frame of animation
+
+    ; END OF INNER LOOP
+
+    inc     FRAME_COUNT_ADDR    ; increment loop counter for next time
+animate_test
+    lda     FRAME_COUNT_ADDR    ; load the frame count
+    cmp     #4                  ; if 4 bytes iterated over
+    bne     animate             ; if animation is in complete, animate next frame
+    
+    
+    jmp     gameloop            ; continue game loop
 
 
 ; subroutine that updates one 'tile' (8*1 chunk of screen)
