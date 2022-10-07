@@ -1,3 +1,8 @@
+;   Boilerplate code for test programs
+;   * sets the screen size to 16 x 16, the screen size for our game. 
+;   * fills in the color to be monochrome white/red
+;   * has some example code that writes "hello" on the screen endlessly
+
 ; GLOBAL VARIABLES
 CLOCK_TICKS = $0001
 
@@ -5,9 +10,7 @@ CLOCK_TICKS = $0001
 COLOR_ADDR = $9600
 SCREEN_ADDR = $1e00
 
-;   Boilerplate code for test programs
-;   * sets the screen size to 16 x 16, the screen size for our game. 
-;   * fills in the color to be monochrome white/red
+; SCREEN SIZE RELATED MEMORY LOCATIONS
 CENTERING_ADDR = $9001          ; stores the screen centering values
 COLUMNS_ADDR = $9002            ; stores the number of columns on screen
 ROWS_ADDR = $9003               ; stores the number of rows on screen
