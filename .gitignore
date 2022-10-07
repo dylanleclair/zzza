@@ -1,2 +1,4 @@
 *.prg
 *.lst
+
+.DS_Store
