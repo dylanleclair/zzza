@@ -1,7 +1,13 @@
+; -----------------------------------------------------------------------------
+;
 ;   Boilerplate code for test programs
 ;   * sets the screen size to 16 x 16, the screen size for our game. 
 ;   * fills in the color to be monochrome white/red
 ;   * has some example code that writes "hello" on the screen endlessly
+;
+;   author: <your name here>
+; -----------------------------------------------------------------------------
+
 
 ; GLOBAL VARIABLES
 CLOCK_TICKS = $0001

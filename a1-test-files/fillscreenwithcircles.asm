@@ -2,7 +2,9 @@
 ;   * my [dylan's] first program that outputs to screen
 ;   * displays the circle character in various colors on screen
 ;   * each color is a new loop
-;   * figuring out i needed to change color buffer as well was... frustrating ;-;
+;   * figuring out i needed to change color buffer as well was... frustrating
+;   
+;   author: dylan
 
 ; KERNAL [sic] routines
 CHROUT = $ffd2
@@ -44,10 +46,10 @@ loop
     
 loop2
     lda #81
-    sta #OFF2,X    
+    sta #OFF2,x    
 
     lda #2
-    sta #COLOFF2,X
+    sta #COLOFF2,x
 
     dex
     txa
