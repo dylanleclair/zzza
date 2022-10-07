@@ -1,3 +1,4 @@
+; key_input.asm
 ; Uses key inputs to control the state of the animation
 ;   * press a to begin animation
 ;   * press s to halt the animation

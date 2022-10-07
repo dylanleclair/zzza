@@ -1,3 +1,8 @@
+;   customcharset.s
+;   * loads a custom charset into memory (1c00)
+;   * displays the character set on screen
+
+
 ; KERNAL [sic] routines
 CHROUT = $ffd2
 

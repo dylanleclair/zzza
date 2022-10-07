@@ -1,3 +1,9 @@
+;   fillscreenwithcircles.s
+;   * my [dylan's] first program that outputs to screen
+;   * displays the circle character in various colors on screen
+;   * each color is a new loop
+;   * figuring out i needed to change color buffer as well was... frustrating ;-;
+
 ; KERNAL [sic] routines
 CHROUT = $ffd2
 COUNT = (22 * 11) - 1
