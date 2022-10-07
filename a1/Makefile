@@ -1,7 +1,7 @@
 %.prg:
 	dasm $< -o$@ -l$*.lst
 
-all: fillscreenwithcircles.prg screensize.prg customcharset.prg custom_animate.prg key_input.prg
+all: fillscreenwithcircles.prg customcharset.prg custom_animate.prg key_input.prg
 clean:
 	rm *.prg *.lst
 

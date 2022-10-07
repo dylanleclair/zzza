@@ -67,7 +67,7 @@ for character in output:
         # precalculate offset to avoid extra instructions
 
         for num in character:
-            print("\tlda #${0:02x}".format(num))
+            print("\tlda #%{0:08b}".format(num))
             print("\tsta ${0:04x}".format(base_addr))
             base_addr +=1
         print()

@@ -51,114 +51,167 @@ stubend
     lda #$3c 
     sta CUSTOM_CHAR_ADDR,x
 
-; character 2
-
-    lda #$0f
+;preview:
+;00001111
+;00010000
+;00101001
+;00100000
+;00101001
+;00100110
+;00010000
+;00001111
+; character
+    lda #%00001111
     sta $1c08
-    lda #$10
+    lda #%00010000
     sta $1c09
-    lda #$29
+    lda #%00101001
     sta $1c0a
-    lda #$20
+    lda #%00100000
     sta $1c0b
-    lda #$29
+    lda #%00101001
     sta $1c0c
-    lda #$26
+    lda #%00100110
     sta $1c0d
-    lda #$10
+    lda #%00010000
     sta $1c0e
-    lda #$0f
+    lda #%00001111
     sta $1c0f
 
+;preview:
+;00000011
+;00000100
+;00001010
+;00001000
+;00001010
+;00001001
+;00000100
+;00000011
 ; character
-        lda #$03
-        sta $1c10
-        lda #$04
-        sta $1c11
-        lda #$0a
-        sta $1c12
-        lda #$08
-        sta $1c13
-        lda #$0a
-        sta $1c14
-        lda #$09
-        sta $1c15
-        lda #$04
-        sta $1c16
-        lda #$03
-        sta $1c17
+    lda #%00000011
+    sta $1c10
+    lda #%00000100
+    sta $1c11
+    lda #%00001010
+    sta $1c12
+    lda #%00001000
+    sta $1c13
+    lda #%00001010
+    sta $1c14
+    lda #%00001001
+    sta $1c15
+    lda #%00000100
+    sta $1c16
+    lda #%00000011
+    sta $1c17
 
+;preview:
+;00000000
+;00000001
+;00000010
+;00000010
+;00000010
+;00000010
+;00000001
+;00000000
 ; character
-        lda #$00
-        sta $1c18
-        lda #$01
-        sta $1c19
-        lda #$02
-        sta $1c1a
-        lda #$02
-        sta $1c1b
-        lda #$02
-        sta $1c1c
-        lda #$02
-        sta $1c1d
-        lda #$01
-        sta $1c1e
-        lda #$00
-        sta $1c1f
-; character
-        lda #$f0
-        sta $1c20
-        lda #$08
-        sta $1c21
-        lda #$94
-        sta $1c22
-        lda #$04
-        sta $1c23
-        lda #$94
-        sta $1c24
-        lda #$64
-        sta $1c25
-        lda #$08
-        sta $1c26
-        lda #$f0
-        sta $1c27
+    lda #%00000000
+    sta $1c18
+    lda #%00000001
+    sta $1c19
+    lda #%00000010
+    sta $1c1a
+    lda #%00000010
+    sta $1c1b
+    lda #%00000010
+    sta $1c1c
+    lda #%00000010
+    sta $1c1d
+    lda #%00000001
+    sta $1c1e
+    lda #%00000000
+    sta $1c1f
 
+;preview:
+;11110000
+;00001000
+;10010100
+;00000100
+;10010100
+;01100100
+;00001000
+;11110000
 ; character
-        lda #$c0
-        sta $1c28
-        lda #$20
-        sta $1c29
-        lda #$50
-        sta $1c2a
-        lda #$10
-        sta $1c2b
-        lda #$50
-        sta $1c2c
-        lda #$90
-        sta $1c2d
-        lda #$20
-        sta $1c2e
-        lda #$c0
-        sta $1c2f
+    lda #%11110000
+    sta $1c20
+    lda #%00001000
+    sta $1c21
+    lda #%10010100
+    sta $1c22
+    lda #%00000100
+    sta $1c23
+    lda #%10010100
+    sta $1c24
+    lda #%01100100
+    sta $1c25
+    lda #%00001000
+    sta $1c26
+    lda #%11110000
+    sta $1c27
 
-
+;preview:
+;11000000
+;00100000
+;01010000
+;00010000
+;01010000
+;10010000
+;00100000
+;11000000
 ; character
-        lda #$00
-        sta $1c30
-        lda #$80
-        sta $1c31
-        lda #$40
-        sta $1c32
-        lda #$40
-        sta $1c33
-        lda #$40
-        sta $1c34
-        lda #$40
-        sta $1c35
-        lda #$80
-        sta $1c36
-        lda #$00
-        sta $1c37
+    lda #%11000000
+    sta $1c28
+    lda #%00100000
+    sta $1c29
+    lda #%01010000
+    sta $1c2a
+    lda #%00010000
+    sta $1c2b
+    lda #%01010000
+    sta $1c2c
+    lda #%10010000
+    sta $1c2d
+    lda #%00100000
+    sta $1c2e
+    lda #%11000000
+    sta $1c2f
+
+;preview:
+;00000000
+;10000000
+;01000000
+;01000000
+;01000000
+;01000000
+;10000000
+;00000000
+; character
+    lda #%00000000
+    sta $1c30
+    lda #%10000000
+    sta $1c31
+    lda #%01000000
+    sta $1c32
+    lda #%01000000
+    sta $1c33
+    lda #%01000000
+    sta $1c34
+    lda #%01000000
+    sta $1c35
+    lda #%10000000
+    sta $1c36
+    lda #%00000000
+    sta $1c37
 
     lda #255
     sta $0000
