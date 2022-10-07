@@ -2,6 +2,8 @@
 ; Uses key inputs to control the state of the animation
 ;   * press a to begin animation
 ;   * press s to halt the animation
+; 
+;   author: dylan
 
 ; KERNEL CALLS
 GETIN = $ffe4				; gets one byte of input from keyboard

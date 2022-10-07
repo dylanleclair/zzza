@@ -1,6 +1,8 @@
 ;   custom_animate.s
 ;   * builds off of custom_charset.s
 ;   * animates a smileyface moving across the screen for two lines
+;   
+;   author: dylan
 
 ; KERNAL [sic] routines
 CHROUT = $ffd2

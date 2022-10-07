@@ -5,7 +5,7 @@ all: fillscreenwithcircles.prg customcharset.prg custom_animate.prg key_input.pr
 clean:
 	rm *.prg *.lst
 
-fillscreenwithcircles.prg: fillscreenwithcircles.s
-customcharset.prg: customcharset.s
-custom_animate.prg: custom_animate.s
+fillscreenwithcircles.prg: fillscreenwithcircles.asm
+customcharset.prg: customcharset.asm
+custom_animate.prg: custom_animate.asm
 key_input.prg: key_input.asm
