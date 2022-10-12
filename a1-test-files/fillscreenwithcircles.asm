@@ -31,6 +31,9 @@ start
     lda #81
     sta $1e00
     ldx #COUNT ; load the offset from graphics buffer in ram
+
+; I basically copy/paste this 3 times to fill the entire screen
+; I realize now I could have put them all in one loop at different start addresses
 loop
     lda #81
     sta $1e00,X    
