@@ -244,7 +244,7 @@ delay_init                  ; <----- BRANCH TO THIS, not delay
     lda     #0
     sta     DELAY_ADDR
 delay
-    lda     #5                 ; lda #n -> set tick rate (number of ticks before function call)
+    lda     #3                 ; lda #n -> set tick rate (number of ticks before function call)
     cmp     DELAY_ADDR          ; place in memory where ticks are counted
     beq     animate             ; function to call every n ticks
     lda     $00A2               ; load lower end of clock pulsing @ 1/1th of a second
@@ -331,9 +331,18 @@ animate_test
     cmp     #4                  ; if 4 bytes iterated over
     bne     delay_init          ; if animation is not complete, animate next frame
 
+    lda LOOP_COUNT
+    cmp #16
+    beq reset_animation
+
     inc     LOOP_COUNT 
     inc     LOOP_COUNT 
     jmp     gameloop            ; continue game loop
+
+reset_animation
+    lda #0
+    sta LOOP_COUNT
+    jmp init_level
 
 ; subroutine that updates one 'STRIP' (8*1 chunk of screen)
 ; parameters:

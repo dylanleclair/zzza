@@ -1,12 +1,12 @@
 ; -----------------------------------------------------------------------------
 ;
-;   Boilerplate code for test programs
+;   Copies characters from ROM memory into a custom character set
 ;   * sets the screen size to 16 x 16, the screen size for our game. 
 ;   * fills in the color to be monochrome white/red
-;   * copies a character from ROM memory into a custom character set
-;   * fills the screen with it
+;   * copies characters from ROM memory into a custom character set
+;   * displays characters on screen
 ;
-;   author: <your name here>
+;   author: dylan
 ; -----------------------------------------------------------------------------
 
 
@@ -20,12 +20,10 @@ SCREEN_ADDR = $1e00
 
 
 CHARSET_CTRL = $9005
-DEFAULT_CHAR_ADDR = 32768
 CUSTOM_CHAR_ADDR = $1c00
 
 
-; 6 
-
+; fixed start addresses of characters we want to copy
 CUSTOM_CHAR_0 = $8300
 CUSTOM_CHAR_1 = $83c8
 CUSTOM_CHAR_2 = $8310
@@ -35,6 +33,7 @@ CUSTOM_CHAR_5 = $8778
 CUSTOM_CHAR_6 = $8710
 CUSTOM_CHAR_7 = $83c0
 
+; target location in custom charset to copy bytes of copied characters into
 CUSTOM_CHAR_ADDR_0 = $1c00
 CUSTOM_CHAR_ADDR_1 = $1c08
 CUSTOM_CHAR_ADDR_2 = $1c10
@@ -90,9 +89,6 @@ color_test
     bne color
 ; END SCREENCOLOR    
 
-; <-- END OF BOILERPLATE !!!!  -->
-; <-- primary code goes below! -->
-
     jmp program_start
 
 ; DEF DELAY
@@ -117,8 +113,8 @@ delaytick
 program_start
 
 ; change the location of the charset
-    lda #255 ; set location of charset to 7168 ($1c00)
-    sta CHARSET_CTRL ; store in register controlling base charset 
+    lda #255            ; set location of charset to 7168 ($1c00)
+    sta CHARSET_CTRL    ; store in register controlling base charset 
 
 ; copy the 8 character bytes at given address to the custom character set memory (CUSTOM_CHAR_ADDR)
     ldx #0
@@ -128,26 +124,26 @@ copy_char
     lda CUSTOM_CHAR_0,x
     sta CUSTOM_CHAR_ADDR_0,x
 
-    lda CUSTOM_CHAR_1,x   ; load a byte from the standard charset
-    sta CUSTOM_CHAR_ADDR_1,x      ; store that byte in our custom location
+    lda CUSTOM_CHAR_1,x             ; load a byte from the standard charset
+    sta CUSTOM_CHAR_ADDR_1,x        ; store that byte in our custom location
 
-    lda CUSTOM_CHAR_2,x   ; load a byte from the standard charset
-    sta CUSTOM_CHAR_ADDR_2,x      ; store that byte in our custom location
+    lda CUSTOM_CHAR_2,x             ; load a byte from the standard charset
+    sta CUSTOM_CHAR_ADDR_2,x        ; store that byte in our custom location
 
-    lda CUSTOM_CHAR_3,x   ; load a byte from the standard charset
-    sta CUSTOM_CHAR_ADDR_3,x      ; store that byte in our custom location
+    lda CUSTOM_CHAR_3,x             ; load a byte from the standard charset
+    sta CUSTOM_CHAR_ADDR_3,x        ; store that byte in our custom location
 
-    lda CUSTOM_CHAR_4,x   ; load a byte from the standard charset
-    sta CUSTOM_CHAR_ADDR_4,x      ; store that byte in our custom location
+    lda CUSTOM_CHAR_4,x             ; load a byte from the standard charset
+    sta CUSTOM_CHAR_ADDR_4,x        ; store that byte in our custom location
 
-    lda CUSTOM_CHAR_5,x   ; load a byte from the standard charset
-    sta CUSTOM_CHAR_ADDR_5,x      ; store that byte in our custom location
+    lda CUSTOM_CHAR_5,x             ; load a byte from the standard charset
+    sta CUSTOM_CHAR_ADDR_5,x        ; store that byte in our custom location
 
-    lda CUSTOM_CHAR_6,x   ; load a byte from the standard charset
-    sta CUSTOM_CHAR_ADDR_6,x      ; store that byte in our custom location
+    lda CUSTOM_CHAR_6,x             ; load a byte from the standard charset
+    sta CUSTOM_CHAR_ADDR_6,x        ; store that byte in our custom location
 
-    lda CUSTOM_CHAR_7,x   ; load a byte from the standard charset
-    sta CUSTOM_CHAR_ADDR_7,x      ; store that byte in our custom location
+    lda CUSTOM_CHAR_7,x             ; load a byte from the standard charset
+    sta CUSTOM_CHAR_ADDR_7,x        ; store that byte in our custom location
 
     inx
 
@@ -164,38 +160,36 @@ copy_test
     lda #0
 
 example
-    lda #0  ; H
+    lda #0  ; empty character
     sta SCREEN_ADDR,y
     iny
     
-    lda #1  ; E
+    lda #1  ; 1/4 of block from bottom
     sta SCREEN_ADDR,y
     iny
 
-    lda #2 ; L
+    lda #2 ; 1/2 of block from bottom
     sta SCREEN_ADDR,y
     iny    
     
-    lda #3 ; L
+    lda #3 ; 3/4 of block from bottom
     sta SCREEN_ADDR,y
     iny
 
-    lda #4 ; 0
+    lda #4 ; complete block (filled in)
     sta SCREEN_ADDR,y
     iny
 
-    lda #5 ; 0
+    lda #5 ; 3/4 of block from top
     sta SCREEN_ADDR,y
     iny
 
-    lda #6 ; 0
+    lda #6 ; 1/2 of block from top
     sta SCREEN_ADDR,y
     iny
 
-    lda #7 ; 0
+    lda #7 ; 1/4 of block from top
     sta SCREEN_ADDR,y
     iny
 
     jmp delay_init
-
-; <-- end of example code -->
