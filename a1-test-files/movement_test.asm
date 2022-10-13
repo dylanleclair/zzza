@@ -91,8 +91,6 @@ get_input
     beq     move_right
     cmp     #$57                        ; W key pressed?
     beq     move_up
-    cmp     #$00
-    beq     get_input                   ; tick the clock
 
     jmp     get_input                   ; otherwise run the loop again
 
