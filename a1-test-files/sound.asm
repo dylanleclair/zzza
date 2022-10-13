@@ -21,7 +21,7 @@ soundon
 	sta		$900B		; load value into low voice speaker
 
     lda 	#15 		; load 15 in the A register
-	sta		$900E		; set the volume to full for low vocie (manual recommends it)
+	sta		$900E		; set the volume to full for low voice (manual recommends it)
 
 loopsetup
 	ldx 	#0
