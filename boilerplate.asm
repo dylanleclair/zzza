@@ -49,7 +49,7 @@ screen_dim
 ; DEF SCREENCOLOR
 ; - sets color of screen to red, clears screen
     ldx #0
-    jmp color_test
+
 color
     lda #2              ; set the color to red
     sta COLOR_ADDR,x
@@ -57,8 +57,6 @@ color
     sta SCREEN_ADDR,x
     inx
 color_test
-    txa
-    cmp #255            ; loop until entire screen cleared
     bne color
 ; END SCREENCOLOR    
 
