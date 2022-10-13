@@ -137,7 +137,10 @@ level_setup
 ; main
 main
 	jsr	draw_screen		; jump to 'draw_screen' subroutine
-	rts				; return to calling code
+
+loop					; dylans loop of disrespect for basic prompt
+	nop
+	jmp loop
 
 ; subroutine used to fill the screen with patterns. 
 draw_screen

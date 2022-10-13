@@ -1,6 +1,9 @@
 ; -----------------------------------------------------------------------------
 ;
 ; Program to test scrolling level on the screen
+;   * repeats a set animation thru some test level data (and random zero page memory)
+;   * animates scrolling upwards on screen if the delta between current block and the block beneath it is set
+;   * combines a lot of our other code (copying characters from ROM, screen_dim, etc.)
 ;
 ; -----------------------------------------------------------------------------
 

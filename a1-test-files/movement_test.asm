@@ -5,6 +5,7 @@
 ;   * Draws a single character
 ;   * Sets key repeat to allow use to hold down key and keep giving input
 ;   * Runs a loop checking for keyboard input and moves the character
+;   * WASD to move the heart up/left/down/right (respectively)
 ;
 ;   author: Jeremy Stuart
 ; -----------------------------------------------------------------------------

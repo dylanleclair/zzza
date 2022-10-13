@@ -41,15 +41,16 @@ screen_dim
 
 
 
-    ldy     $00                     ; initialize loop counter
+    ldy     #$00                     ; initialize loop counter
 
 color_fill
-    lda     $00                     ; colour code for black
+    lda     #$00                     ; colour code for black
     sta     COLOR_MEM,y             ; store at COLOR_MEM+y
 
     iny                             ; increment loop counter
     bne     color_fill              ; loop until y overflows at 256
     
-
-    rts                             ; return to calling code6
+loop
+    nop
+    jmp loop
 
