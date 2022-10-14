@@ -4,7 +4,7 @@ DASM=/home/profs/aycock/599.82/bin/dasm
 %.prg:
 	$(DASM) $< -o$@ -l$*.lst
 
-all: copy_char.prg custom_animate.prg customcharset.prg fillscreenwithcircles.prg full_colour_fill.prg full_screen_patterns.prg key_input.prg movement_test.prg multicolour_sprite.prg print_char.prg screen_dim.prg scrollexample.prg sound.prg title_screen.prg 
+all: copy_char.prg custom_animate.prg customcharset.prg fillscreenwithcircles.prg full_colour_fill.prg full_screen_patterns.prg key_input.prg movement_test.prg multicolour_sprite.prg print_char.prg screen_dim.prg scrollexample.prg sound.prg title_screen.prg  print_heart.prg
 
 clean:
 	rm *.prg *.lst
@@ -23,4 +23,5 @@ screen_dim.prg: screen_dim.asm
 scrollexample.prg: scrollexample.asm
 sound.prg: sound.asm 
 title_screen.prg: title_screen.asm
+print_heart.prg : print_heart.asm
 
