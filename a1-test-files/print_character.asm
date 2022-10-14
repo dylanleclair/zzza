@@ -4,7 +4,7 @@
 ;   * Prints a red heart to the top left of the screen
 ;   * loops until a key is pressed and then exits
 ;
-;   author: Doesn't matter!
+;   author: Sarina
 ; -----------------------------------------------------------------------------
 
 
