@@ -104,7 +104,7 @@ get_input
 move_left
     lda     X_COOR                      ; load the X coordinate
     cmp     #0                          ; compare X coordinate with 0
-    beq     continue                   ; if X == 0, can't move left, go back to get input
+    beq     continue                    ; if X == 0, can't move left, go back to get input
 
     dec     X_COOR                      ; decrement the X coordinate by 1 (move left)
     jmp     continue
@@ -112,7 +112,7 @@ move_left
 move_right
     lda     X_COOR                      ; load the X coordinate
     cmp     #15                         ; compare X coordinate with 15
-    beq     continue                   ; if X == 15, can't move right, go back to get input
+    beq     continue                    ; if X == 15, can't move right, go back to get input
 
     inc     X_COOR                      ; increment the X coordinate by 1 (move right)
     jmp     continue
@@ -121,7 +121,7 @@ move_right
 move_up
     lda     Y_COOR                      ; load the Y coordinate
     cmp     #0                          ; compare Y coordinate with 0
-    beq     continue                   ; if X == 0, can't move up, go back to get input
+    beq     continue                    ; if X == 0, can't move up, go back to get input
     
     dec     Y_COOR                      ; decrement the Y coordinate by 1 (move up)
     jmp     continue
@@ -129,7 +129,7 @@ move_up
 move_down
     lda     Y_COOR                      ; load the Y coordinate
     cmp     #15                         ; compare Y coordinate with 15
-    beq     continue                   ; if Y == 15, can't move down, go back to get input
+    beq     continue                    ; if Y == 15, can't move down, go back to get input
 
     inc     Y_COOR                      ; increment the y coordinate by 1 (move down)
 
