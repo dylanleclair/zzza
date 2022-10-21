@@ -9,6 +9,8 @@ TODO:
         2. boilerplate to automatically use output as a program stub
 '''
 
+# this is a smiley face!
+
 bitmap = [
     "00111100",    
     "01000010",    
@@ -36,24 +38,57 @@ for item in bitmap:
     #output += str(byte_string) + "\n"
     base.append(num)
 
-output.append(base)
 
-for i in range(4):
-    temp = [] # character being generated
-    for num in output[-1]:
-        temp.append(num >> 2)
-    output.append(temp)
+# HORIZONTAL KEYFRAMES
 
-output.append(base)
+'''
 
-for i in range(4):
-    temp = [] # character being generated
-    for num in output[-1]:
-        temp.append((num << 2) & 0xFC)
-    output.append(temp)
+shifts = [8,6,4,2]
+
+for shift in shifts:
+    character = []
+    for num in base:
+        character.append((num << shift) & 0xff) 
+    output.append(character)
+shifts = [0,2,4,6]
+
+for shift in shifts:
+    character = []
+    for num in base:
+        character.append(num >> shift)
+    output.append(character)
+'''
+
+# VERTICAL KEYFRAMES
+
+shifts = [8,6,4,2]
+
+for shift in shifts:
+    character = base[0:len(base)-shift]
+    while(len(character) < 8):
+        character.insert(0,0)
+    output.append(character)
+
+# down
+shifts = [0,2,4,6]
+
+for shift in shifts:
+    character = base[shift:]
+    while (len(character) < 8):
+        character.append(0)
+    output.append(character)
+
+
 
 print(" --- Starting code output ---")
 
+
+for character in output: 
+    preview(character)
+    print()
+
+
+'''
 # generate the code to stdout
 base_addr = 7168 + 8
 for character in output:
@@ -71,4 +106,24 @@ for character in output:
             print("\tsta ${0:04x}".format(base_addr))
             base_addr +=1
         print()
-            
+'''
+count = 0
+for character in output:
+    print("\t; character " + str(count))
+    for byte in character:
+        print("\tdc.b #%{0:08b}".format(byte))
+    count +=1
+
+
+# transition table:
+
+# 0 -> 1
+# 1 -> 2
+# 2 -> 3
+# 3 -> 4
+# 4 -> 5
+# 5 -> 6
+# 6 -> 7
+# 7 -> 0
+
+
