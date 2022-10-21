@@ -34,6 +34,7 @@ BACKUP_A_VAR = $000E
 DELAY_ADDR = $000F
 FRAME_COUNT_ADDR = $0010
 MOVE_DIR_VAR = $0011
+GAME_COUNT_VAR = $0012
 
 ; subroutines
 GETIN = $FFE4                   ; KERNAL routine to get keyboard input
@@ -43,7 +44,7 @@ GETIN = $FFE4                   ; KERNAL routine to get keyboard input
     
     dc.w stubend                ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4192", 0
+    dc.b $9e, "4264", 0
 stubend
     dc.w 0
 
@@ -129,9 +130,9 @@ charset
 	dc.b #%00000001
 	dc.b #%00000000
 
+EVA_IDLE_CHAR = #10 ; first character in evas animation
 
 ; eva scrolling frames
-
 	; character 0
 	dc.b #%00000000
 	dc.b #%00000000
@@ -209,7 +210,7 @@ charset
 
 y_lookup: dc.b #0, #16, #32, #48, #64, #80, #96, #112, #128, #144, #160, #176, #192, #208, #224, #240
 
-state_table: dc.b #1 #2 #3 #4 #5 #6 #7 #0
+state_table: dc.b #1, #2, #3, #4, #5, #6, #7, #0
 
 
 ; DEF INIT_CHARSET
@@ -261,9 +262,11 @@ color_test
 
 ; setup sprite on the screen
 sprite_setup
-    lda     #0                          ; position character at the top left of the screen
+    lda     #8                          ; position character at the top left of the screen
     sta     X_COOR                      ; set the x coordinate to 0
-    sta     Y_COOR                      ; set the y coordinate to 0
+    
+    lda     #12
+    sta     Y_COOR                      ; set the y coordinate to 12
     jsr     draw_sprite                 ; draw the sprite at the 0,0 position
 
 ; <-- END OF BOILERPLATE !!!!  -->
@@ -274,13 +277,34 @@ set_repeat
     lda     #128                        ; 128 = repeat all keys
     sta     KEY_REPEAT                  ; sets all keys to repeat
 
+
+    lda #0
+    sta GAME_COUNT_VAR
+
+gameloop
+    
+movement_loop
+    ; run get input 3 times
+    jsr get_input   
+movement_test
+    inc GAME_COUNT_VAR
+    lda GAME_COUNT_VAR
+    cmp #3
+    bne movement_loop
+
+    jsr scroll_eva
+
+    jmp gameloop
+
+
+
 get_input
     
     ldx     #00                         ; set x to 0
     jsr     GETIN                       ; get 1 bytes from keyboard buffer
     
     cmp     #$00                        ; no changes
-    beq     get_input
+    beq     get_input_return
     jsr     clear_sprite
     cpy     #$41                        ; A key pressed?
     beq     move_left
@@ -290,6 +314,9 @@ get_input
     beq     move_right
     cpy     #$57                        ; W key pressed?
     beq     move_up
+get_input_return
+    rts
+
 
 move_left
     jsr draw_sprite
@@ -337,25 +364,6 @@ continue
 
 
 
-; DEF DELAY
-; - use to delay a fixed number of ticks. 
-delay_init                  ; <----- BRANCH TO THIS, not delay
-    lda     #0
-    sta     DELAY_ADDR
-delay
-    lda     #1                  ; lda #n -> set tick rate (number of ticks before function call)
-    cmp     DELAY_ADDR          ; place in memory where ticks are counted
-    beq     animate_loop        ; function to call every n ticks
-    lda     $00A2               ; load lower end of clock pulsing @ 1/1th of a second
-delaywait
-    cmp     $00A2               ; as soon as clock value changes (1/th of a second passes...)
-    bne     delaytick           ; increment counter
-    jmp     delaywait           ; otherwise, keep waiting for clock to update
-delaytick
-    inc     DELAY_ADDR          ; increment tick counter
-    jmp     delay               ; wait for next tick
-; END DELAY
-
 
 state_transition
     lda SCREEN_ADDR,x                   ; move this into subroutine to save memory
@@ -390,7 +398,7 @@ animate
 
 animate_loop
     ; each iteration of this loop is one frame of the animation 
-
+    jsr delay_init
     ; dynamic state transition
     ;   1. get position
     ;   2. update character player begins in (initial position)
@@ -414,7 +422,7 @@ animate_test
     inc FRAME_COUNT_ADDR
     lda FRAME_COUNT_ADDR
     cmp #4
-    bne delay_init ; if 0 to 3, keep looping
+    bne animate_loop ; if 0 to 3, keep looping
 
     ; correct last iteration (dont need to check direction since they coincidentally use same character)
     jsr get_position
@@ -428,7 +436,107 @@ animate_test
 
     rts
 
+
+
+; this function will... scroll eva, moving her up vertically by 1
+scroll_eva
+
+    ; save registers
+    stx BACKUP_X_VAR
+    sty BACKUP_Y_VAR
+    sta BACKUP_A_VAR
+    
+
+    lda     Y_COOR                      ; load the Y coordinate
+    cmp     #0                          ; compare Y coordinate with 0
+    beq     scroll_return                    ; if X == 0, can't move up, go back to get input
+
+    ; set to initial state of scroll
+    jsr get_position
+    lda #14
+    sta SCREEN_ADDR,x
+
+    ; set to initial state of scroll
+    txa
+    clc
+    adc #-16
+    tax
+
+    lda #10
+    sta SCREEN_ADDR,x
+
+    ; reset frame count (in case animation used previously)
+    lda #0
+    sta FRAME_COUNT_ADDR
+
+scroll_eva_loop
+
+    jsr delay_init
+    ; fetch current position
+    jsr get_position ; position is in x register
+    
+    ; increment current position
+
+    inc SCREEN_ADDR,x
+
+    ; increment target position (current position - 16)
+
+    txa
+    clc
+    adc #-16
+    tax
+
+    inc SCREEN_ADDR,x
+
+scroll_eva_test
+    inc FRAME_COUNT_ADDR
+    lda FRAME_COUNT_ADDR
+    cmp #4
+    bne scroll_eva_loop ; if 0 to 3, keep looping
+
+    ; correct last iteration (dont need to check direction since they coincidentally use same character)
+    jsr get_position
+    lda EVA_IDLE_CHAR
+    sta SCREEN_ADDR,x
+
+
+    ; increment EVA's position
+    jsr clear_sprite
+    dec     Y_COOR                      ; decrement the Y coordinate by 1 (move up)
+    jsr draw_sprite
+
+    ; prepare to return back to calling context
+    ldx BACKUP_X_VAR
+    ldy BACKUP_Y_VAR
+    lda BACKUP_A_VAR
+scroll_return
+    rts
+
+
 ; FUNCTIONS
+
+; DEF DELAY
+; - use to delay a fixed number of ticks. 
+delay_init                  ; <----- BRANCH TO THIS, not delay
+    lda     #0
+    sta     DELAY_ADDR
+delay
+    lda     #5                 ; lda #n -> set tick rate (number of ticks before function call)
+    cmp     DELAY_ADDR          ; place in memory where ticks are counted
+    beq     delay_return                 ; return to sender after delay
+    lda     $00A2               ; load lower end of clock pulsing @ 1/1th of a second
+delaywait
+    cmp     $00A2               ; as soon as clock value changes (1/th of a second passes...)
+    bne     delaytick           ; increment counter
+    jmp     delaywait           ; otherwise, keep waiting for clock to update
+delaytick
+    inc     DELAY_ADDR          ; increment tick counter
+    jmp     delay               ; wait for next tick
+; END DELAY
+
+delay_return
+    rts
+
 
 draw_sprite
     jsr     get_position                ; sets the X register to the screen offset
