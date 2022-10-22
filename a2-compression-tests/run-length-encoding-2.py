@@ -40,6 +40,17 @@ COLOR_CODE = {"BLACK": 0,
               "LIGHT BLUE": 14,
               "LIGHT YELLOW": 15}
 
+CHAR_CODE = {"0": 0,
+             "E": 1,
+             "2": 2,
+             "I": 3,
+             "M": 4,
+             "N": 5,
+             "R": 6,
+             "T": 7,
+             "U": 8,
+             " ": 9}
+
 ENCODING_COLOUR = {"BLACK": False,
                   "PURPLE": True}
 
@@ -79,9 +90,16 @@ length = 0 # setup the length variable
 
 data = []
 
+mode = "ENC_COL"
+
+TEXT_TO_ENCODE = ["RUNTIME TERR0R", "2022 "]
+
+text_enc_index = 0
+
 # loop over the image and read a pixel from each 8 pixel "byte" of the image
 for i in range(SCREEN_WIDTH):
     for j in range(SCREEN_HEIGHT):
+
         # read the pixel
         r, g, b, a = img.getpixel((j*8, i*8))
         
@@ -90,20 +108,50 @@ for i in range(SCREEN_WIDTH):
             current_colour = ENCODING_COLOUR["BLACK"]
         if r == 114 and g == 8 and b == 153:  # if PURPLE
             current_colour = ENCODING_COLOUR["PURPLE"]
-            
-        # If this is a repeated block
-        if current_colour == previous_colour:
-            length += 1
-        else:
+
+        position = ((i*SCREEN_WIDTH) + j)
+        # if we're at the spot to place text
+        if(position == 177 or position == 197):
+            mode = "ENC_TEXT"
+            print(length)
             val = encode(length, previous_colour)
             data.append(val)
             length = 1
             previous_colour = current_colour
-        
-        if (i == SCREEN_WIDTH -1 ) and (j == SCREEN_HEIGHT-1):
-            data.append(encode(length, previous_colour)) # last encoding
-            data.append(0) # end of the encoding (null byte)
-            break
+
+        if (mode == "ENC_COL"):
+
+            # If this is a repeated block
+            if current_colour == previous_colour:
+                length += 1
+            else:
+                val = encode(length, previous_colour)
+                data.append(val)
+                length = 1
+                previous_colour = current_colour
+            
+            if (i == SCREEN_WIDTH -1 ) and (j == SCREEN_HEIGHT-1):
+                data.append(encode(length, previous_colour)) # last encoding
+                data.append(0) # end of the encoding (null byte)
+                break
+
+        elif (mode == "ENC_TEXT"):
+
+
+
+            # encode next string in TEXT_TO_ENCODE
+                
+            diff = 177 if (text_enc_index == 0) else 197
+            # advance
+            text_index = (i * SCREEN_WIDTH + j) - diff
+            val = TEXT_TO_ENCODE[text_enc_index][text_index] # gives character to encode
+
+            out_byte = data.append(CHAR_CODE[val] << 4 | 0x08) # shift four and set bit five
+
+            if (text_index == (len(TEXT_TO_ENCODE[text_enc_index]) - 1)):
+                # entire string encoded, switch back to color mode (for next iteration)
+                mode = "ENC_COL"
+                text_enc_index += 1
 
 
 write_data(data)
@@ -111,10 +159,9 @@ write_data(data)
 for i in range(len(data)):
     data[i] = data[i] & 0x7f
 
-assert sum(data) == 16 * 16
-
 
 #save the output in a file named "output.txt"
 text_file = open("output.txt", "w")
 n = text_file.write(str(data))  # type: ignore
 text_file.close()
+
