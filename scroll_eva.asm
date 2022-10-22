@@ -9,6 +9,10 @@
 ;   author: Jeremy Stuart, Dylan Leclair
 ; -----------------------------------------------------------------------------
 
+
+
+
+
 ; GLOBAL VARIABLES
 CLOCK_TICKS = $0001
 
@@ -44,7 +48,7 @@ GETIN = $FFE4                   ; KERNAL routine to get keyboard input
     
     dc.w stubend                ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4264", 0
+    dc.b $9e, "4264", 0         ; remember to change whenever character set changes
 stubend
     dc.w 0
 
@@ -206,8 +210,6 @@ EVA_IDLE_CHAR = #10 ; first character in evas animation
 	dc.b #%00000000
 	dc.b #%00000000
 
-
-
 y_lookup: dc.b #0, #16, #32, #48, #64, #80, #96, #112, #128, #144, #160, #176, #192, #208, #224, #240
 
 state_table: dc.b #1, #2, #3, #4, #5, #6, #7, #0
@@ -257,9 +259,6 @@ color_test
 
 
 
-
-
-
 ; setup sprite on the screen
 sprite_setup
     lda     #8                          ; position character at the top left of the screen
@@ -278,26 +277,44 @@ set_repeat
     sta     KEY_REPEAT                  ; sets all keys to repeat
 
 
-    lda #0
-    sta GAME_COUNT_VAR
+; ---------------------------------------------------------------
+; -- End of initialization  -------------------------------------
+; ---------------------------------------------------------------
 
+
+; ---------------------------------------------------------------
+; -- Start of main loop  ----------------------------------------
+; ---------------------------------------------------------------
+; DEF GAMELOOP
+; goal: run get input 3 times, then scroll
+; this gives the player the opppourtunity to move (left or right) 3 times per scroll
 gameloop
-    
+
+; --- start movement loop
+; loop: for (int i = 0; i < 3; i++) { move player }
+    ; reset loop condition
+    lda     #0
+    sta     GAME_COUNT_VAR
+
 movement_loop
-    ; run get input 3 times
-    jsr get_input   
+    jsr     get_input                   ; move player according to keys pressed
 movement_test
-    inc GAME_COUNT_VAR
-    lda GAME_COUNT_VAR
-    cmp #3
-    bne movement_loop
+    inc     GAME_COUNT_VAR
+    lda     GAME_COUNT_VAR
+    cmp     #3
+    bne     movement_loop                   
 
-    jsr scroll_eva
+; --- end of movement loop 
 
-    jmp gameloop
+    jsr     scroll_eva                  ; after polling 3 times for input, scroll the eva upwards (should be along with level)
+
+    jmp     gameloop
+; END GAMELOOP
 
 
 
+; DEF GET_INPUT
+; this function moves a player, according to the keys pressed
 get_input
     
     ldx     #00                         ; set x to 0
@@ -308,13 +325,11 @@ get_input
     jsr     clear_sprite
     cpy     #$41                        ; A key pressed?
     beq     move_left
-    cpy     #$53                        ; S key pressed?
-    beq     move_down
     cpy     #$44                        ; D key pressed?
     beq     move_right
-    cpy     #$57                        ; W key pressed?
-    beq     move_up
+
 get_input_return
+    jsr draw_sprite
     rts
 
 
@@ -322,117 +337,101 @@ move_left
     jsr draw_sprite
     lda     X_COOR                      ; load the X coordinate
     cmp     #0                          ; compare X coordinate with 0
-    beq     continue                    ; if X == 0, can't move left, go back to get input
+    beq     get_input_return            ; if X == 0, can't move left, return
 
     lda     #-1
-    sta     MOVE_DIR_VAR
-    jsr     animate
-    dec     X_COOR                      ; decrement the X coordinate by 1 (move left)
-    jmp     get_input
+    sta     MOVE_DIR_VAR                ; move_dir = -1
+    jsr     animate                     ; animate left
+    dec     X_COOR                      ; update logical position of player (x--)
+    jmp     get_input_return
 
 move_right
     jsr draw_sprite
     lda     X_COOR                      ; load the X coordinate
     cmp     #15                         ; compare X coordinate with 15
-    beq     continue                    ; if X == 15, can't move right, go back to get input
+    beq     get_input_return            ; if X == 15, can't move right, return
 
-    lda #1
-    sta MOVE_DIR_VAR
-    jsr     animate                     ; function to animate
-    inc     X_COOR                      ; increment the X coordinate by 1 (move right)
-    jmp     get_input
-
-
-move_up
-    lda     Y_COOR                      ; load the Y coordinate
-    cmp     #0                          ; compare Y coordinate with 0
-    beq     continue                    ; if X == 0, can't move up, go back to get input
-    
-    dec     Y_COOR                      ; decrement the Y coordinate by 1 (move up)
-    jmp     continue
-
-move_down
-    lda     Y_COOR                      ; load the Y coordinate
-    cmp     #15                         ; compare Y coordinate with 15
-    beq     continue                    ; if Y == 15, can't move down, go back to get input
-
-    inc     Y_COOR                      ; increment the y coordinate by 1 (move down)
-
-continue 
-    jsr     draw_sprite                 ; draw the sprite in the new position
-    jmp     get_input
+    lda     #1                  
+    sta     MOVE_DIR_VAR                ; move_dir = 1
+    jsr     animate                     ; animate right
+    inc     X_COOR                      ; update logical position of player (x++)
+    jmp     get_input_return
 
 
 
 
+; BEGIN ANIMATE
+; dynamically animates the player movement (left/right)
+
+; helper function to manage state transition (prevent code duplication)
 state_transition
-    lda SCREEN_ADDR,x                   ; move this into subroutine to save memory
-    clc 
-    adc MOVE_DIR_VAR
-    sta SCREEN_ADDR,x 
-    rts
+    lda     SCREEN_ADDR,x               ; load the target character
+    clc                                 ; advance the state 
+    adc     MOVE_DIR_VAR                ; left = -1 (state transition backwards), right = 1 (state transition forwards)
+    sta     SCREEN_ADDR,x               ; update the target character
+    rts                                 
 
 animate
     ; save registers
-    stx BACKUP_X_VAR
-    sty BACKUP_Y_VAR
-    sta BACKUP_A_VAR
+    stx     BACKUP_X_VAR
+    sty     BACKUP_Y_VAR
+    sta     BACKUP_A_VAR
 
     ; reset frame count (in case animation used previously)
-    lda #0
-    sta FRAME_COUNT_ADDR
+    lda     #0
+    sta     FRAME_COUNT_ADDR
 
-    jsr get_position
+    jsr     get_position
 
     ; if direction is negative, we need to make it s.t. state transition resets on first frame (going backwards thru fsm)
-    lda MOVE_DIR_VAR
-    eor #$80 ; flip high bit s.t. bmi actually passes on positive value in MOVE_DIR_VAR  (probably a better way?)
-    bmi animate_loop ; MOVE_DIR_VAR is +, moving left
+    lda     MOVE_DIR_VAR
+    eor     #$80                        ; flip high bit s.t. bmi actually passes on positive value in MOVE_DIR_VAR  (probably a better way?)
+    bmi     animate_loop                ; MOVE_DIR_VAR is +, moving left
 
     ; if this code executes, MOVE_DIR_VAR is -, moving right
     dex
-    lda #10
-    sta SCREEN_ADDR,x
+    lda     #10
+    sta     SCREEN_ADDR,x
     inx
 
 
 animate_loop
     ; each iteration of this loop is one frame of the animation 
-    jsr delay_init
+    jsr     delay_init
     ; dynamic state transition
     ;   1. get position
     ;   2. update character player begins in (initial position)
     ;   3. update character player is moving to (final position)
 
-    jsr get_position                    ; screen offset of character now in x register
+    jsr     get_position                    ; screen offset of character now in x register
     
     ; transition initial position
-    jsr state_transition
+    jsr     state_transition
 
     ; add MOVE_DIR_VAR to x to find final position
     txa 
     clc 
-    adc MOVE_DIR_VAR
+    adc     MOVE_DIR_VAR
     tax
 
     ; transitional final position
-    jsr state_transition
+    jsr     state_transition
 
 animate_test
-    inc FRAME_COUNT_ADDR
-    lda FRAME_COUNT_ADDR
-    cmp #4
-    bne animate_loop ; if 0 to 3, keep looping
+    inc     FRAME_COUNT_ADDR
+    lda     FRAME_COUNT_ADDR
+    cmp     #4
+    bne     animate_loop ; if 0 to 3, keep looping
 
     ; correct last iteration (dont need to check direction since they coincidentally use same character)
-    jsr get_position
-    lda #2
-    sta SCREEN_ADDR,x
+    jsr     get_position
+    lda     #2
+    sta     SCREEN_ADDR,x
 
     ; prepare to return back to calling context
-    ldx BACKUP_X_VAR
-    ldy BACKUP_Y_VAR
-    lda BACKUP_A_VAR
+    ldx     BACKUP_X_VAR
+    ldy     BACKUP_Y_VAR
+    lda     BACKUP_A_VAR
 
     rts
 
@@ -442,9 +441,9 @@ animate_test
 scroll_eva
 
     ; save registers
-    stx BACKUP_X_VAR
-    sty BACKUP_Y_VAR
-    sta BACKUP_A_VAR
+    stx     BACKUP_X_VAR
+    sty     BACKUP_Y_VAR
+    sta     BACKUP_A_VAR
     
 
     lda     Y_COOR                      ; load the Y coordinate
@@ -452,63 +451,63 @@ scroll_eva
     beq     scroll_return                    ; if X == 0, can't move up, go back to get input
 
     ; set to initial state of scroll
-    jsr get_position
-    lda #14
-    sta SCREEN_ADDR,x
+    jsr     get_position
+    lda     #14
+    sta     SCREEN_ADDR,x
 
     ; set to initial state of scroll
     txa
     clc
-    adc #-16
+    adc     #-16
     tax
 
-    lda #10
-    sta SCREEN_ADDR,x
+    lda     #10
+    sta     SCREEN_ADDR,x
 
     ; reset frame count (in case animation used previously)
-    lda #0
-    sta FRAME_COUNT_ADDR
+    lda     #0
+    sta     FRAME_COUNT_ADDR
 
 scroll_eva_loop
 
-    jsr delay_init
+    jsr     delay_init
     ; fetch current position
-    jsr get_position ; position is in x register
+    jsr     get_position ; position is in x register
     
     ; increment current position
 
-    inc SCREEN_ADDR,x
+    inc     SCREEN_ADDR,x
 
     ; increment target position (current position - 16)
 
     txa
     clc
-    adc #-16
+    adc     #-16
     tax
 
-    inc SCREEN_ADDR,x
+    inc     SCREEN_ADDR,x
 
 scroll_eva_test
-    inc FRAME_COUNT_ADDR
-    lda FRAME_COUNT_ADDR
-    cmp #4
-    bne scroll_eva_loop ; if 0 to 3, keep looping
+    inc     FRAME_COUNT_ADDR
+    lda     FRAME_COUNT_ADDR
+    cmp     #4
+    bne     scroll_eva_loop ; if 0 to 3, keep looping
 
     ; correct last iteration (dont need to check direction since they coincidentally use same character)
-    jsr get_position
-    lda EVA_IDLE_CHAR
-    sta SCREEN_ADDR,x
+    jsr     get_position
+    lda     EVA_IDLE_CHAR
+    sta     SCREEN_ADDR,x
 
 
     ; increment EVA's position
-    jsr clear_sprite
+    jsr     clear_sprite
     dec     Y_COOR                      ; decrement the Y coordinate by 1 (move up)
-    jsr draw_sprite
+    jsr     draw_sprite
 
     ; prepare to return back to calling context
-    ldx BACKUP_X_VAR
-    ldy BACKUP_Y_VAR
-    lda BACKUP_A_VAR
+    ldx     BACKUP_X_VAR
+    ldy     BACKUP_Y_VAR
+    lda     BACKUP_A_VAR
 scroll_return
     rts
 
@@ -521,7 +520,7 @@ delay_init                  ; <----- BRANCH TO THIS, not delay
     lda     #0
     sta     DELAY_ADDR
 delay
-    lda     #5                 ; lda #n -> set tick rate (number of ticks before function call)
+    lda     #3                  ; lda #n -> set tick rate (number of ticks before function call)
     cmp     DELAY_ADDR          ; place in memory where ticks are counted
     beq     delay_return                 ; return to sender after delay
     lda     $00A2               ; load lower end of clock pulsing @ 1/1th of a second
@@ -532,11 +531,9 @@ delaywait
 delaytick
     inc     DELAY_ADDR          ; increment tick counter
     jmp     delay               ; wait for next tick
-; END DELAY
-
 delay_return
     rts
-
+; END DELAY
 
 draw_sprite
     jsr     get_position                ; sets the X register to the screen offset
@@ -559,5 +556,4 @@ get_position
     adc     X_COOR                      ; add the X coordinate to the position
     tax                                 ; transfer the position to the X register
     rts                                 ; return to caller function
-
 
