@@ -198,14 +198,15 @@ game_loop
     jsr     advance_level               ; update the state of the LEVEL_DATA array
     jsr     lfsr                        ; update the lfsr
 
-    ldy     #60                         ; set desired delay 
+    ldy     #40                         ; set desired delay 
     jsr     delay                       ; jump to delay
 
     jmp     game_loop                   ; loop forever
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: INIT_LEVEL
-; - initializes the values of LEVEL_DATA using the LFSR
+; - initializes the values of LEVEL_DATA with whitespace, and fills in the very
+;   bottom of the screen using the LFSR
 ; -----------------------------------------------------------------------------
 init_level
     pha                                 ; store the caller's accumulator
@@ -234,6 +235,34 @@ init_random_test
     bne     init_random_loop            ; while y<34 branch to random loop
 
 init_level_exit
+    pla                                 ; restore the caller's accumulator
+    rts
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: INIT_LEVEL_RAND
+; - a variation of INIT_LEVEL that fills the entire screen with LFSR data, instead
+;   of starting off with mostly white space
+; - not used for the actual game, but a good util for debugging
+; -----------------------------------------------------------------------------
+init_level_rand
+    pha                                 ; store the caller's accumulator
+    ldy     #0                          ; initialize loop counter
+    lda     #0                          ; the level starts out mostly empty, so fill with pattern 0
+
+    jmp init_rand_test                  ; jump to loop test
+init_rand_loop
+    lda     LFSR_ADDR                   ; we will use the lfsr to generate new data for the end of the array
+    and     #$0f                        ; bitmask out the high nibble, leaving us with 0 <= a < 16
+    sta     LEVEL_DATA,y                ; store it in LEVEL_DATA[y]
+
+    jsr     lfsr                        ; shuffle the lfsr
+    iny                                 ; increment y
+    
+init_rand_test
+    cpy     #34                         ; LEVEL_DATA is 34 bytes long
+    bne     init_rand_loop            ; while y<34 branch to random loop
+
+init_rand_exit
     pla                                 ; restore the caller's accumulator
     rts
 
