@@ -85,61 +85,57 @@ set_repeat
     sta     KEY_REPEAT                  ; sets all keys to repeat
 
 get_input
+    
     ldx     #00                         ; set x to 0
     jsr     GETIN                       ; get 1 bytes from keyboard buffer
-    cmp     #$41                        ; A key pressed?
+    
+    cmp     #$00                        ; no changes
+    beq     get_input
+    jsr     clear_sprite
+    cpy     #$41                        ; A key pressed?
     beq     move_left
-    cmp     #$53                        ; S key pressed?
+    cpy     #$53                        ; S key pressed?
     beq     move_down
-    cmp     #$44                        ; D key pressed?
+    cpy     #$44                        ; D key pressed?
     beq     move_right
-    cmp     #$57                        ; W key pressed?
+    cpy     #$57                        ; W key pressed?
     beq     move_up
-    cmp     #$00
-    beq     get_input                   ; tick the clock
-
-    jmp     get_input                   ; otherwise run the loop again
 
 move_left
     lda     X_COOR                      ; load the X coordinate
-    cmp     #0                           ; compare X coordinate with 0
-    beq     get_input                   ; if X == 0, can't move left, go back to get input
+    cmp     #0                          ; compare X coordinate with 0
+    beq     continue                    ; if X == 0, can't move left, go back to get input
 
-    jsr     clear_sprite                ; clear the sprite from it's current position
     dec     X_COOR                      ; decrement the X coordinate by 1 (move left)
-    jsr     draw_sprite                 ; draw the sprite in the new position
-    jmp     get_input                   ; return to keyboard input
+    jmp     continue
 
 move_right
     lda     X_COOR                      ; load the X coordinate
-    cmp     #15                          ; compare X coordinate with 15
-    beq     get_input                   ; if X == 15, can't move right, go back to get input
+    cmp     #15                         ; compare X coordinate with 15
+    beq     continue                    ; if X == 15, can't move right, go back to get input
 
-    jsr     clear_sprite                ; clear the sprite from it's current position
     inc     X_COOR                      ; increment the X coordinate by 1 (move right)
-    jsr     draw_sprite                 ; draw the sprite in the new position
-    jmp     get_input                   ; return to get keyboard input
+    jmp     continue
+
 
 move_up
     lda     Y_COOR                      ; load the Y coordinate
-    cmp     #0                           ; compare Y coordinate with 0
-    beq     get_input                   ; if X == 0, can't move up, go back to get input
-
-    jsr     clear_sprite                ; clear the sprite from it's current position
+    cmp     #0                          ; compare Y coordinate with 0
+    beq     continue                    ; if X == 0, can't move up, go back to get input
+    
     dec     Y_COOR                      ; decrement the Y coordinate by 1 (move up)
-    jsr     draw_sprite                 ; draw the sprite in the new position
-    jmp     get_input                   ; return to keyboard input
+    jmp     continue
 
 move_down
     lda     Y_COOR                      ; load the Y coordinate
-    cmp     #15                          ; compare Y coordinate with 15
-    beq     get_input                   ; if Y == 15, can't move down, go back to get input
+    cmp     #15                         ; compare Y coordinate with 15
+    beq     continue                    ; if Y == 15, can't move down, go back to get input
 
-    jsr     clear_sprite                ; clear the sprite from it's current position
     inc     Y_COOR                      ; increment the y coordinate by 1 (move down)
-    jsr     draw_sprite                 ; draw the sprite in the new position
-    jmp     get_input                   ; return to keyboard input
 
+continue 
+    jsr     draw_sprite                 ; draw the sprite in the new position
+    jmp     get_input
 
 draw_sprite
     jsr     get_position                ; sets the X register to the screen offset
