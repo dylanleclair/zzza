@@ -40,19 +40,32 @@ mode = "ENC_COL"                # flag used to decide if data is colour or text
 file_name = "zzza.png"          # hardcoded image file name
 data = []                       # the data array that we will fill with bytes
 
+
+ENCODING_COLOUR = {"BLACK": False,
+                   "PURPLE": True}
+
+
 '''
 Returns a number encoding length (7 bits) and char code.
 High 4 bits are index into char lookup table, low 4 bits are length
+
+  char
+  v v v v
+ [ | | | | | | | ]
+          ^ ^ ^ ^
+          length 
 '''
-def encode(length: int, char: int):
+
+
+def encode(char: int, length: int):
     shift_char = char << 4
-    print(length)
-    print(char)
-    print(shift_char)
-    print()
     if length >= 16:
         raise ValueError("value encoded cannot exceed 15")
-    # return length | 0x80 if color else length
+    print(length | (char << 4))
+    return (length | (char << 4))
+
+
+assert encode(10, 5) == 0xa5
 
 
 '''
@@ -71,10 +84,17 @@ def write_data(data):
 # open the image in Pillow
 img = Image.open(file_name)
 
-text_enc_index = 0  # what is this
-previous_char = 0   # The colour of the first block that changed
-current_char = 0    # the colour of the block we're currently reading
-length = 0          # setup the length variable
+previous_colour = CHAR_CODE[" "]  # The colour of the first block that changed
+current_char = CHAR_CODE[" "] # the colour of the block we're currently reading (init to black)
+length = 0  # setup the length variable
+
+data = []
+
+mode = "ENC_COL"
+
+TEXT_TO_ENCODE = ["RUNTIME TERR0R", "2022 "]
+
+text_enc_index = 0
 
 # loop over the image and read a pixel from each 8 pixel "byte" of the image
 for i in range(SCREEN_WIDTH):
@@ -83,15 +103,76 @@ for i in range(SCREEN_WIDTH):
         # read the pixel
         r, g, b, a = img.getpixel((j*8, i*8))
 
-        # set the colour
-        if r + g + b == 0:      # if BLACK
-            current_char = 0x09
-        else:                   # otherwise assume purple
-            current_char = 0x0a
+        # set the char
+        if r + g + b == 0:  # if BLACK
+            current_char = CHAR_CODE[" "]
+        if r == 114 and g == 8 and b == 153:  # if PURPLE
+            current_char = CHAR_CODE["PS"]
 
-        # correlates directly to VIC20 screen memory offsets
         position = ((i*SCREEN_WIDTH) + j)
-        
+        # if we're at the spot to place text
+        if(position == 177 or position == 197):
+            mode = "ENC_TEXT"
+            print(length)
+            val = encode(previous_char, length)
+            data.append(val)
+            length = 1
+            previous_char = "R"
+            current_char = "R"
+
+        if (mode == "ENC_COL"):
+
+            # If this is a repeated block
+            if previous_char == current_char:
+                length += 1
+            else:
+                val = encode(previous_char, length)
+                data.append(val)
+                length = 1
+                previous_char = current_char
+
+            if (i == SCREEN_WIDTH - 1) and (j == SCREEN_HEIGHT-1):
+                val = encode(previous_char, length)
+                data.append(val)
+                data.append(0)  # end of the encoding (null byte)
+                break
+
+        elif (mode == "ENC_TEXT"):
+            # encode next string in TEXT_TO_ENCODE
+
+            # update previous / current_char
+            diff = 177 if (text_enc_index == 0) else 197
+            # advance
+            text_index = (i * SCREEN_WIDTH + j) - diff
+            # gives character to encode
+            val = TEXT_TO_ENCODE[text_enc_index][text_index]
+
+            # shift four and set bit five
+            out_byte = data.append(CHAR_CODE[val] << 4 | 0x08)
+
+            current_char = val
+
+
+
+            if (text_index == (len(TEXT_TO_ENCODE[text_enc_index]) - 1)):
+                # entire string encoded, switch back to color mode (for next iteration)
+                mode = "ENC_COL"
+                text_enc_index += 1
+                
+                val = encode(CHAR_CODE[previous_char], length)
+                data.append(val)
+                length = 1
+                previous_char = current_char
+
+            # encoding logic
+            if previous_char == current_char:
+                length += 1
+            else:
+                val = encode(CHAR_CODE[previous_char], length)
+                data.append(val)
+                length = 1
+                previous_char = current_char
+
 
 
 write_data(data)

@@ -136,9 +136,6 @@ for i in range(SCREEN_WIDTH):
                 break
 
         elif (mode == "ENC_TEXT"):
-
-
-
             # encode next string in TEXT_TO_ENCODE
                 
             diff = 177 if (text_enc_index == 0) else 197
