@@ -4,7 +4,7 @@ DASM=dasm
 %.prg:
 	$(DASM) $< -o$@ -l$*.lst
 
-all: runlength-decompress-1.prg runlength-decompress-2.prg
+all: runlength-decompress-1.prg runlength-decompress-2.prg decode-1.prg
 
 clean:
 	rm *.prg *.lst
