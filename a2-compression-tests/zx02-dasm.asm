@@ -99,8 +99,6 @@ data_setup
     sta     $05         
     lda     #$80                ; bitr = $80
     sta     $06
-    lda     $00                 ; pointer to the start of the block?
-    sta     $00
     jmp     full_decomp
 
 ; variables to decompress the colour data
@@ -118,10 +116,8 @@ colour_setup
     sta     $05         
     lda     #$80                ; bitr = $80
     sta     $06
-    lda     $00                 ; pointer to the start of the block?
-    sta     $00
 
-; ------------------------BEGIN ZX02 DECOMPRESSION CODE------------------------
+; ------------------------BEGIN ZX02 DECOMPRESSION CODE-----------------------
 
 full_decomp
     ; Get initialization block
