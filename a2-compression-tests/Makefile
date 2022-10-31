@@ -15,7 +15,7 @@ runlength-decompress-1.prg: runlength-decompress-1.asm
 runlength-decompress-2.prg: runlength-decompress-2.asm
 zx02-dasm.prg: zx02-dasm.asm
 
-screen_data.zx02: uncompress/char.bin
+screen_data.zx02: uncompressed/char.bin
 	$(zx02) -f $@ $<
-screen_colour.zx02: uncompress/color.bin
+screen_colour.zx02: uncompressed/color.bin
 	$(zx02) -f $@ $<
