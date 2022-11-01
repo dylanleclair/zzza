@@ -209,7 +209,9 @@ decompress_loop_check
     cmp     #0                          ; comparing accumulator to 0x00
     bne     decompress_loop             ; if not a null byte, go back to top of loop
 
-    jmp     nop_loop
+; -----------------------------------------------------------------------------
+nop_loop
+    jmp nop_loop
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: DECOMPRESS_CHAR
@@ -285,8 +287,3 @@ draw_purple
     pla                         ; pop 10 off of the stack into the accumulator
 
     jmp     draw_test           ; go back to the draw test
-
-
-; -----------------------------------------------------------------------------
-nop_loop
-    jmp nop_loop
