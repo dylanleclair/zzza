@@ -65,7 +65,7 @@ def encode(char: int, length: int):
     return (length | (char << 4))
 
 
-assert encode(10, 5) == 0xa5
+assert encode(10, 5) == 0x5a
 
 
 '''
