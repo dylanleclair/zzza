@@ -67,45 +67,6 @@ WORKING_SCREEN_HI = $03         ; same as above, hi byte
 stubend
     dc.w 0
 
-; -----------------------------------------------------------------------------
-;
-;   Run length encoding of the title screen.  The encoding uses 8 bits to store
-;   all the data needed to draw the title screen.  There are two modes that the
-;   bit string can function in.  Having looked at our encoding data, we noticed
-;   that the 4th bit (from the right) was never being set and so this controls
-;   which of the two modes the screen is being encoded in.  If the 4th bit is
-;   not set, we draw solid blocks and set their colour - which we call Colour
-;   Mode - and if the bit IS set we draw characters, which we call Char Mode.
-;
-;   Colour Mode
-;   The most significant bit controls the colour of the screen.  If it is not
-;   set, we colour the space as black.  If it's set to 1 we colour the block as
-;   purple.  The remaining bits encoding the number of blocks to draw with that
-;   colour.  So a bit string of 10000001 encodes 1 block as purple.  And a bit
-;   string of 01010000 encodes 80 blocks of black.
-;
-;
-;   Char Mode
-;   The 4th bit from the right (5th from the left) controls when the bit string
-;   is interpreted in Char Mode.  When this bit is set, the upper 4 bits are
-;   then interpreted as characters from a lookup table.  The table is:
-;
-;                           Letter  |   Encoding
-;                              "0"          0
-;                              "E"          1
-;                              "2"          2
-;                              "I"          3
-;                              "M"          4
-;                              "N"          5
-;                              "R"          6
-;                              "T"          7
-;                              "U"          8
-;                              " " (space)  9
-;   
-;   A bit pattern of 00111000 encodes the character "I", and the bit pattern of
-;   10011000 encodes the space character.  
-;
-; -----------------------------------------------------------------------------
 encoding
 ; number chars encoded: 2370
 ; number bytes encoded: 75
@@ -251,7 +212,8 @@ decompress_loop_check
     cmp     #0                          ; comparing accumulator to 0x00
     bne     decompress_loop             ; if not a null byte, go back to top of loop
 
-    jmp     nop_loop
+nop_loop
+    jmp nop_loop
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: DECOMPRESS_CHAR
@@ -331,5 +293,3 @@ draw_purple
 
 
 ; -----------------------------------------------------------------------------
-nop_loop
-    jmp nop_loop
