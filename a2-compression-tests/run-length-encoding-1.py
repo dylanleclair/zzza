@@ -4,7 +4,7 @@ from string import Template
 
 ###############################################################################
 #
-#   Python program to read an image and output a run length encoding of the
+#   Python program to read an image and output a (basic) run length encoding of the
 #   title screen
 #
 ###############################################################################
@@ -58,6 +58,8 @@ High 4 bits are index into char lookup table, low 4 bits are length
 
 
 def encode(char: int, length: int):
+
+    print([char, length])
     shift_char = char << 4
     if length >= 16:
         raise ValueError("value encoded cannot exceed 15")
@@ -65,7 +67,7 @@ def encode(char: int, length: int):
     return (length | (char << 4))
 
 
-assert encode(10, 5) == 0x5a
+#assert encode(10, 5) == 0xa5
 
 
 '''
@@ -75,8 +77,8 @@ def write_data(data):
     print("; number chars encoded: " + str(sum(b & 0x7f for b in data)))
     print("; number bytes encoded: " + str(len(data)))
     print("; generated code begins !!!")
-    # for b in data:
-    #     print("\tdc.b #%{0:08b}".format(b))
+    for b in data:
+        print("\tdc.b #%{0:08b}".format(b))
 
 
 
@@ -84,7 +86,7 @@ def write_data(data):
 # open the image in Pillow
 img = Image.open(file_name)
 
-previous_colour = CHAR_CODE[" "]  # The colour of the first block that changed
+previous_char = CHAR_CODE[" "]  # The colour of the first block that changed
 current_char = CHAR_CODE[" "] # the colour of the block we're currently reading (init to black)
 length = 0  # setup the length variable
 
@@ -92,9 +94,17 @@ data = []
 
 mode = "ENC_COL"
 
-TEXT_TO_ENCODE = ["RUNTIME TERR0R", "2022 "]
+TEXT_TO_ENCODE = ["RUNTIME TERR0R", "2022"]
 
 text_enc_index = 0
+
+
+test_str = []
+for item in TEXT_TO_ENCODE:
+    for char in item:
+        test_str.append(CHAR_CODE[char])
+
+print(test_str)
 
 # loop over the image and read a pixel from each 8 pixel "byte" of the image
 for i in range(SCREEN_WIDTH):
@@ -117,13 +127,13 @@ for i in range(SCREEN_WIDTH):
             val = encode(previous_char, length)
             data.append(val)
             length = 1
-            previous_char = "R"
-            current_char = "R"
+            previous_char = TEXT_TO_ENCODE[text_enc_index][0]
+            #current_char = "R"
 
         if (mode == "ENC_COL"):
 
             # If this is a repeated block
-            if previous_char == current_char:
+            if previous_char == current_char and length != 15:
                 length += 1
             else:
                 val = encode(previous_char, length)
@@ -147,9 +157,6 @@ for i in range(SCREEN_WIDTH):
             # gives character to encode
             val = TEXT_TO_ENCODE[text_enc_index][text_index]
 
-            # shift four and set bit five
-            out_byte = data.append(CHAR_CODE[val] << 4 | 0x08)
-
             current_char = val
 
 
@@ -162,7 +169,8 @@ for i in range(SCREEN_WIDTH):
                 val = encode(CHAR_CODE[previous_char], length)
                 data.append(val)
                 length = 1
-                previous_char = current_char
+                previous_char = CHAR_CODE[" "]
+                continue
 
             # encoding logic
             if previous_char == current_char:
@@ -174,8 +182,15 @@ for i in range(SCREEN_WIDTH):
                 previous_char = current_char
 
 
-
 write_data(data)
+
+count = 0
+
+for item in data:
+    count += (item & 0x0f) 
+
+print("count: ")
+print(count)
 
 #save the output in a file named "output.txt"
 text_file = open("output.txt", "w")
