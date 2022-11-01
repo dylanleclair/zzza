@@ -63,13 +63,55 @@ WORKING_SCREEN_HI = $03         ; same as above, hi byte
     
     dc.w stubend                ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4213", 0         ; jump to start of code
+    dc.b $9e, "4195", 0         ; jump to start of code
 stubend
     dc.w 0
 
+; -----------------------------------------------------------------------------
+;
+;   Run length encoding of the title screen.  The encoding uses 8 bits to store
+;   all the data needed to draw the title screen.  There are two modes that the
+;   bit string can function in.  Having looked at our encoding data, we noticed
+;   that the 4th bit (from the right) was never being set and so this controls
+;   which of the two modes the screen is being encoded in.  If the 4th bit is
+;   not set, we draw solid blocks and set their colour - which we call Colour
+;   Mode - and if the bit IS set we draw characters, which we call Char Mode.
+;
+;   Colour Mode
+;   The most significant bit controls the colour of the screen.  If it is not
+;   set, we colour the space as black.  If it's set to 1 we colour the block as
+;   purple.  The remaining bits encoding the number of blocks to draw with that
+;   colour.  So a bit string of 10000001 encodes 1 block as purple.  And a bit
+;   string of 01010000 encodes 80 blocks of black.
+;
+;
+;   Char Mode
+;   The 4th bit from the right (5th from the left) controls when the bit string
+;   is interpreted in Char Mode.  When this bit is set, the upper 4 bits are
+;   then interpreted as characters from a lookup table.  The table is:
+;
+;                           Letter  |   Encoding
+;                              "0"          0
+;                              "E"          1
+;                              "2"          2
+;                              "I"          3
+;                              "M"          4
+;                              "N"          5
+;                              "R"          6
+;                              "T"          7
+;                              "U"          8
+;                              " " (space)  9
+;   
+;   A bit pattern of 00111000 encodes the character "I", and the bit pattern of
+;   10011000 encodes the space character.  
+;
+; -----------------------------------------------------------------------------
 encoding
 ; number chars encoded: 2370
 ; number bytes encoded: 75
+; generated code begins !!!
+; number chars encoded: 2274
+; number bytes encoded: 74
 ; generated code begins !!!
         dc.b #%10011111
         dc.b #%10011111
@@ -124,23 +166,23 @@ encoding
         dc.b #%10100001
         dc.b #%10011111
         dc.b #%10010011
-        dc.b #%01100010
-        dc.b #%10000001
-        dc.b #%01010001
-        dc.b #%01110001
-        dc.b #%00110001
-        dc.b #%01000001
-        dc.b #%00010001
-        dc.b #%10010001
-        dc.b #%01110001
-        dc.b #%00010001
-        dc.b #%01100010
-        dc.b #%00000001
-        dc.b #%10010111
-        dc.b #%01100001
-        dc.b #%00100001
-        dc.b #%00000001
-        dc.b #%00100001
+        dc.b #%01100001 ; r
+        dc.b #%10000001 ; u
+        dc.b #%01010001 ; n
+        dc.b #%01110001 ; t
+        dc.b #%00110001 ; i 
+        dc.b #%01000001 ; m 
+        dc.b #%00010001 ; e
+        dc.b #%10010001 ; 
+        dc.b #%01110001 ; t
+        dc.b #%00010001 ; e
+        dc.b #%01100010 ; rr
+        dc.b #%00000001 ; o
+        dc.b #%01100001 ; r
+        dc.b #%10010111  ; skip to 2
+        dc.b #%00100001  ; 2
+        dc.b #%00000001  ; 0
+        dc.b #%00100010  ; 22
         dc.b #%10011111
         dc.b #%10011111
         dc.b #%10011111
@@ -158,7 +200,7 @@ char_list
         dc.b #146       ; R
         dc.b #148       ; T
         dc.b #149       ; U
-        dc.b #32        ; " " (empty space)
+        dc.b #160        ; " " (empty space)
         dc.b #160       ; full block (to be made purple)
 
 
@@ -232,16 +274,17 @@ decompress_char
     ; now acc has the character :D 
     lda     char_list,x             ; go get the thing stored at position char_list[x]
 
+skip_lookup
     pha                             ; push the character code onto the stack
         ; get the length of the encoding and store in x
-    lda     ENC_BYTE_INDEX_VAR      ; load the encoding byte again
+    lda     ENC_BYTE_VAR      ; load the encoding byte again
     and     #$0F                    ; mask out the upper 4 bits
     tax                             ; transfer the length into the x register
     pla                             ; pull the character code off the stack
 
     ; END PUT CHARACTER IN ACCUMULATOR
 
-skip_lookup
+
     jsr     draw
     
     rts
@@ -258,7 +301,7 @@ draw
 
     pha                         ; backup char (accumulator) onto stack while doing color :D 
 
-    lda     #2                  ; black
+    lda     #0                  ; black
     sta     COLOR_ADDR,y        ; store the color in memory
 
     pla                         ; once color done, restore accumulator with character code
