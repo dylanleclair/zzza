@@ -1,13 +1,41 @@
 ; -----------------------------------------------------------------------------
 ;
-;   Boilerplate code for test programs
-;   * sets the screen size to 16 x 16, the screen size for our game. 
-;   * decompresses the title screen data, compressed using runlength encoding. 
-;   * and displays the results on-screen
-;   * Compression details:
-;       - 0x00 is the null terminator
-;       - hi bit is the colour code (0 indicates black, 1 purple)
-;       - lo 7 bits indicate the # of repetitions
+;   Naive run length encoding of the title screen.  The encoding uses bytes to
+;   store all the data needed to draw the screen.  The lower 4 bits of the byte
+;   store the number of repetitions of the character and the upper 4 bits store
+;   the character that is being drawn to the screen.  The limitation of this
+;   encoding is that we have 10 possible options for the character, so no fewer
+;   than 4 bits can be used to store this info.  Because of this, it takes 2
+;   bytes to encode a character that is repeated 17 times.  This is because the
+;   lower 4 bits can only store up to the number 16, so a sequence of long repetions 
+;   require more bytes than might otherwise be necessary (see run length encoding 
+;   scheme 2).
+;
+;                              char
+;                              v v v v
+;                             [ | | | | | | | ]
+;                                      ^ ^ ^ ^
+;                                      length 
+;
+;   The encoding of the characters is as follows:
+;
+; CHAR_CODE = {
+;                 "0": 0,
+;                 "E": 1,
+;                 "2": 2,
+;                 "I": 3,
+;                 "M": 4,
+;                 "N": 5,
+;                 "R": 6,
+;                 "T": 7,
+;                 "U": 8,
+;                 " ": 9,         # black square
+;                 "PS": 10        # purple square
+;              }
+;
+;   
+;   A bit pattern of 00110011 therefore represents 3 I characters, while a
+;   pattern of 10101101 represents 13 purple squares.  
 ;
 ;   author: Emily, Sarina, Jeremy, Dylan
 ;
@@ -39,45 +67,6 @@ WORKING_SCREEN_HI = $03         ; same as above, hi byte
 stubend
     dc.w 0
 
-; -----------------------------------------------------------------------------
-;
-;   Run length encoding of the title screen.  The encoding uses 8 bits to store
-;   all the data needed to draw the title screen.  There are two modes that the
-;   bit string can function in.  Having looked at our encoding data, we noticed
-;   that the 4th bit (from the right) was never being set and so this controls
-;   which of the two modes the screen is being encoded in.  If the 4th bit is
-;   not set, we draw solid blocks and set their colour - which we call Colour
-;   Mode - and if the bit IS set we draw characters, which we call Char Mode.
-;
-;   Colour Mode
-;   The most significant bit controls the colour of the screen.  If it is not
-;   set, we colour the space as black.  If it's set to 1 we colour the block as
-;   purple.  The remaining bits encoding the number of blocks to draw with that
-;   colour.  So a bit string of 10000001 encodes 1 block as purple.  And a bit
-;   string of 01010000 encodes 80 blocks of black.
-;
-;
-;   Char Mode
-;   The 4th bit from the right (5th from the left) controls when the bit string
-;   is interpreted in Char Mode.  When this bit is set, the upper 4 bits are
-;   then interpreted as characters from a lookup table.  The table is:
-;
-;                           Letter  |   Encoding
-;                              "0"          0
-;                              "E"          1
-;                              "2"          2
-;                              "I"          3
-;                              "M"          4
-;                              "N"          5
-;                              "R"          6
-;                              "T"          7
-;                              "U"          8
-;                              " " (space)  9
-;   
-;   A bit pattern of 00111000 encodes the character "I", and the bit pattern of
-;   10011000 encodes the space character.  
-;
-; -----------------------------------------------------------------------------
 encoding
 ; number chars encoded: 2370
 ; number bytes encoded: 75
