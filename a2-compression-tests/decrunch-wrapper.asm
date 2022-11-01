@@ -73,6 +73,10 @@ screen_dim
     lda     #24                ; value for black border
     sta     BD_COLOR_ADDR
 
+; SET SCREEN BORDER TO BLACK
+    lda     #24                 ; white screen with a black border
+    sta     $900F               ; set screen border color
+
 ; -----------------------------------------------------------------------------
 ; EXOMIZER JUMP
 ; * sets up the necessary values for Exomizer's decruncher to play nicely

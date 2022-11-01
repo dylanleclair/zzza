@@ -48,10 +48,6 @@ screen_data
 ; include the compressed screen colour data
 screen_colour
     incbin      "screen_colour.zx02"
-; screen_data
-;     dc.b $3a, $e0, $aa, $2f, $09, $92, $95, $8e, $94, $89, $8d, $85, $e0, $94, $85, $92, $8f, $92, $7c, $e2, $8a, $b2, $b0, $b2, $b2, $f9, $ff
-; screen_colour
-;     dc.b $2b, $00, $fc, $27, $04, $06, $d0, $22, $04, $b7, $06, $dd, $02, $1c, $bd, $4e, $b7, $42, $b7, $7e, $a7, $02, $6f, $00, $fd, $ff
 
 ; offsets on 0-page
 ZP=$00          ; 0-page base location
@@ -77,6 +73,10 @@ screen_dim
     lda     #$20                ; i don't know why this value works but it does
 	sta     CENTERING_ADDR      ; vertical screen centering
 ; END SCREEN_DIM
+
+; SET SCREEN BORDER TO BLACK
+    lda     #24                 ; white screen with a black border
+    sta     $900F               ; set screen border color
 
 ; setup a loop counter, defaulting to 2.  The first loop will decompress the
 ; screen character data, the second loop with decompress the colour data, and
@@ -108,9 +108,9 @@ colour_setup
     lda     #$00                ; load offset
     sta     $00                 ; offset = 0
     sta     $01                 ; offset = 0
-    lda     #$2a                ; screen colour stored at 102A, load lower byte
+    lda     #$2a                ; screen colour stored at 1029, load lower byte
     sta     $02
-    lda     #$10                ; screen colour stored at 102A, load upper byte
+    lda     #$10                ; screen colour stored at 1029, load upper byte
     sta     $03
     lda     #$00                ; screen colour decompressed at 9600, load lower byte
     sta     $04
