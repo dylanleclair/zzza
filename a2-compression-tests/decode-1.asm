@@ -1,13 +1,13 @@
 ; -----------------------------------------------------------------------------
 ;
-;   Boilerplate code for test programs
+;   Very basic run length encoding
 ;   * sets the screen size to 16 x 16, the screen size for our game. 
 ;   * decompresses the title screen data, compressed using runlength encoding. 
 ;   * and displays the results on-screen
 ;   * Compression details:
 ;       - 0x00 is the null terminator
-;       - hi bit is the colour code (0 indicates black, 1 purple)
-;       - lo 7 bits indicate the # of repetitions
+;       - first four bits in a byte encode a character
+;       - next four bits encode the length of the sequence
 ;
 ;   author: Emily, Sarina, Jeremy, Dylan
 ;
