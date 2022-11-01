@@ -113,7 +113,7 @@ encoding
     dc.b #%10000001
     dc.b #%00000001
     dc.b #%10000001
-    dc.b #%00010010
+    dc.b #%00100010
     dc.b #%01101000
     dc.b #%10001000
     dc.b #%01011000
@@ -134,7 +134,7 @@ encoding
     dc.b #%00101000
     dc.b #%00101000
     dc.b #%10011000
-    dc.b #%00110111
+    dc.b #%00100111
     dc.b #%00000000
 
 ; lookup table of characters that we need for the title screen
