@@ -198,7 +198,9 @@ decompress_loop_check
     cmp     #0                          ; comparing accumulator to 0x00
     bne     decompress_loop             ; if not a null byte, go back to top of loop
 
-    jmp     nop_loop
+; -----------------------------------------------------------------------------
+nop_loop
+    jmp nop_loop
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: MODE_CHECK
@@ -286,8 +288,3 @@ draw
     bne     draw                ; loop back to draw loop 
 
     rts
-
-
-; -----------------------------------------------------------------------------
-nop_loop
-    jmp nop_loop
