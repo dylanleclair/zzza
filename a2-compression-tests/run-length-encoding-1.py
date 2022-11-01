@@ -59,10 +59,6 @@ High 4 bits are index into char lookup table, low 4 bits are length
 
 def encode(char: int, length: int):
     shift_char = char << 4
-    print(length)
-    print(char)
-    print(shift_char)
-    print()
     if length >= 16:
         raise ValueError("value encoded cannot exceed 15")
     print(length | (char << 4))

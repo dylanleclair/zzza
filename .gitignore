@@ -1,4 +1,6 @@
 *.prg
 *.lst
+*.exo
+*.zx02
 
 .DS_Store
