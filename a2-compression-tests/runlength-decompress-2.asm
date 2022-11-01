@@ -165,7 +165,11 @@ screen_dim
 
     lda     #$20                ; i don't know why this value works but it does
 	sta     CENTERING_ADDR      ; vertical screen centering
-; END SCREEN_DIM  
+; END SCREEN_DIM
+
+; SET SCREEN BORDER TO BLACK
+    lda     #24                 ; white screen with a black border
+    sta     $900F               ; set screen border color
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: DECOMPRESS

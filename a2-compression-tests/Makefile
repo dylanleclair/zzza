@@ -22,14 +22,12 @@ exomizer-decompress.prg: decrunch-wrapper.asm exomizer-decrunch.asm
 function-encoding.prg: function-encoding.asm
 
 # targets for compressing with zx02
-# puts the compressed data into the zx02 folder
-screen_data.zx02: memory-dumps/char.bin
+screen_data.zx02: memory-dumps/zx02_char.bin
 	$(ZX02_COMPRESS) -f $< $@
-screen_colour.zx02: memory-dumps/color.bin
+screen_colour.zx02: memory-dumps/zx02_color.bin
 	$(ZX02_COMPRESS) -f $< $@
 
 # targets for compressing exomizer data
-# puts the compressed data into the exomizer folder
 screen_data.exo: memory-dumps/char.bin	
 	$(EXOMIZER_COMPRESS) mem -l 0x1e00 -o $@ $<
 screen_colour.exo: memory-dumps/color.bin

@@ -96,7 +96,9 @@ screen_dim
 	sta     CENTERING_ADDR      ; vertical screen centering
 ; END SCREEN_DIM
 
-
+; SET SCREEN BORDER TO BLACK
+    lda     #24                 ; white screen with a black border
+    sta     $900F               ; set screen border color
 
     ; zero initializes a few important values
 ; DEF DECOMPRESS_INIT
