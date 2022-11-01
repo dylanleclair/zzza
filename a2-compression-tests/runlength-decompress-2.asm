@@ -1,47 +1,6 @@
 ; -----------------------------------------------------------------------------
 ;
-;   Boilerplate code for test programs
-;   * sets the screen size to 16 x 16, the screen size for our game. 
-;   * decompresses the title screen data, compressed using runlength encoding. 
-;   * and displays the results on-screen
-;   * Compression details:
-;       - 0x00 is the null terminator
-;       - hi bit is the colour code (0 indicates black, 1 purple)
-;       - lo 7 bits indicate the # of repetitions
-;
-;   author: Emily, Sarina, Jeremy, Dylan
-;
-; -----------------------------------------------------------------------------
-
-; IMPORTANT MEMORY LOCATIONS
-COLOR_ADDR = $9600
-SCREEN_ADDR = $1e00
-
-; SCREEN SIZE RELATED MEMORY LOCATIONS
-CENTERING_ADDR = $9001          ; stores the screen centering values
-COLUMNS_ADDR = $9002            ; stores the number of columns on screen
-ROWS_ADDR = $9003               ; stores the number of rows on screen
-
-
-; PROGRAM VARIABLES
-ENC_BYTE_VAR = $00              ; stores the current working byte of our compressed data
-ENC_BYTE_INDEX_VAR = $01        ; stores the index into the 'encoding' array
-
-WORKING_SCREEN = $02            ; stores the memory location of the screen area we're working on
-WORKING_SCREEN_HI = $03         ; same as above, hi byte
-
-    processor 6502
-    org $1001
-    
-    dc.w stubend                ; define a constant to be address @ stubend
-    dc.w 12345 
-    dc.b $9e, "4188", 0         ; jump to the end of the 'encoding' array (0x103d)
-stubend
-    dc.w 0
-
-; -----------------------------------------------------------------------------
-;
-;   Run length encoding of the title screen.  The encoding uses 8 bits to store
+;   Data specific run length encoding for title screen.  Uses 8 bits to store
 ;   all the data needed to draw the title screen.  There are two modes that the
 ;   bit string can function in.  Having looked at our encoding data, we noticed
 ;   that the 4th bit (from the right) was never being set and so this controls
@@ -75,9 +34,38 @@ stubend
 ;                              " " (space)  9
 ;   
 ;   A bit pattern of 00111000 encodes the character "I", and the bit pattern of
-;   10011000 encodes the space character.  
+;   10011000 encodes the space character.
+;
+;   author: Emily, Sarina, Jeremy, Dylan
 ;
 ; -----------------------------------------------------------------------------
+
+; IMPORTANT MEMORY LOCATIONS
+COLOR_ADDR = $9600
+SCREEN_ADDR = $1e00
+
+; SCREEN SIZE RELATED MEMORY LOCATIONS
+CENTERING_ADDR = $9001          ; stores the screen centering values
+COLUMNS_ADDR = $9002            ; stores the number of columns on screen
+ROWS_ADDR = $9003               ; stores the number of rows on screen
+
+
+; PROGRAM VARIABLES
+ENC_BYTE_VAR = $00              ; stores the current working byte of our compressed data
+ENC_BYTE_INDEX_VAR = $01        ; stores the index into the 'encoding' array
+
+WORKING_SCREEN = $02            ; stores the memory location of the screen area we're working on
+WORKING_SCREEN_HI = $03         ; same as above, hi byte
+
+    processor 6502
+    org $1001
+    
+    dc.w stubend                ; define a constant to be address @ stubend
+    dc.w 12345 
+    dc.b $9e, "4188", 0         ; jump to the end of the 'encoding' array (0x103d)
+stubend
+    dc.w 0
+
 encoding
     dc.b #%01010000
     dc.b #%10000011
