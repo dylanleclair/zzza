@@ -47,11 +47,11 @@ stubend
 ; * this is the compressed data from the Exomizer compression cli
 ; -----------------------------------------------------------------------------
 packed_char_data 
-    incbin "char-crunch.x"
+    incbin "screen_data.exo"
 packed_char_data_end
 
 packed_color_data 
-    incbin "color-crunch.x"
+    incbin "screen_colour.exo"
 packed_color_data_end
 
 ; -----------------------------------------------------------------------------

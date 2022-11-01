@@ -13,9 +13,6 @@
 ;
 ; -----------------------------------------------------------------------------
 
-; GLOBAL VARIABLES
-CLOCK_TICKS = $0001
-
 ; IMPORTANT MEMORY LOCATIONS
 COLOR_ADDR = $9600
 SCREEN_ADDR = $1e00
