@@ -111,7 +111,7 @@ for i in range(SCREEN_WIDTH):
 
         position = ((i*SCREEN_WIDTH) + j)
         # if we're at the spot to place text
-        if(position == 177 or position == 197):
+        if(position == 193 or position == 213):
             mode = "ENC_TEXT"
             print(length)
             val = encode(length, previous_colour)
@@ -138,7 +138,7 @@ for i in range(SCREEN_WIDTH):
         elif (mode == "ENC_TEXT"):
             # encode next string in TEXT_TO_ENCODE
                 
-            diff = 177 if (text_enc_index == 0) else 197
+            diff = 193 if (text_enc_index == 0) else 213
             # advance
             text_index = (i * SCREEN_WIDTH + j) - diff
             val = TEXT_TO_ENCODE[text_enc_index][text_index] # gives character to encode
