@@ -7,7 +7,7 @@ EXOMIZER_COMPRESS=./exomizer		# precompiled exomizer binary for compression
 %.prg:
 	$(DASM) $< -o$@ -l$*.lst
 
-all: screen_data.zx02 screen_colour.zx02 screen_data.exo screen_colour.exo runlength-decompress-1.prg runlength-decompress-2.prg zx02-dasm.prg exomizer-decompress.prg
+all: screen_data.zx02 screen_colour.zx02 screen_data.exo screen_colour.exo runlength-decompress-1.prg runlength-decompress-2.prg zx02-dasm.prg exomizer-decompress.prg function-encoding.prg
 
 # compressed: screen_data.zx02 screen_colour.zx02 screen_data.exo screen_colour.exo
 
@@ -19,6 +19,7 @@ runlength-decompress-1.prg: runlength-decompress-1.asm
 runlength-decompress-2.prg: runlength-decompress-2.asm
 zx02-dasm.prg: zx02-dasm.asm
 exomizer-decompress.prg: decrunch-wrapper.asm exomizer-decrunch.asm
+function-encoding.prg: function-encoding.asm
 
 
 # targets for compressing with zx02
