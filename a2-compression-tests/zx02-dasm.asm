@@ -5,6 +5,8 @@
 ;  decompressed to $1E00 and screen colour data to $9600.  The program then
 ;  runs an endless loop to display the title screen.
 ;
+;  author: Emily, Jeremy
+;
 ;------------------------------------------------------------------------------
 
 

@@ -21,7 +21,6 @@ zx02-dasm.prg: zx02-dasm.asm
 exomizer-decompress.prg: decrunch-wrapper.asm exomizer-decrunch.asm
 function-encoding.prg: function-encoding.asm
 
-
 # targets for compressing with zx02
 # puts the compressed data into the zx02 folder
 screen_data.zx02: memory-dumps/char.bin
