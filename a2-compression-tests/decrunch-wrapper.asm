@@ -38,7 +38,7 @@ WORKING_SCREEN_HI = $03         ; same as above, hi byte
     
     dc.w stubend                ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4216", 0         ; jump to the start of machine code
+    dc.b $9e, "4214", 0         ; jump to the start of machine code
 stubend
     dc.w 0
 
@@ -87,7 +87,7 @@ exomizer_jump
     jsr     exod_decrunch       ; jump to exomizer's decrunch routine
 
     ; decompress colour data
-    lda     #$78                ; lo byte of packed_color_data_end address
+    lda     #$76                ; lo byte of packed_color_data_end address
     sta     _byte_lo            ; self-modifying: tells exod_crunched_byte to start reading from the
                                 ; color data file instead of screen data file
     jsr     exod_decrunch       ; jump to decrunch routine again
