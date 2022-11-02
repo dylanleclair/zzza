@@ -1,6 +1,6 @@
 
-#DASM=/home/profs/aycock/599.82/bin/dasm
-DASM=dasm
+DASM=/home/profs/aycock/599.82/bin/dasm
+# DASM=dasm
 ZX02_COMPRESS=./zx02				# precompiled zx02 binary for compression
 EXOMIZER_COMPRESS=./exomizer		# precompiled exomizer binary for compression
 
