@@ -88,9 +88,12 @@ exomizer_jump
 
     ; decompress colour data
     lda     #$76                ; lo byte of packed_color_data_end address
-    sta     _byte_lo            ; self-modifying: tells exod_crunched_byte to start reading from the
+    sta     _byte_lo            ; self-modifying: tells exod_get_crunched_byte to start reading from the
                                 ; color data file instead of screen data file
     jsr     exod_decrunch       ; jump to decrunch routine again
+
+    lda     #$44                ; lo byte of packed_char_data_end address
+    sta     _byte_lo            ; self-modifying: restore the value of exod_get_crunched_byte
 
     jmp     nop_loop            ; prevent return to BASIC prompt
 
