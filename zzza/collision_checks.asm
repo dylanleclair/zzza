@@ -137,33 +137,23 @@ exit_loop
     rts                                 ; return out of the rotate_loop, bit in A register
 
 ; -----------------------------------------------------------------------------
-; SUBROUTINE: COLLISION_UP
-;    - Checks if sprite is moving off the top edge of the screen, sets death flag if yes
-;
+; SUBROUTINE: EDGE_DEATH
+;   - Checks if sprite has moved off the top or bottom of screen
+;   - returns a boolean in A based on whether the character has died: 1=dead, 0=not dead
 ; -----------------------------------------------------------------------------
-collision_up
+edge_death
     lda     Y_COOR                      ; load the Y coordinate
-    cmp     #0                          ; compare Y coordinate with 0
-    bne     up_clear                    ; if not at the top of the screen, skip setting DEAD_FLAG
-    lda     #1                          ; load 1 into A register
-    sta     DEAD_FLAG                   ; set DEAD_FLAG to 1 to register the death
-up_clear
+    bmi     death                       ; if Y == FF you're off top of screen, set DEAD_FLAG
+    cmp     #16                         ; compare Y coordinate with 15
+    beq     death                       ; if Y == 16, you're off the bottom of the screen, set the dead flag
+
+no_death
+    lda     #0                          ; set return value to 0 (dead == False)
     rts                                 ; return from the subroutine
 
-; -----------------------------------------------------------------------------
-; SUBROUTINE: CHECK_BOTTOM_DEATH
-;    - Checks if sprite is moving off the bottom edge of the screen, sets death flag if yes
-;
-; -----------------------------------------------------------------------------
-check_bottom_death
-    ; check for collision with bottom of the screen (death check)
-    lda     Y_COOR                      ; load the Y coordinate
-    cmp     #15                         ; compare Y coordinate with 15
-    bne     no_down_death               ; if Y != 15, skip setting DEAD_FLAG
-    lda     #1                          ; load 1 into A register
-    sta     DEAD_FLAG                   ; set DEAD_FLAG to 1 to register the death
-no_down_death
-    rts                                 ; end routine
+death
+    lda     #1                          ; set return value to 1 (dead == True)
+    rts
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: CHECK_BLOCK_DOWN

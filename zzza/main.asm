@@ -116,8 +116,8 @@ start
 ; Basically everything that needs to be set up before going in to the main
 ; game loop
 ; -----------------------------------------------------------------------------
-    include "screen-init.asm"
     include "char-init.asm"
+    include "screen-init.asm"
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_INITIALIZE
@@ -157,7 +157,7 @@ game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
     jsr     advance_level               ; update the state of the LEVEL_DATA array
-    ; jsr     get_input                   ; check for user input and update player X,Y coords
+    jsr     get_input                   ; check for user input and update player X,Y coords
 
     ; DEATH CHECK: once all states have been updated, check for a game over
     jsr     game_over_check
@@ -169,7 +169,7 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #20                         ; set desired delay 
+    ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
     
     jmp     game_loop                   ; loop forever
@@ -185,16 +185,12 @@ game_loop
     include "lfsr.asm"
     include "collision_checks.asm"
 
-
 game_over_check
-    lda     #01                         ; 1 is the value for being dead
-    cmp     DEAD_FLAG                   ; check if dead==dead
-    beq     end                         ; if you are dead, break
-    rts                                 ; otherwise return to calling code
+    jsr     edge_death                  ; check if the character has gone off the edge
 
-; -----------------------------------------------------------------------------
-end
-    brk                                 ; escape hatch
+    cmp     #1                          ; check return value, 1==dead
+    beq     dead_loop                   ; if you are dead, break
+    rts                                 ; otherwise return to calling code
 
 dead_loop
     lda     #7                          ; load 7 for screen colour yellow
@@ -203,3 +199,7 @@ dead_loop
     sta     $1e07                       ; set the yellow location to a block (so we can see it)
 infinitum
     jmp     infinitum                   ; loop infinitely
+
+; -----------------------------------------------------------------------------
+end
+    brk                                 ; escape hatch
