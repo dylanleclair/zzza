@@ -41,8 +41,6 @@ SPRITE_POSITION = $4d               ; 1 byte: sprite position relative to screen
 
 LOOP_CTR = $4e                      ; 1 byte: just another loop counter
 
-DEAD_FLAG = $4f                     ; 1 byte: 0 indicates character is alive, 1 indicates char is dead
- 
 ; -----------------------------------------------------------------------------
 ; TODO: please don't leave these as custom_char_n, what a terrible
 ; naming convention
@@ -128,18 +126,17 @@ game
     sta     LFSR_ADDR
 
     lda     #00                         ; initialize lots of stuff to 0
+    sta     ANIMATION_FRAME             ; set the animation frame to 0                
+    sta     WORKING_SCREEN              ; lo byte of screen memory should start at 0x00
 
-    sta     ANIMATION_FRAME             ; set the animation frame to 0
+    lda     #$1e                        ; hi byte of screen memory will always be 0x1e
+    sta     WORKING_SCREEN_HI
 
     lda     #$7
     sta     X_COOR                      ; set the x coordinate to 7
     sta     NEW_X_COOR                  ; set the x coordinate to 7
     sta     Y_COOR                      ; set the y coordinate to 7
     sta     NEW_Y_COOR                  ; set the y coordinate to 7
-                     
-    sta     WORKING_SCREEN              ; lo byte of screen memory should start at 0x00
-    lda     #$1e                        ; hi byte of screen memory will always be 0x1e
-    sta     WORKING_SCREEN_HI
 
 set_repeat                              ; sets the repeat value so holding down a key will keep moving the sprite
     lda     #128                        ; 128 = repeat all keys

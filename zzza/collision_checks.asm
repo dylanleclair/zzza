@@ -116,7 +116,6 @@ check_block_right
 blocked_3
     rts                                 ; return back to the get_input loop
 
-
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: ROTATE_LOOP
 ;    - ASSUMES: A = level byte, X = bit from the right holding the block we're checking for
@@ -142,7 +141,7 @@ exit_loop
 ;   - returns a boolean in A based on whether the character has died: 1=dead, 0=not dead
 ; -----------------------------------------------------------------------------
 edge_death
-    lda     Y_COOR                      ; load the Y coordinate
+    lda     NEW_Y_COOR                  ; load the Y coordinate
     bmi     death                       ; if Y == FF you're off top of screen, set DEAD_FLAG
     cmp     #16                         ; compare Y coordinate with 15
     beq     death                       ; if Y == 16, you're off the bottom of the screen, set the dead flag
