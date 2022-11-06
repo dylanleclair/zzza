@@ -35,6 +35,9 @@ copy_char
 
     lda     CUSTOM_CHAR_7,x             ; load a byte from the standard charset
     sta     CUSTOM_CHAR_ADDR_7,x        ; store that byte in our custom location
+    
+    lda     CUSTOM_CHAR_8,x             ; load a byte from the standard charset
+    sta     CUSTOM_CHAR_ADDR_8,x        ; store that byte in our custom location
 
     inx
 

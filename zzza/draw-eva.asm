@@ -8,10 +8,6 @@
 ;   In other words, it's incredibly broken! It's just to be used to test char 
 ;   positioning
 ; -----------------------------------------------------------------------------
-X_COOR = $49                        ; 1 byte: X coordinate of the player character
-Y_COOR = $4a                        ; 1 byte: Y coordinate of the player character
-NEW_X_COORD = $4b                   ; 1 byte: player character's new X position
-NEW_Y_COORD = $4c                   ; 1 byte: player character's onew Y position
 
 draw_eva
     ; check if there is a diff between the old and new coords

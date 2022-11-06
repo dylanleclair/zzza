@@ -62,8 +62,11 @@ advance_new                             ; this section is responsible for fillin
     beq     advance_final               ; if it is already 0, don't decrement
     sbc     #1                          ; otherwise, dec by 1
 
-advance_final                           ; fill in the final piece of level data
+advance_final
     sta     LEVEL_DATA,y                ; store it in LEVEL_DATA[32]
+
+advance_char_pos
+    dec     NEW_Y_COOR                  ; the level is moving up, so the player sprite also needs to move up
 
 advance_exit
     rts
