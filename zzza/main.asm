@@ -132,11 +132,12 @@ game
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
 
-    lda     #$7
+    lda     #$6
     sta     X_COOR                      ; set the x coordinate to 7
     sta     NEW_X_COOR                  ; set the x coordinate to 7
-    sta     Y_COOR                      ; set the y coordinate to 7
-    sta     NEW_Y_COOR                  ; set the y coordinate to 7
+    lda     #$0
+    sta     Y_COOR                      ; set the y coordinate to 0
+    sta     NEW_Y_COOR                  ; set the y coordinate to 0
 
 set_repeat                              ; sets the repeat value so holding down a key will keep moving the sprite
     lda     #128                        ; 128 = repeat all keys
@@ -153,8 +154,9 @@ set_repeat                              ; sets the repeat value so holding down 
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
-    jsr     advance_level               ; update the state of the LEVEL_DATA array
     jsr     get_input                   ; check for user input and update player X,Y coords
+    jsr     check_block_down            ; try to move the sprite down
+    jsr     advance_level               ; update the state of the LEVEL_DATA array
 
     ; DEATH CHECK: once all states have been updated, check for a game over
     jsr     game_over_check
@@ -166,7 +168,7 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #5                          ; set desired delay 
+    ldy     #2                          ; set desired delay 
     jsr     delay                       ; jump to delay
     
     jmp     game_loop                   ; loop forever
