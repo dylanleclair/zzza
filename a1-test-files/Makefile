@@ -1,10 +1,11 @@
 
-DASM=/home/profs/aycock/599.82/bin/dasm
+#DASM=/home/profs/aycock/599.82/bin/dasm
+DASM=dasm
 
 %.prg:
 	$(DASM) $< -o$@ -l$*.lst
 
-all: copy_char.prg custom_animate.prg customcharset.prg fillscreenwithcircles.prg full_colour_fill.prg full_screen_patterns.prg key_input.prg movement_test.prg multicolour_sprite.prg print_char.prg screen_dim.prg scrollexample.prg sound.prg title_screen.prg  print_heart.prg
+all: copy_char.prg custom_animate.prg customcharset.prg fillscreenwithcircles.prg full_colour_fill.prg full_screen_patterns.prg key_input.prg movement_test.prg multicolour_sprite.prg print_char.prg screen_dim.prg scrollexample.prg sound.prg title_screen.prg print_heart.prg collision_test.prg
 
 clean:
 	rm *.prg *.lst
@@ -24,4 +25,4 @@ scrollexample.prg: scrollexample.asm
 sound.prg: sound.asm 
 title_screen.prg: title_screen.asm
 print_heart.prg : print_heart.asm
-
+collision_test.prg: collision_test.asm
