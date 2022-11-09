@@ -20,7 +20,7 @@ GETIN = $FFE4                   ; KERNAL routine to get keyboard input
 ; -----------------------------------------------------------------------------
 ; ZERO-PAGE MEMORY LOCATIONS
 ; -----------------------------------------------------------------------------
-LEVEL_DATA = $00                    ; 34 bytes: used to hold the 32 onscreen STRIPS, plus 2 extras
+LEVEL_DATA = $00                    ; 34 bytes: a bitwise representation of the onscreen level
 LEVEL_DELTA = $22                   ; 34 bytes: used to keep track of which blocks need to animate
 
 LFSR_ADDR = $44                     ; 1 byte: location of the linear-feedback shift register PRNG
@@ -186,9 +186,7 @@ game_loop
 
 game_over_check
     jsr     edge_death                  ; check if the character has gone off the edge
-
-    cmp     #1                          ; check return value, 1==dead
-    beq     dead_loop                   ; if you are dead, break
+    bne     dead_loop                   ; if the return value is not 0, you're dead
     rts                                 ; otherwise return to calling code
 
 dead_loop
