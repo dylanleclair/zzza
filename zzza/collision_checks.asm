@@ -63,6 +63,8 @@ check_block_left
     tax                                 ; transfer value to X, this is how many bits we have to shift to find the piece we're on
     dex                                 ; decrement x to get the piece to the left of us
     lda     LEVEL_DATA,y                ; get the byte holidng level data we're in
+    tay                                 ; transfer the byte index for Strips into y
+    lda     STRIPS,y                  ; get the pattern of the piece of level data being displayed
     ldy     #0                          ; set y to 0, setting up our loop counter for the rotation
     sty     LOOP_CTR                    ; set LOOP_CTR to 0
 
@@ -108,6 +110,8 @@ check_block_right
     tax                                 ; transfer value to X, this is how many bits we have to shift to find the piece we're on
     inx                                 ; increment x to get the place to the right of us
     lda     LEVEL_DATA,y                ; get the byte holidng level data we're in
+    tay                                 ; transfer the byte index for Strips into y
+    lda     STRIPS,y                  ; get the pattern of the piece of level data being displayed
     ldy     #0                          ; set y to 0, setting up our loop counter for the rotation
     sty     LOOP_CTR                    ; set LOOP_CTR to 0
     jsr     rotate_loop                 ; get the bit we're looking for!
@@ -177,6 +181,8 @@ skip_y_inc0
     and     #7                          ; get the bottom three bits of the X coordinate
     tax                                 ; transfer value to X, this is how many bits we have to shift to find the piece under us
     lda     LEVEL_DATA,y                ; get the byte holidng level data under us
+    tay                                 ; transfer the byte index for Strips into y
+    lda     STRIPS,y                  ; get the pattern of the piece of level data being displayed
     ldy     #0                          ; set y to 0, setting up our loop counter for the rotation
     sty     LOOP_CTR                    ; set LOOP_CTR to 0
     jsr     rotate_loop                 ; get the bit we're looking for, returns value in A register
