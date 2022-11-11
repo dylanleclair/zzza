@@ -33,11 +33,11 @@ delta_bit_lo                            ; if the bit was lo, this char can just 
 
 delta_bit_hi                            ; if the bit was hi, this char needs to animate
     lda     (WORKING_SCREEN),y          ; go to SCREEN+y and get the current character stored there
-    cmp     #7                          ; we only have 8 animation frames, so we want to overflow after 7
+    cmp     #9                          ; we only have 8 animation frames, so we want to overflow after 7
     bne     delta_advance_frame         ; if we aren't about to overflow, just increment the frame
 
 delta_overflow_frame
-    lda     #0                          ; if we were at frame 7, overflow back to frame 0
+    lda     #2      ; if we were at frame 7, overflow back to frame 0 (character 2)
     jmp     delta_draw                 ; jump over the frame advance
 
 delta_advance_frame

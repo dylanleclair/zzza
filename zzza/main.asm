@@ -57,15 +57,21 @@ CUSTOM_CHAR_7 = $83c0
 CUSTOM_CHAR_8 = $8298
 
 ; custom char memory offsets (hardcoded)
-CUSTOM_CHAR_ADDR_0 = $1c00
-CUSTOM_CHAR_ADDR_1 = $1c08
-CUSTOM_CHAR_ADDR_2 = $1c10
-CUSTOM_CHAR_ADDR_3 = $1c18
-CUSTOM_CHAR_ADDR_4 = $1c20
-CUSTOM_CHAR_ADDR_5 = $1c28
-CUSTOM_CHAR_ADDR_6 = $1c30
-CUSTOM_CHAR_ADDR_7 = $1c38
-CUSTOM_CHAR_ADDR_8 = $1c40
+CUSTOM_CHAR_ADDR_0 = $1010 ; character #2
+CUSTOM_CHAR_ADDR_1 = $1018 ; character #3 
+CUSTOM_CHAR_ADDR_2 = $1020 ; ...
+CUSTOM_CHAR_ADDR_3 = $1028
+CUSTOM_CHAR_ADDR_4 = $1030
+CUSTOM_CHAR_ADDR_5 = $1038
+CUSTOM_CHAR_ADDR_6 = $1040
+CUSTOM_CHAR_ADDR_7 = $1048
+CUSTOM_CHAR_ADDR_8 = $1050
+
+
+CHARACTER_BLOCKS_START = #$2
+CHARACTER_BLOCKS_END = #9
+CHARACTER_EMPTY_SPACE = #$2
+CHARACTER_FULL_SPACE = #6
 
 ; -----------------------------------------------------------------------------
 ; BASIC STUB
@@ -76,10 +82,22 @@ CUSTOM_CHAR_ADDR_8 = $1c40
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4141", 0
+    dc.b $9e, "4336", 0
 stubend
     dc.w 0
 
+; -----------------------------------------------------------------------------
+; Character set initialization voodoo.
+; -----------------------------------------------------------------------------
+
+    org $100d       ; where stub ends
+    dc.b #0,#0,#0   ; round off to 8 byte alignment for proper characters
+
+    ; REMINDER: start at character #2 instead of 0
+
+    org $1050 ; 0x1010 (start of charset) + 64
+    ; after 8 chars of space reserved (for copied block chars), slot in the rest of the characters
+    include "custom_charset.asm"
 ; -----------------------------------------------------------------------------
 ; Lookup table for the y-coordinates on the screen. Multiples of 16
 ; -----------------------------------------------------------------------------

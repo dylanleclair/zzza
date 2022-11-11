@@ -5,6 +5,9 @@
 ; - this subroutine can be optimized quite a bit, but it's been left big for now
 ;   so that it's more readable
 ; -----------------------------------------------------------------------------
+
+
+; LOOP 1: initialize the level data
 init_level
     lda     #0                          ; the level starts out empty so fill with pattern 0
     tay                                 ; initialize loop counter
@@ -17,8 +20,11 @@ init_data_test
     cpy     #34                         ; 34 elements in LEVEL_DATA
     bne     init_data_loop              ; while y<34, branch to top of loop
 
+; LOOP 2: initialize the screen
+
     ldy     #0                          ; zero out loop counter again
 init_screen_loop
+    lda     #2
     sta     (WORKING_SCREEN),y          ; store a 0 character (empty space) on screen
 
     iny                                 ; increment y

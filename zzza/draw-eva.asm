@@ -7,7 +7,18 @@
 ;   the new x and new y position, and erases the char from the old position
 ;   In other words, it's incredibly broken! It's just to be used to test char 
 ;   positioning
+
+
+; i need to fragment this so that it's frame by frame.
+; if the direction pointer is not one of the end proper values, must continue animating & ignore input
 ; -----------------------------------------------------------------------------
+
+EVA_FRAME_COUNT = #$0055
+MOVE_DIR_VAR = #$0056
+
+
+
+; note that the level data is already on the screen! 
 
 draw_eva
     ; check if there is a diff between the old and new coords
@@ -30,7 +41,7 @@ clear_sprite
     tax                             ; put this value into x so that we can use it as an offset
 
     ; draw a blank space where the character was
-    lda     #0                      ; char for a blank space
+    lda     #2                      ; char for a blank space
     sta     SCREEN_ADDR,x           ; store the space at the correct offset
 
 draw_sprite
@@ -54,3 +65,19 @@ update_sprite_diff
 draw_eva_exit
     rts
 
+
+get_position
+    ldx     Y_COOR                      ; load the Y coordinate
+    lda     y_lookup,x                  ; load the Y offset
+    clc                                 ; beacuse.you.always.have.to!
+    adc     X_COOR                      ; add the X coordinate to the position
+    tax                                 ; transfer the position to the X register
+    rts                                 ; return to caller function
+
+get_next_position
+    ldx     NEW_Y_COOR                  ; load the Y coordinate
+    lda     y_lookup,x                  ; load the Y offset
+    clc                                 ; beacuse.you.always.have.to!
+    adc     NEW_X_COOR                      ; add the X coordinate to the position
+    tax                                 ; transfer the position to the X register
+    rts                                 ; return to caller function
