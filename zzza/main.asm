@@ -20,7 +20,7 @@ GETIN = $FFE4                   ; KERNAL routine to get keyboard input
 ; -----------------------------------------------------------------------------
 ; ZERO-PAGE MEMORY LOCATIONS
 ; -----------------------------------------------------------------------------
-LEVEL_DATA = $00                    ; 34 bytes: used to hold the 32 onscreen STRIPS, plus 2 extras
+LEVEL_DATA = $00                    ; 34 bytes: a bitwise representation of the onscreen level
 LEVEL_DELTA = $22                   ; 34 bytes: used to keep track of which blocks need to animate
 
 LFSR_ADDR = $44                     ; 1 byte: location of the linear-feedback shift register PRNG
@@ -150,11 +150,12 @@ game
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
 
-    lda     #$7
+    lda     #$6
     sta     X_COOR                      ; set the x coordinate to 7
     sta     NEW_X_COOR                  ; set the x coordinate to 7
-    sta     Y_COOR                      ; set the y coordinate to 7
-    sta     NEW_Y_COOR                  ; set the y coordinate to 7
+    lda     #$0
+    sta     Y_COOR                      ; set the y coordinate to 0
+    sta     NEW_Y_COOR                  ; set the y coordinate to 0
 
 set_repeat                              ; sets the repeat value so holding down a key will keep moving the sprite
     lda     #128                        ; 128 = repeat all keys
@@ -171,9 +172,9 @@ set_repeat                              ; sets the repeat value so holding down 
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
+    jsr     get_input                   ; check for user input and update player X,Y coords
+    jsr     check_block_down            ; try to move the sprite down
     jsr     advance_level               ; update the state of the LEVEL_DATA array
-    ; jsr     get_input                   ; check for user input and update player X,Y coords
-
 
     ; DEATH CHECK: once all states have been updated, check for a game over
     ; jsr     game_over_check
@@ -187,7 +188,7 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #5                          ; set desired delay 
+    ldy     #2                          ; set desired delay 
     jsr     delay                       ; jump to delay
     
     jmp     game_loop                   ; loop forever
@@ -205,9 +206,7 @@ game_loop
 
 game_over_check
     jsr     edge_death                  ; check if the character has gone off the edge
-
-    cmp     #1                          ; check return value, 1==dead
-    beq     dead_loop                   ; if you are dead, break
+    bne     dead_loop                   ; if the return value is not 0, you're dead
     rts                                 ; otherwise return to calling code
 
 dead_loop
