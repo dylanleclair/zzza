@@ -172,14 +172,17 @@ game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
     jsr     advance_level               ; update the state of the LEVEL_DATA array
-    jsr     get_input                   ; check for user input and update player X,Y coords
+    ; jsr     get_input                   ; check for user input and update player X,Y coords
+
 
     ; DEATH CHECK: once all states have been updated, check for a game over
-    jsr     game_over_check
+    ; jsr     game_over_check
 
     ; ANIMATION: draw the current state of all the game elements to the screen
-    jsr     draw_level                  ; draw the level data onto the screen
-    jsr     draw_eva                    ; draw the player character
+    ; jsr     draw_level                  ; draw the level data onto the screen
+    ; jsr     draw_eva                    ; draw the player character
+    jsr     fill_level
+
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
