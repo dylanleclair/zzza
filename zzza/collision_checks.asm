@@ -13,18 +13,24 @@
 get_input
     ldx     #00                         ; set x to 0 for GETTIN kernal call
     jsr     GETIN                       ; get 1 bytes from keyboard buffer
+
 input_left
     cmp     #$41                        ; A key pressed?
     bne     input_right                 ; if A wasn't pressed, keep checking input
     jsr     collision_left              ; A was pressed, go to check for a collission left
+
 input_right
     cmp     #$44                        ; D key pressed?
-    bne     no_key_pressed              ; if D wasn't pressed, keep checking
+    bne     input_stomp                 ; if D wasn't pressed, keep checking
     jsr     collision_right             ; D was pressed, check for collision right
 
-no_key_pressed
-    rts                                 ; no key pressed, return to calling code
+input_stomp
+    cmp     #$53                        ; S key pressed?
+    bne     no_key_pressed              ; if S wasn't pressed, exit
+    jsr     block_stomp                 ; S was pressed, try to stomp block
 
+no_key_pressed
+    rts 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: COLLISION_LEFT
 ;   1) checks if sprite is trying to move off the left side of the screen
@@ -142,7 +148,7 @@ exit_loop
 ; -----------------------------------------------------------------------------
 edge_death
     lda     NEW_Y_COOR                  ; load the Y coordinate
-    bmi     death                       ; if Y == FF you're off top of screen, set DEAD_FLAG
+    bmi     death                       ; if Y == FF you're off top of screen
     cmp     #16                         ; compare Y coordinate with 15
     beq     death                       ; if Y == 16, you're off the bottom of the screen, set the dead flag
 
@@ -157,9 +163,8 @@ death
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: CHECK_BLOCK_DOWN
 ;   - Checks if there's a block under the sprite
-;   - If yes, returns
-;   - If no, increment the y-coordinate of the sprite by 1 (move down)
-;
+;   - If yes, returns 1
+;   - If no, returns 0
 ; -----------------------------------------------------------------------------
 check_block_down
     lda     Y_COOR                      ; load the Y coordinate into A register
@@ -172,6 +177,7 @@ check_block_down
     cmp     #8                          ; check to see if the 3rd bit is set
     bne     skip_y_inc0                 ; if not equal, don't increment y
     iny                                 ; increment y by 1 (you're in the right part of the screen)
+
 skip_y_inc0
     lda     X_COOR                      ; reload the X coordinate into A register
     and     #7                          ; get the bottom three bits of the X coordinate
@@ -180,7 +186,59 @@ skip_y_inc0
     ldy     #0                          ; set y to 0, setting up our loop counter for the rotation
     sty     LOOP_CTR                    ; set LOOP_CTR to 0
     jsr     rotate_loop                 ; get the bit we're looking for, returns value in A register
-    bmi     blocked_1                   ; hi bit set (reads as negative), go back to get input and don't move        
-    inc     NEW_Y_COOR                  ; increment the y coordinate by 1 (move down) 
-blocked_1
-    rts                                 ; return back to the get_input loop
+    bmi     block_under                 ; hi bit set (reads as negative), indicates there's a block under us       
+
+    lda     #0                          ; return value of 0 indicates there's nothing underneath
+    rts
+
+block_under
+    lda     #1                          ; return value of 1 indicates there's something underneath
+    rts
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: CHECK_FALL
+;   - Checks if the player is on top of a block
+;   - If they aren't on top of anything, increments their Y coordinate to make them fall
+; -----------------------------------------------------------------------------
+check_fall
+    jsr     check_block_down            ; jump to down collision check
+    bne     move_down                   ; if return value == 0, player is falling
+    inc     NEW_Y_COOR                  ; player should now transition to this new Y position
+move_down
+    rts
+
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: BLOCK_STOMP
+;   - Attempts to stomp out a block from under the player
+; -----------------------------------------------------------------------------
+block_stomp
+    jsr     check_block_down            ; check if there is a block underneath us
+    bne     stomp                       ; check if return value != 0
+    rts                                 ; if there's no block below us, return
+
+; TODO: this currently doesn't take into account the restriction on stomping 2 blocks deep
+stomp
+    ; store the block's x and y coordinates for later use
+    lda     X_COOR                      ; get player's x coord
+    sta     BLOCK_X_COOR                ; store in block's coords (player and block share x position)
+    tax                                 ; also keep a copy in x
+
+    lda     Y_COOR                      ; get player's y coord
+    clc 
+    adc     #1                          ; we want the byte below the player
+    sta     BLOCK_Y_COOR                ; store in block's coords
+
+    asl                                 ; multiply Y by 2 to get the index into LEVEL_DATA
+    tay                                 ; put this offset into y
+
+    cpx     #$08                        ; check if block's x coord is less than 8
+    bmi     clear_block                 ; if block x < 8, you're on left half of screen, don't inc y
+    iny                                 ; if you're on right half, inc y
+
+clear_block                             ; remove the block's old position from LEVEL_DATA
+    lda     collision_mask,x            ; get collision_mask[x] (this is the particular bit correlating to X position)
+    eor     LEVEL_DATA,y                ; clear the block out of the level by xoring the bitmask with the onscreen data
+    sta     LEVEL_DATA,y                ; store the new pattern back in LEVEL_DATA at correct offset
+
+    rts

@@ -34,12 +34,17 @@ ANIMATION_FRAME = $48               ; 1 byte: used to keep track of the current 
 ; MOVEMENT VARIABLES
 X_COOR = $49                        ; 1 byte: X coordinate of the player character
 Y_COOR = $4a                        ; 1 byte: Y coordinate of the player character
-NEW_X_COOR = $4b                   ; 1 byte: player character's new X position
-NEW_Y_COOR = $4c                   ; 1 byte: player character's new Y position
+NEW_X_COOR = $4b                    ; 1 byte: player character's new X position
+NEW_Y_COOR = $4c                    ; 1 byte: player character's new Y position
 
 SPRITE_POSITION = $4d               ; 1 byte: sprite position relative to screen start in memory
 
 LOOP_CTR = $4e                      ; 1 byte: just another loop counter
+
+BLOCK_X_COOR = $4f                  ; 1 byte: X coord of stomped block's original location
+BLOCK_Y_COOR = $50                  ; 1 byte: Y coord of stomped block's original location
+NEW_BLOCK_X = $51                   ; 1 byte: X coord of stomped block's new location
+NEW_BLOCK_Y = $52                   ; 1 byte: Y coord of stomped block's new location
 
 ; -----------------------------------------------------------------------------
 ; TODO: please don't leave these as custom_char_n, what a terrible
@@ -76,14 +81,36 @@ CUSTOM_CHAR_ADDR_8 = $1c40
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4141", 0
+    dc.b $9e, "4157", 0
 stubend
     dc.w 0
 
 ; -----------------------------------------------------------------------------
-; Lookup table for the y-coordinates on the screen. Multiples of 16
+; Lookup table to translate y coords into onscreen offsets. Multiples of 16
 ; -----------------------------------------------------------------------------
 y_lookup: dc.b #0, #16, #32, #48, #64, #80, #96, #112, #128, #144, #160, #176, #192, #208, #224, #240
+
+; -----------------------------------------------------------------------------
+; Lookup table for collision masks, indicates which bit a sprite is occupying
+; TODO: we can move this into the zero page very easily bc it's multiples of 2
+; -----------------------------------------------------------------------------
+collision_mask:
+    dc.b #%10000000
+    dc.b #%01000000
+    dc.b #%00100000
+    dc.b #%00010000
+    dc.b #%00001000
+    dc.b #%00000100
+    dc.b #%00000010
+    dc.b #%00000001
+    dc.b #%10000000
+    dc.b #%01000000
+    dc.b #%00100000
+    dc.b #%00010000
+    dc.b #%00001000
+    dc.b #%00000100
+    dc.b #%00000010
+    dc.b #%00000001
 
 ; -----------------------------------------------------------------------------
 ; the patterns that can be used as level data. Each 8-bit strip will be translated into 8 spaces of on-screen
@@ -132,12 +159,17 @@ game
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
 
-    lda     #$6
+    lda     #$3
     sta     X_COOR                      ; set the x coordinate to 7
     sta     NEW_X_COOR                  ; set the x coordinate to 7
+    
     lda     #$0
     sta     Y_COOR                      ; set the y coordinate to 0
     sta     NEW_Y_COOR                  ; set the y coordinate to 0
+
+    lda     #$ff                        ; impossible value for x and y
+    sta     BLOCK_X_COOR                ; store in block x
+    sta     BLOCK_Y_COOR                ; store in block y
 
 set_repeat                              ; sets the repeat value so holding down a key will keep moving the sprite
     lda     #128                        ; 128 = repeat all keys
@@ -155,7 +187,7 @@ game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
     jsr     get_input                   ; check for user input and update player X,Y coords
-    jsr     check_block_down            ; try to move the sprite down
+    jsr     check_fall                  ; try to move the sprite down
     jsr     advance_level               ; update the state of the LEVEL_DATA array
 
     ; DEATH CHECK: once all states have been updated, check for a game over
@@ -164,11 +196,12 @@ game_loop
     ; ANIMATION: draw the current state of all the game elements to the screen
     jsr     draw_level                  ; draw the level data onto the screen
     jsr     draw_eva                    ; draw the player character
+    jsr     draw_block                  ; draw any falling blocks
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #2                          ; set desired delay 
+    ldy     #10                          ; set desired delay 
     jsr     delay                       ; jump to delay
     
     jmp     game_loop                   ; loop forever
@@ -183,6 +216,7 @@ game_loop
     include "delay.asm"
     include "lfsr.asm"
     include "collision_checks.asm"
+    include "draw-block.asm"
 
 game_over_check
     jsr     edge_death                  ; check if the character has gone off the edge
