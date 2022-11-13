@@ -172,22 +172,18 @@ check_block_down
     clc                                 ; beacuse.you.always.have.to!
     adc     #2                          ; add 2 to the level byte (we want the level piece under us)
     tay                                 ; store the level index variable into the y register
-    lda     X_COOR                      ; load the X coordinate into A register
-    and     #8                          ; Isolate the 3rd bit to check if position is in 2nd half of level data
-    cmp     #8                          ; check to see if the 3rd bit is set
-    bne     skip_y_inc0                 ; if not equal, don't increment y
-    iny                                 ; increment y by 1 (you're in the right part of the screen)
+    
+    ldx     X_COOR                      ; put player's x coord in x
 
-skip_y_inc0
-    lda     X_COOR                      ; reload the X coordinate into A register
-    and     #7                          ; get the bottom three bits of the X coordinate
-    tax                                 ; transfer value to X, this is how many bits we have to shift to find the piece under us
-    lda     LEVEL_DATA,y                ; get the byte holidng level data under us
-    ldy     #0                          ; set y to 0, setting up our loop counter for the rotation
-    sty     LOOP_CTR                    ; set LOOP_CTR to 0
-    jsr     rotate_loop                 ; get the bit we're looking for, returns value in A register
-    bmi     block_under                 ; hi bit set (reads as negative), indicates there's a block under us       
+    cpx     #$08                        ; x < 8 ?
+    bmi     skip_y_inc                  ; if so you're on lhs. don't inc y
+    iny                                 ; else you're on rhs. inc y
 
+skip_y_inc
+    lda     collision_mask,x            ; get the bit pattern for the player's position
+    and     LEVEL_DATA,y                ; do an AND on the collision mask and lvl data to see if there's something under you
+    bne     block_under                 ; if result != 0, your bit had a block in it
+    
     lda     #0                          ; return value of 0 indicates there's nothing underneath
     rts
 
@@ -220,9 +216,8 @@ block_stomp
 ; TODO: this currently doesn't take into account the restriction on stomping 2 blocks deep
 stomp
     ; store the block's x and y coordinates for later use
-    lda     X_COOR                      ; get player's x coord
-    sta     BLOCK_X_COOR                ; store in block's coords (player and block share x position)
-    tax                                 ; also keep a copy in x
+    ldx     X_COOR                      ; get player's x coord
+    stx     BLOCK_X_COOR                ; store in block's coords (player and block share x position)
 
     lda     Y_COOR                      ; get player's y coord
     clc 
