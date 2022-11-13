@@ -41,41 +41,29 @@ collision_left
     ; check if the sprite is moving off the left edge of the screen
     lda     X_COOR                      ; load the X coordinate
     cmp     #0                          ; compare X coordinate with 0
-    beq     blocked_2                   ; if X == 0, can't move left, exit the subroutine
+    beq     blocked_left                ; if X == 0, can't move left, exit the subroutine
 
-    ; find the byte of level data the sprite is located in
-    lda     Y_COOR                      ; load the Y coordinate into A register
-    asl                                 ; multiply Y coordinate by 2 to get the index into level data
-    tay                                 ; store the level index variable into the y register
-    lda     X_COOR                      ; load the X coordinate into A register
-    and     #8                          ; Isolate the 3rd bit to check if position is in 2nd half of level data
-    cmp     #8                          ; check to see if the 3rd bit is set
-    bne     check_block_left            ; if not equal, don't increment y
-    iny                                 ; increment y by 1 (you're in the right part of the screen)
+    ; find proper index into LEVEL_DATA array (if you're on the left or right of the screen)
+    ldx     X_COOR                      ; get player's x coord
 
-    ; TODO: REFACTOR SO THAT THSESE SIDE OF SCREEN CHECKS ARE ONE FUNCTION FOR BOTH MOVE LEFT AND RIGHT
-    ; check if there's a block of level data beside us
+    lda     Y_COOR                      ; get player's y coord
+    clc
+    asl                                 ; multiply by 2 to get the index into LEVEL_DATA
+    tay                                 ; put this offset into y
 
-; -----------------------------------------------------------------------------
-; SUBROUTINE: CHECK_BLOCK_LEFT
-;   - Checks if there is a block in the place the sprite wants to move
-;   - If there's a block, returns to calling code
-;   - If there is not, update the sprite position then return to calling code
-;
-; -----------------------------------------------------------------------------
+    cpx     #$08                        ; check if player's x coord is less than 8
+    bmi     check_block_left            ; if player's x < 8, you're on lhs. don't inc y
+    iny                                 ; else you're on rhs, inc y
+
 check_block_left
-    lda     X_COOR                      ; reload the X coordinate into A register
-    and     #7                          ; get the bottom three bits of the X coordinate
-    tax                                 ; transfer value to X, this is how many bits we have to shift to find the piece we're on
-    dex                                 ; decrement x to get the piece to the left of us
-    lda     LEVEL_DATA,y                ; get the byte holidng level data we're in
-    ldy     #0                          ; set y to 0, setting up our loop counter for the rotation
-    sty     LOOP_CTR                    ; set LOOP_CTR to 0
+    ; check for collision with a block
+    lda     collision_mask,x            ; get collision_mask[x]
+    asl                                 ; shift one bit left so that we check the thing to our left
+    and     LEVEL_DATA,y                ; AND the collision mask with the level data
+    bne     blocked_left                ; if result != 0, you're colliding, exit
+    dec     NEW_X_COOR                  ; else, move sprite left by decrementing its new x coordinate
 
-    jsr     rotate_loop                 ; get the bit we're looking for!
-    bmi     blocked_2                   ; hi bit set (reads as negative), go back to get input and don't move        
-    dec     NEW_X_COOR                  ; move sprite left by decrementing x coordinate
-blocked_2
+blocked_left
     rts                                 ; return back to the get_input loop
 
 ; -----------------------------------------------------------------------------
@@ -88,59 +76,30 @@ collision_right
     ; check for screen edge collision
     lda     X_COOR                      ; load the X coordinate
     cmp     #15                         ; compare X coordinate with 15
-    beq     blocked_3                   ; if X == 15, can't move right, exit the subroutine
+    beq     blocked_right               ; if X == 15, can't move right, exit the subroutine
 
     ; find proper index into LEVEL_DATA array (if you're on the left or right of the screen)
-    lda     Y_COOR                      ; load the Y coordinate into A register
-    asl                                 ; multiply Y coordinate by 2 to get the index into level data
-    tay                                 ; store the level index variable into the y register
-    lda     X_COOR                      ; load the X coordinate into A register
-    and     #8                          ; Isolate the 3rd bit to check if position is in 2nd half of level data
-    cmp     #8                          ; check to see if the 3rd bit is set
-    bne     check_block_right           ; if not equal, don't increment y
-    iny                                 ; increment y by 1 (you're in the right part of the screen)
+    ldx     X_COOR                      ; get player's x coord
 
-; -----------------------------------------------------------------------------
-; SUBROUTINE: CHECK_BLOCK_RIGHT
-;   - Checks if there is a block in the place the sprite wants to move
-;   - If there's a block, returns to calling code
-;   - If there is not, update the sprite position then return to calling code
-;
-; -----------------------------------------------------------------------------
+    lda     Y_COOR                      ; get player's y coord
+    clc
+    asl                                 ; multiply by 2 to get the index into LEVEL_DATA
+    tay                                 ; put this offset into y
+
+    cpx     #$08                        ; check if player's x coord is less than 8
+    bmi     check_block_right           ; if player's x < 8, you're on lhs. don't inc y
+    iny                                 ; else you're on rhs, inc y
+
 check_block_right
     ; check for collision with a block
-    lda     X_COOR                      ; reload the X coordinate into A register
-    and     #7                          ; get the bottom three bits of the X coordinate
-    tax                                 ; transfer value to X, this is how many bits we have to shift to find the piece we're on
-    inx                                 ; increment x to get the place to the right of us
-    lda     LEVEL_DATA,y                ; get the byte holidng level data we're in
-    ldy     #0                          ; set y to 0, setting up our loop counter for the rotation
-    sty     LOOP_CTR                    ; set LOOP_CTR to 0
-    jsr     rotate_loop                 ; get the bit we're looking for!
-    bmi     blocked_3                   ; hi bit set (reads as negative), go back to get input and don't move        
-    inc     NEW_X_COOR                  ; move sprite right by incrementing x coordinate
-blocked_3
-    rts                                 ; return back to the get_input loop
+    lda     collision_mask,x            ; get collision_mask[x]
+    lsr                                 ; shift one bit right so that we check the thing to our right
+    and     LEVEL_DATA,y                ; AND the collision mask with the level data
+    bne     blocked_right               ; if result != 0, you're colliding, exit
+    inc     NEW_X_COOR                  ; else, move sprite right by incrementing its new x coordinate
 
-; -----------------------------------------------------------------------------
-; SUBROUTINE: ROTATE_LOOP
-;    - ASSUMES: A = level byte, X = bit from the right holding the block we're checking for
-;   - find the bit that holds the piece of level data we're looking for
-;   - returns a byte that's either #128 (high bit set) or #0 high bit not set
-;       - this bit represents the block of level data we're checking for
-;
-; -----------------------------------------------------------------------------
-rotate_loop
-    cpx     LOOP_CTR                    ; compare X (loop limit) and LOOP_CTR (current iteration)
-    beq     exit_loop                   ; if equal, exit the loop
-
-    asl                                 ; shift the level data one bit to the left
-    inc     LOOP_CTR                    ; increment the loop count
-    jmp     rotate_loop
-exit_loop
-    and     #128                        ; isolate the high bit  TODO: DON'T NEED TO ISOLATE THIS, HIGH BIT IS SET EITHER WAY
-    rts                                 ; return out of the rotate_loop, bit in A register
-
+blocked_right
+    rts                                 ; return without updating player location
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: EDGE_DEATH
 ;   - Checks if sprite has moved off the top or bottom of screen
@@ -213,7 +172,6 @@ check_fall
     inc     NEW_Y_COOR                  ; player should now transition to this new Y position
 move_down
     rts
-
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: BLOCK_STOMP
