@@ -19,7 +19,7 @@ draw_eva
     cmp     NEW_Y_COOR              ; check if there is any difference
     bne     clear_sprite            ; if there is, the char has moved
 
-    jmp     draw_eva_exit           ; if nothing has changed, leave subroutine
+    rts                             ; if nothing has changed, leave subroutine
 
 clear_sprite
     ; convert the old x and y coordinates into a screen offset from 1e00

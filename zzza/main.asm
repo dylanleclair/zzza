@@ -46,6 +46,9 @@ BLOCK_Y_COOR = $50                  ; 1 byte: Y coord of stomped block's origina
 NEW_BLOCK_X = $51                   ; 1 byte: X coord of stomped block's new location
 NEW_BLOCK_Y = $52                   ; 1 byte: Y coord of stomped block's new location
 
+WORKING_COOR = $53                  ; 1 byte: used for indirect addressing of coordinates
+WORKING_COOR_HI = $54               ; 1 byte: used for indirect addressing of coordinates
+
 ; -----------------------------------------------------------------------------
 ; TODO: please don't leave these as custom_char_n, what a terrible
 ; naming convention
@@ -156,6 +159,9 @@ game
     sta     ANIMATION_FRAME             ; set the animation frame to 0                
     sta     WORKING_SCREEN              ; lo byte of screen memory should start at 0x00
 
+    sta     WORKING_COOR                ; lo byte of working coord
+    sta     WORKING_COOR_HI             ; hi byte of working coord
+
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
 
@@ -189,6 +195,7 @@ game_loop
     jsr     get_input                   ; check for user input and update player X,Y coords
     jsr     check_fall                  ; try to move the sprite down
     jsr     advance_level               ; update the state of the LEVEL_DATA array
+    jsr     advance_block               ; update location of any falling blocks
 
     ; DEATH CHECK: once all states have been updated, check for a game over
     jsr     game_over_check
@@ -217,6 +224,7 @@ game_loop
     include "lfsr.asm"
     include "collision_checks.asm"
     include "draw-block.asm"
+    include "advance-block.asm"
 
 game_over_check
     jsr     edge_death                  ; check if the character has gone off the edge

@@ -162,18 +162,26 @@ death
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: CHECK_BLOCK_DOWN
-;   - Checks if there's a block under the sprite
+;   - Checks if there's a block under something
 ;   - If yes, returns 1
 ;   - If no, returns 0
+;   - Parameters:
+;       - expects WORKING_COOR to hold the address where it can find the coordinates
+;         of the thing it's checking (sprite, falling block, etc)
+;       - assumes that X coord comes first, and that Y come next
 ; -----------------------------------------------------------------------------
 check_block_down
-    lda     Y_COOR                      ; load the Y coordinate into A register
+    ldy     #0                          ; zero out y reg
+    lda     (WORKING_COOR),y            ; get the x coord: WORKING_COOR stores a pointer to coordinates
+    tax                                 ; put it into x
+
+    iny                                 ; indirect offset + 1 should have y coord
+    lda     (WORKING_COOR),y            ; get the y coord
+
     asl                                 ; multiply Y coordinate by 2 to get the index into level data
     clc                                 ; beacuse.you.always.have.to!
     adc     #2                          ; add 2 to the level byte (we want the level piece under us)
     tay                                 ; store the level index variable into the y register
-    
-    ldx     X_COOR                      ; put player's x coord in x
 
     cpx     #$08                        ; x < 8 ?
     bmi     skip_y_inc                  ; if so you're on lhs. don't inc y
@@ -183,7 +191,7 @@ skip_y_inc
     lda     collision_mask,x            ; get the bit pattern for the player's position
     and     LEVEL_DATA,y                ; do an AND on the collision mask and lvl data to see if there's something under you
     bne     block_under                 ; if result != 0, your bit had a block in it
-    
+
     lda     #0                          ; return value of 0 indicates there's nothing underneath
     rts
 
@@ -197,6 +205,9 @@ block_under
 ;   - If they aren't on top of anything, increments their Y coordinate to make them fall
 ; -----------------------------------------------------------------------------
 check_fall
+    lda     #$49                        ; memory location 0049 is where player x and y are stored
+    sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
+
     jsr     check_block_down            ; jump to down collision check
     bne     move_down                   ; if return value == 0, player is falling
     inc     NEW_Y_COOR                  ; player should now transition to this new Y position
@@ -209,7 +220,10 @@ move_down
 ;   - Attempts to stomp out a block from under the player
 ; -----------------------------------------------------------------------------
 block_stomp
-    jsr     check_block_down            ; check if there is a block underneath us
+    lda     #$49                        ; memory location 0049 is where player x and y are stored
+    sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
+
+    jsr     check_block_down            ; check if there is a block underneath player
     bne     stomp                       ; check if return value != 0
     rts                                 ; if there's no block below us, return
 
@@ -218,11 +232,13 @@ stomp
     ; store the block's x and y coordinates for later use
     ldx     X_COOR                      ; get player's x coord
     stx     BLOCK_X_COOR                ; store in block's coords (player and block share x position)
+    stx     NEW_BLOCK_X
 
     lda     Y_COOR                      ; get player's y coord
     clc 
     adc     #1                          ; we want the byte below the player
     sta     BLOCK_Y_COOR                ; store in block's coords
+    sta     NEW_BLOCK_Y
 
     asl                                 ; multiply Y by 2 to get the index into LEVEL_DATA
     tay                                 ; put this offset into y
@@ -235,5 +251,9 @@ clear_block                             ; remove the block's old position from L
     lda     collision_mask,x            ; get collision_mask[x] (this is the particular bit correlating to X position)
     eor     LEVEL_DATA,y                ; clear the block out of the level by xoring the bitmask with the onscreen data
     sta     LEVEL_DATA,y                ; store the new pattern back in LEVEL_DATA at correct offset
+
+; ; TODO: i think there are some optimizations here to avoid accessing BLOCK_Y_COOR so many times
+;     inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall
+;     inc     NEW_BLOCK_Y
 
     rts
