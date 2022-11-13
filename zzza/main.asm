@@ -176,6 +176,8 @@ game
     lda     #$ff                        ; impossible value for x and y
     sta     BLOCK_X_COOR                ; store in block x
     sta     BLOCK_Y_COOR                ; store in block y
+    sta     NEW_BLOCK_X                 ; store in block x
+    sta     NEW_BLOCK_Y                 ; store in block y
 
 set_repeat                              ; sets the repeat value so holding down a key will keep moving the sprite
     lda     #128                        ; 128 = repeat all keys
@@ -202,8 +204,8 @@ game_loop
 
     ; ANIMATION: draw the current state of all the game elements to the screen
     jsr     draw_level                  ; draw the level data onto the screen
-    jsr     draw_eva                    ; draw the player character
     jsr     draw_block                  ; draw any falling blocks
+    jsr     draw_eva                    ; draw the player character
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter

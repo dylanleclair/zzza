@@ -253,7 +253,7 @@ clear_block                             ; remove the block's old position from L
     sta     LEVEL_DATA,y                ; store the new pattern back in LEVEL_DATA at correct offset
 
 ; ; TODO: i think there are some optimizations here to avoid accessing BLOCK_Y_COOR so many times
-;     inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall
-;     inc     NEW_BLOCK_Y
+    inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall
+    inc     NEW_BLOCK_Y
 
     rts
