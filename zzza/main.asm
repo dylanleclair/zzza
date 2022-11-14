@@ -41,6 +41,11 @@ SPRITE_POSITION = $4d               ; 1 byte: sprite position relative to screen
 
 LOOP_CTR = $4e                      ; 1 byte: just another loop counter
 
+INNER_LOOP_CTR = $4f
+
+BACKUP_HIGH_RES_SCROLL = $50        ; 9 bytes - one for each char in the high res graphics
+
+
 ; -----------------------------------------------------------------------------
 ; TODO: please don't leave these as custom_char_n, what a terrible
 ; naming convention
@@ -68,11 +73,6 @@ CUSTOM_CHAR_ADDR_7 = $1048
 CUSTOM_CHAR_ADDR_8 = $1050
 
 
-CHARACTER_BLOCKS_START = #$2
-CHARACTER_BLOCKS_END = #9
-CHARACTER_EMPTY_SPACE = #$2
-CHARACTER_FULL_SPACE = #6
-
 ; -----------------------------------------------------------------------------
 ; BASIC STUB
 ; -----------------------------------------------------------------------------
@@ -82,7 +82,7 @@ CHARACTER_FULL_SPACE = #6
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4336", 0
+    dc.b $9e, "4288", 0
 stubend
     dc.w 0
 
@@ -95,7 +95,7 @@ stubend
 
     ; REMINDER: start at character #2 instead of 0
 
-    org $1050 ; 0x1010 (start of charset) + 64
+    org $1058 ; 0x1010 (start of charset) + 64
     ; after 8 chars of space reserved (for copied block chars), slot in the rest of the characters
     include "custom_charset.asm"
 ; -----------------------------------------------------------------------------
@@ -153,7 +153,7 @@ game
     lda     #$6
     sta     X_COOR                      ; set the x coordinate to 7
     sta     NEW_X_COOR                  ; set the x coordinate to 7
-    lda     #$0
+    lda     #$1
     sta     Y_COOR                      ; set the y coordinate to 0
     sta     NEW_Y_COOR                  ; set the y coordinate to 0
 
@@ -162,17 +162,22 @@ set_repeat                              ; sets the repeat value so holding down 
     sta     KEY_REPEAT                  ; sets all keys to repeat
 
     jsr     init_level                  ; ensure that there's valid level data ready to go
-    jsr     draw_eva                    ; draw the sprite at the 0,0 position
+    jsr     fill_level
+    jsr     backup_scrolling
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_LOOP
 ; - the main game loop
 ; - TODO: should keep track of the current animation counter
 ; -----------------------------------------------------------------------------
+game_loop_reset_scroll
+
+    lda #0
+    sta ANIMATION_FRAME
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
-    jsr     get_input                   ; check for user input and update player X,Y coords
+    jsr     get_input                   ; check for user input and update player X,Y coords    
     jsr     check_block_down            ; try to move the sprite down
     jsr     advance_level               ; update the state of the LEVEL_DATA array
 
@@ -182,16 +187,28 @@ game_loop
     ; ANIMATION: draw the current state of all the game elements to the screen
     ; jsr     draw_level                  ; draw the level data onto the screen
     ; jsr     draw_eva                    ; draw the player character
-    jsr     fill_level
 
+    ; jsr     reset_high_res
+    ; jsr     restore_scrolling
+    
+    ; jsr     backup_scrolling
+
+    jsr     draw_master
+
+    ; jsr     animate_level
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #2                          ; set desired delay 
+    ldy     #15                         ; set desired delay 
     jsr     delay                       ; jump to delay
     
-    jmp     game_loop                   ; loop forever
+
+    lda     ANIMATION_FRAME
+    cmp     #4
+    bne     game_loop
+
+    jmp     game_loop_reset_scroll      ; loop forever
 
 ; -----------------------------------------------------------------------------
 ; Includes for all the individual subroutines that are called in the main loop

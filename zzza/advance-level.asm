@@ -21,6 +21,10 @@ advance_level
     and     ANIMATION_FRAME             ; calculate (acc AND frame) to check if the low bit pattern matches a multiple of 4
     bne     advance_exit                ; if the AND operation didn't zero out, frame is not a multiple of 4. leave subroutine.
 
+    jsr     restore_scrolling
+    jsr     update_sprite_position      ; move character if applicable
+    jsr     backup_scrolling
+
     ldy     #0                          ; initialize loop counter
     ldx     #2                          ; we need an offset that is always 2 ahead of y
 

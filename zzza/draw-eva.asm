@@ -56,11 +56,12 @@ draw_sprite
     lda     #8                      ; heart character
     sta     SCREEN_ADDR,x           ; store the heart at position offset
 
-update_sprite_diff
-    lda     NEW_X_COOR              ; update the old x coordinate
-    sta     X_COOR
-    lda     NEW_Y_COOR              ; update the old y coordinate
-    sta     Y_COOR
+update_sprite_position
+    inc Y_COOR
+    ; lda     NEW_X_COOR              ; update the old x coordinate
+    ; sta     X_COOR
+    ; lda     NEW_Y_COOR              ; update the old y coordinate
+    ; sta     Y_COOR
 
 draw_eva_exit
     rts
@@ -81,3 +82,5 @@ get_next_position
     adc     NEW_X_COOR                      ; add the X coordinate to the position
     tax                                 ; transfer the position to the X register
     rts                                 ; return to caller function
+
+

@@ -698,3 +698,26 @@ shift_right_loop
 
 
 shift_left
+    ldx #0
+    
+    ; for now just assume rightmost bit in section does not need to be rotated (pretty safe bet)
+shift_left_loop
+    clc
+; rotate whole hi res buffer to the left
+    lda $1090,x
+    rol
+    sta $1090,x
+
+    lda $1098,x
+    rol
+    sta $1098,x
+    
+    lda $10a0,x
+    rol
+    sta $10a0,x
+    
+    inx
+    cpx #8
+    bne shift_right_loop
+
+    rts

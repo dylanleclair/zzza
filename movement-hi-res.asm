@@ -303,10 +303,10 @@ color_test
 
 ; setup sprite on the screen
 sprite_setup
-    lda     #1                         ; position character at the bottom left of screen
+    lda     #14                         ; position character at the bottom left of screen
     sta     X_COOR                      ; set the x coordinate to 0
     
-    lda     #14
+    lda     #1
     sta     Y_COOR                      ; set the y coordinate to 12
     jsr     draw_sprite                 ; draw the sprite at the 0,0 position
 
@@ -349,8 +349,8 @@ movement
 movement_loop
 
 
-    jsr shift_right
-    jsr shift_up
+    ; jsr shift_left
+    jsr shift_down
 
     jsr delay_init
     inc FRAME_COUNT_ADDR
@@ -358,8 +358,8 @@ movement_loop
     cmp #8
     bne movement_loop
 
-    inc X_COOR
-    dec Y_COOR
+    ; dec X_COOR
+    inc Y_COOR
     
 
     jsr reset_high_res
@@ -491,33 +491,7 @@ draw_high_res
     dec Y_COOR
     inc X_COOR
 
-
-    ; mask character and draw it
-
-    lda #8
-    ldx #24 ; target high res 
-    jsr xor_character_to_high_res
-
-    lda #4
-    ldx #24 ; target high res
-    jsr xor_character_to_high_res
-
     rts 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -738,7 +712,7 @@ delay_init                  ; <----- BRANCH TO THIS, not delay
     lda     #0
     sta     DELAY_ADDR
 delay
-    lda     #1                  ; lda #n -> set tick rate (number of ticks before function call)
+    lda     #20                  ; lda #n -> set tick rate (number of ticks before function call)
     cmp     DELAY_ADDR          ; place in memory where ticks are counted
     beq     delay_return                 ; return to sender after delay
     lda     $00A2               ; load lower end of clock pulsing @ 1/1th of a second
@@ -865,6 +839,70 @@ shift_right_loop
     rts
 
 
+
+;----------------------------------------------------------------------------------
+;   Shift the entire framebuffer right one bit
+;----------------------------------------------------------------------------------
+shift_left
+    ldx #0                              ; loop count in this code is the row of bytes being shifted
+    
+    ; for now just assume rightmost bit in section does not need to be rotated (pretty safe bet)
+shift_left_loop
+    ; first row
+    clc
+; rotate ENTIRE hi res buffer to the right
+    lda hi_res_0_2,x
+    rol
+    sta hi_res_0_2,x
+
+    lda hi_res_0_1,x
+    rol
+    sta hi_res_0_1,x
+    
+    lda hi_res_0_0,x
+    rol
+    sta hi_res_0_0,x
+
+    ; second row
+
+    clc
+    lda hi_res_1_2,x
+    rol
+    sta hi_res_1_2,x
+
+    lda hi_res_1_1,x
+    rol
+    sta hi_res_1_1,x
+    
+    lda hi_res_1_0,x
+    rol
+    sta hi_res_1_0,x
+
+    ; third row
+    clc
+    lda hi_res_2_2,x
+    rol
+    sta hi_res_2_2,x
+
+    lda hi_res_2_1,x
+    rol
+    sta hi_res_2_1,x
+    
+    lda hi_res_2_0,x
+    rol
+    sta hi_res_2_0,x
+
+
+    inx
+
+    cpx #8
+    bne shift_left_loop
+
+    rts
+
+
+
+
 ;----------------------------------------------------------------------------------
 ;   Shift the entire framebuffer up one bit
 ;----------------------------------------------------------------------------------
@@ -942,6 +980,95 @@ wrap_char
     iny ; increment y
 
     rts
+
+
+
+
+
+
+;----------------------------------------------------------------------------------
+;   Shift the entire framebuffer DOWN one bit
+;----------------------------------------------------------------------------------
+
+shift_down
+    ldx #54
+    ldy #55
+    jsr shift_down_column
+
+
+    ldx #62
+    ldy #63
+    jsr shift_down_column
+
+    ldx #70
+    ldy #71
+    jsr shift_down_column
+
+    rts
+
+shift_down_column
+    ; rotate the entire column down
+
+    jsr shift_character_down
+    ; at the end of this character.
+    ; need to:
+    ;   - move first byte of next character to this one
+    ;   - switch to next character
+    jsr wrap_char_down
+    jsr shift_character_down
+    jsr wrap_char_down
+    jsr shift_character_down
+
+    rts
+
+
+; shift the 8 bytes in a character up
+shift_character_down
+    lda #0
+    sta LOOP_COUNT
+
+shift_character_down_loop
+
+    ; copy next byte of character to current
+    ; repeat this 7 times to do the whole character!
+
+    lda hi_res_0_0,x
+    sta hi_res_0_0,y
+
+    ; increment both
+    dex
+    dey
+
+    ; load byte 
+    inc LOOP_COUNT
+    lda LOOP_COUNT
+    cmp #7
+    bne shift_character_down_loop  ; loop until whole character shifted
+
+    rts
+
+wrap_char_down
+    ; add 24 to the variable in y (target location)
+    txa
+    clc
+    adc #-16
+    tax
+
+    lda hi_res_0_0,x    ; load the last byte of character above this one
+    sta hi_res_0_0,y    ; store it in first byte of new
+    
+    txa ; put x to byte character of next character
+    tay
+    ; dex
+    dex ; increment y
+
+    rts
+
+
+
+
+
+
 
 
 xor_character_to_high_res
