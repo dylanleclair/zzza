@@ -13,18 +13,24 @@
 get_input
     ldx     #00                         ; set x to 0 for GETTIN kernal call
     jsr     GETIN                       ; get 1 bytes from keyboard buffer
+
 input_left
     cmp     #$41                        ; A key pressed?
     bne     input_right                 ; if A wasn't pressed, keep checking input
     jsr     collision_left              ; A was pressed, go to check for a collission left
+
 input_right
     cmp     #$44                        ; D key pressed?
-    bne     no_key_pressed              ; if D wasn't pressed, keep checking
+    bne     input_stomp                 ; if D wasn't pressed, keep checking
     jsr     collision_right             ; D was pressed, check for collision right
 
-no_key_pressed
-    rts                                 ; no key pressed, return to calling code
+input_stomp
+    cmp     #$53                        ; S key pressed?
+    bne     no_key_pressed              ; if S wasn't pressed, exit
+    jsr     block_stomp                 ; S was pressed, try to stomp block
 
+no_key_pressed
+    rts 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: COLLISION_LEFT
 ;   1) checks if sprite is trying to move off the left side of the screen
@@ -35,41 +41,29 @@ collision_left
     ; check if the sprite is moving off the left edge of the screen
     lda     X_COOR                      ; load the X coordinate
     cmp     #0                          ; compare X coordinate with 0
-    beq     blocked_2                   ; if X == 0, can't move left, exit the subroutine
+    beq     blocked_left                ; if X == 0, can't move left, exit the subroutine
 
-    ; find the byte of level data the sprite is located in
-    lda     Y_COOR                      ; load the Y coordinate into A register
-    asl                                 ; multiply Y coordinate by 2 to get the index into level data
-    tay                                 ; store the level index variable into the y register
-    lda     X_COOR                      ; load the X coordinate into A register
-    and     #8                          ; Isolate the 3rd bit to check if position is in 2nd half of level data
-    cmp     #8                          ; check to see if the 3rd bit is set
-    bne     check_block_left            ; if not equal, don't increment y
-    iny                                 ; increment y by 1 (you're in the right part of the screen)
+    ; find proper index into LEVEL_DATA array (if you're on the left or right of the screen)
+    ldx     X_COOR                      ; get player's x coord
 
-    ; TODO: REFACTOR SO THAT THSESE SIDE OF SCREEN CHECKS ARE ONE FUNCTION FOR BOTH MOVE LEFT AND RIGHT
-    ; check if there's a block of level data beside us
+    lda     Y_COOR                      ; get player's y coord
+    clc
+    asl                                 ; multiply by 2 to get the index into LEVEL_DATA
+    tay                                 ; put this offset into y
 
-; -----------------------------------------------------------------------------
-; SUBROUTINE: CHECK_BLOCK_LEFT
-;   - Checks if there is a block in the place the sprite wants to move
-;   - If there's a block, returns to calling code
-;   - If there is not, update the sprite position then return to calling code
-;
-; -----------------------------------------------------------------------------
+    cpx     #$08                        ; check if player's x coord is less than 8
+    bmi     check_block_left            ; if player's x < 8, you're on lhs. don't inc y
+    iny                                 ; else you're on rhs, inc y
+
 check_block_left
-    lda     X_COOR                      ; reload the X coordinate into A register
-    and     #7                          ; get the bottom three bits of the X coordinate
-    tax                                 ; transfer value to X, this is how many bits we have to shift to find the piece we're on
-    dex                                 ; decrement x to get the piece to the left of us
-    lda     LEVEL_DATA,y                ; get the byte holidng level data we're in
-    ldy     #0                          ; set y to 0, setting up our loop counter for the rotation
-    sty     LOOP_CTR                    ; set LOOP_CTR to 0
+    ; check for collision with a block
+    lda     collision_mask,x            ; get collision_mask[x]
+    asl                                 ; shift one bit left so that we check the thing to our left
+    and     LEVEL_DATA,y                ; AND the collision mask with the level data
+    bne     blocked_left                ; if result != 0, you're colliding, exit
+    dec     NEW_X_COOR                  ; else, move sprite left by decrementing its new x coordinate
 
-    jsr     rotate_loop                 ; get the bit we're looking for!
-    bmi     blocked_2                   ; hi bit set (reads as negative), go back to get input and don't move        
-    dec     NEW_X_COOR                  ; move sprite left by decrementing x coordinate
-blocked_2
+blocked_left
     rts                                 ; return back to the get_input loop
 
 ; -----------------------------------------------------------------------------
@@ -82,59 +76,30 @@ collision_right
     ; check for screen edge collision
     lda     X_COOR                      ; load the X coordinate
     cmp     #15                         ; compare X coordinate with 15
-    beq     blocked_3                   ; if X == 15, can't move right, exit the subroutine
+    beq     blocked_right               ; if X == 15, can't move right, exit the subroutine
 
     ; find proper index into LEVEL_DATA array (if you're on the left or right of the screen)
-    lda     Y_COOR                      ; load the Y coordinate into A register
-    asl                                 ; multiply Y coordinate by 2 to get the index into level data
-    tay                                 ; store the level index variable into the y register
-    lda     X_COOR                      ; load the X coordinate into A register
-    and     #8                          ; Isolate the 3rd bit to check if position is in 2nd half of level data
-    cmp     #8                          ; check to see if the 3rd bit is set
-    bne     check_block_right           ; if not equal, don't increment y
-    iny                                 ; increment y by 1 (you're in the right part of the screen)
+    ldx     X_COOR                      ; get player's x coord
 
-; -----------------------------------------------------------------------------
-; SUBROUTINE: CHECK_BLOCK_RIGHT
-;   - Checks if there is a block in the place the sprite wants to move
-;   - If there's a block, returns to calling code
-;   - If there is not, update the sprite position then return to calling code
-;
-; -----------------------------------------------------------------------------
+    lda     Y_COOR                      ; get player's y coord
+    clc
+    asl                                 ; multiply by 2 to get the index into LEVEL_DATA
+    tay                                 ; put this offset into y
+
+    cpx     #$08                        ; check if player's x coord is less than 8
+    bmi     check_block_right           ; if player's x < 8, you're on lhs. don't inc y
+    iny                                 ; else you're on rhs, inc y
+
 check_block_right
     ; check for collision with a block
-    lda     X_COOR                      ; reload the X coordinate into A register
-    and     #7                          ; get the bottom three bits of the X coordinate
-    tax                                 ; transfer value to X, this is how many bits we have to shift to find the piece we're on
-    inx                                 ; increment x to get the place to the right of us
-    lda     LEVEL_DATA,y                ; get the byte holidng level data we're in
-    ldy     #0                          ; set y to 0, setting up our loop counter for the rotation
-    sty     LOOP_CTR                    ; set LOOP_CTR to 0
-    jsr     rotate_loop                 ; get the bit we're looking for!
-    bmi     blocked_3                   ; hi bit set (reads as negative), go back to get input and don't move        
-    inc     NEW_X_COOR                  ; move sprite right by incrementing x coordinate
-blocked_3
-    rts                                 ; return back to the get_input loop
+    lda     collision_mask,x            ; get collision_mask[x]
+    lsr                                 ; shift one bit right so that we check the thing to our right
+    and     LEVEL_DATA,y                ; AND the collision mask with the level data
+    bne     blocked_right               ; if result != 0, you're colliding, exit
+    inc     NEW_X_COOR                  ; else, move sprite right by incrementing its new x coordinate
 
-; -----------------------------------------------------------------------------
-; SUBROUTINE: ROTATE_LOOP
-;    - ASSUMES: A = level byte, X = bit from the right holding the block we're checking for
-;   - find the bit that holds the piece of level data we're looking for
-;   - returns a byte that's either #128 (high bit set) or #0 high bit not set
-;       - this bit represents the block of level data we're checking for
-;
-; -----------------------------------------------------------------------------
-rotate_loop
-    cpx     LOOP_CTR                    ; compare X (loop limit) and LOOP_CTR (current iteration)
-    beq     exit_loop                   ; if equal, exit the loop
-
-    asl                                 ; shift the level data one bit to the left
-    inc     LOOP_CTR                    ; increment the loop count
-    jmp     rotate_loop
-exit_loop
-    and     #128                        ; isolate the high bit  TODO: DON'T NEED TO ISOLATE THIS, HIGH BIT IS SET EITHER WAY
-    rts                                 ; return out of the rotate_loop, bit in A register
-
+blocked_right
+    rts                                 ; return without updating player location
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: EDGE_DEATH
 ;   - Checks if sprite has moved off the top or bottom of screen
@@ -142,7 +107,7 @@ exit_loop
 ; -----------------------------------------------------------------------------
 edge_death
     lda     NEW_Y_COOR                  ; load the Y coordinate
-    bmi     death                       ; if Y == FF you're off top of screen, set DEAD_FLAG
+    bmi     death                       ; if Y == FF you're off top of screen
     cmp     #16                         ; compare Y coordinate with 15
     beq     death                       ; if Y == 16, you're off the bottom of the screen, set the dead flag
 
@@ -156,31 +121,97 @@ death
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: CHECK_BLOCK_DOWN
-;   - Checks if there's a block under the sprite
-;   - If yes, returns
-;   - If no, increment the y-coordinate of the sprite by 1 (move down)
-;
+;   - Checks if there's a block under something
+;   - If yes, returns 1
+;   - If no, returns 0
+;   - Parameters:
+;       - expects WORKING_COOR to hold the address where it can find the coordinates
+;         of the thing it's checking (sprite, falling block, etc)
+;       - assumes that X coord comes first, and that Y come next
 ; -----------------------------------------------------------------------------
 check_block_down
-    lda     Y_COOR                      ; load the Y coordinate into A register
+    ldy     #0                          ; zero out y reg
+    lda     (WORKING_COOR),y            ; get the x coord: WORKING_COOR stores a pointer to coordinates
+    tax                                 ; put it into x
+
+    iny                                 ; indirect offset + 1 should have y coord
+    lda     (WORKING_COOR),y            ; get the y coord
+
     asl                                 ; multiply Y coordinate by 2 to get the index into level data
     clc                                 ; beacuse.you.always.have.to!
     adc     #2                          ; add 2 to the level byte (we want the level piece under us)
     tay                                 ; store the level index variable into the y register
-    lda     X_COOR                      ; load the X coordinate into A register
-    and     #8                          ; Isolate the 3rd bit to check if position is in 2nd half of level data
-    cmp     #8                          ; check to see if the 3rd bit is set
-    bne     skip_y_inc0                 ; if not equal, don't increment y
-    iny                                 ; increment y by 1 (you're in the right part of the screen)
-skip_y_inc0
-    lda     X_COOR                      ; reload the X coordinate into A register
-    and     #7                          ; get the bottom three bits of the X coordinate
-    tax                                 ; transfer value to X, this is how many bits we have to shift to find the piece under us
-    lda     LEVEL_DATA,y                ; get the byte holidng level data under us
-    ldy     #0                          ; set y to 0, setting up our loop counter for the rotation
-    sty     LOOP_CTR                    ; set LOOP_CTR to 0
-    jsr     rotate_loop                 ; get the bit we're looking for, returns value in A register
-    bmi     blocked_1                   ; hi bit set (reads as negative), go back to get input and don't move        
-    inc     NEW_Y_COOR                  ; increment the y coordinate by 1 (move down) 
-blocked_1
-    rts                                 ; return back to the get_input loop
+
+    cpx     #$08                        ; x < 8 ?
+    bmi     skip_y_inc                  ; if so you're on lhs. don't inc y
+    iny                                 ; else you're on rhs. inc y
+
+skip_y_inc
+    lda     collision_mask,x            ; get the bit pattern for the player's position
+    and     LEVEL_DATA,y                ; do an AND on the collision mask and lvl data to see if there's something under you
+    bne     block_under                 ; if result != 0, your bit had a block in it
+
+    lda     #0                          ; return value of 0 indicates there's nothing underneath
+    rts
+
+block_under
+    lda     #1                          ; return value of 1 indicates there's something underneath
+    rts
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: CHECK_FALL
+;   - Checks if the player is on top of a block
+;   - If they aren't on top of anything, increments their Y coordinate to make them fall
+; -----------------------------------------------------------------------------
+check_fall
+    lda     #$49                        ; memory location 0049 is where player x and y are stored
+    sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
+
+    jsr     check_block_down            ; jump to down collision check
+    bne     move_down                   ; if return value == 0, player is falling
+    inc     NEW_Y_COOR                  ; player should now transition to this new Y position
+move_down
+    rts
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: BLOCK_STOMP
+;   - Attempts to stomp out a block from under the player
+; -----------------------------------------------------------------------------
+block_stomp
+    lda     #$49                        ; memory location 0049 is where player x and y are stored
+    sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
+
+    jsr     check_block_down            ; check if there is a block underneath player
+    bne     stomp                       ; check if return value != 0
+    rts                                 ; if there's no block below us, return
+
+; TODO: this currently doesn't take into account the restriction on stomping 2 blocks deep
+stomp
+    ; store the block's x and y coordinates for later use
+    ldx     X_COOR                      ; get player's x coord
+    stx     BLOCK_X_COOR                ; store in block's coords (player and block share x position)
+    stx     NEW_BLOCK_X
+
+    lda     Y_COOR                      ; get player's y coord
+    clc 
+    adc     #1                          ; we want the byte below the player
+    sta     BLOCK_Y_COOR                ; store in block's coords
+    sta     NEW_BLOCK_Y
+
+    asl                                 ; multiply Y by 2 to get the index into LEVEL_DATA
+    tay                                 ; put this offset into y
+
+    cpx     #$08                        ; check if block's x coord is less than 8
+    bmi     clear_block                 ; if block x < 8, you're on left half of screen, don't inc y
+    iny                                 ; if you're on right half, inc y
+
+clear_block                             ; remove the block's old position from LEVEL_DATA
+    lda     collision_mask,x            ; get collision_mask[x] (this is the particular bit correlating to X position)
+    eor     LEVEL_DATA,y                ; clear the block out of the level by xoring the bitmask with the onscreen data
+    sta     LEVEL_DATA,y                ; store the new pattern back in LEVEL_DATA at correct offset
+
+; ; TODO: i think there are some optimizations here to avoid accessing BLOCK_Y_COOR so many times
+    inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall
+    inc     NEW_BLOCK_Y
+
+    rts

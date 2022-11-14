@@ -19,14 +19,14 @@ draw_eva
     cmp     NEW_Y_COOR              ; check if there is any difference
     bne     clear_sprite            ; if there is, the char has moved
 
-    jmp     draw_eva_exit           ; if nothing has changed, leave subroutine
+    rts                             ; if nothing has changed, leave subroutine
 
 clear_sprite
     ; convert the old x and y coordinates into a screen offset from 1e00
     ldx     Y_COOR                  ; load the y coordinate
     lda     y_lookup,x              ; index into the y lookup table to draw to the correct row
     clc                             ; clear the carry bit!
-    adc     X_COOR                  ; add the X coordinate to draw to the correct row
+    adc     X_COOR                  ; add the X coordinate to draw to the correct col
     tax                             ; put this value into x so that we can use it as an offset
 
     ; draw a blank space where the character was
@@ -38,7 +38,7 @@ draw_sprite
     ldx     NEW_Y_COOR              ; load the y coordinate
     lda     y_lookup,x              ; index into the y lookup table to draw to the correct row
     clc                             ; clear the carry bit!
-    adc     NEW_X_COOR              ; add the X coordinate to draw to the correct row
+    adc     NEW_X_COOR              ; add the X coordinate to draw to the correct col
     tax                             ; put this value into x so that we can use it as an offset
 
     ; draw the sprite to the new location
