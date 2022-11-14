@@ -37,13 +37,18 @@ Y_COOR = $4a                        ; 1 byte: Y coordinate of the player charact
 NEW_X_COOR = $4b                   ; 1 byte: player character's new X position
 NEW_Y_COOR = $4c                   ; 1 byte: player character's new Y position
 
+
 SPRITE_POSITION = $4d               ; 1 byte: sprite position relative to screen start in memory
 
 LOOP_CTR = $4e                      ; 1 byte: just another loop counter
 
 INNER_LOOP_CTR = $4f
 
+
 BACKUP_HIGH_RES_SCROLL = $50        ; 9 bytes - one for each char in the high res graphics
+
+MOVE_DIR_X = $05a
+MOVE_DIR_Y = $05b
 
 
 ; -----------------------------------------------------------------------------
@@ -165,6 +170,11 @@ set_repeat                              ; sets the repeat value so holding down 
     jsr     fill_level
     jsr     backup_scrolling
 
+    lda #0
+    sta MOVE_DIR_X
+
+    lda #1
+    sta MOVE_DIR_Y
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_LOOP
 ; - the main game loop
@@ -177,16 +187,32 @@ game_loop_reset_scroll
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
-    jsr     get_input                   ; check for user input and update player X,Y coords    
-    jsr     check_block_down            ; try to move the sprite down
+
+
+
+    lda     #$03                        ; for now, run advance_level once every 4 loops
+    and     ANIMATION_FRAME             ; calculate (acc AND frame) to check if the low bit pattern matches a multiple of 4
+    bne     continue_code              ; if the AND operation didn't zero out, frame is not a multiple of 4. leave subroutine.
+    
+    jsr     restore_scrolling
+    jsr     update_sprite_position      ; update position   (must be in between restore / backup)
+    jsr     backup_scrolling
+
     jsr     advance_level               ; update the state of the LEVEL_DATA array
+    jsr     get_input                   ; check for user input and update player X,Y coords    
+
+
+
+
+continue_code
 
     ; DEATH CHECK: once all states have been updated, check for a game over
-    ; jsr     game_over_check
+    jsr     game_over_check
 
     ; ANIMATION: draw the current state of all the game elements to the screen
     ; jsr     draw_level                  ; draw the level data onto the screen
     ; jsr     draw_eva                    ; draw the player character
+
 
     ; jsr     reset_high_res
     ; jsr     restore_scrolling

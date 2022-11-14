@@ -162,6 +162,7 @@ death
 ;
 ; -----------------------------------------------------------------------------
 check_block_down
+
     lda     Y_COOR                      ; load the Y coordinate into A register
     asl                                 ; multiply Y coordinate by 2 to get the index into level data
     clc                                 ; beacuse.you.always.have.to!
@@ -181,6 +182,7 @@ skip_y_inc0
     sty     LOOP_CTR                    ; set LOOP_CTR to 0
     jsr     rotate_loop                 ; get the bit we're looking for, returns value in A register
     bmi     blocked_1                   ; hi bit set (reads as negative), go back to get input and don't move        
+    
     inc     NEW_Y_COOR                  ; increment the y coordinate by 1 (move down) 
 blocked_1
     rts                                 ; return back to the get_input loop

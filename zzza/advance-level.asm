@@ -21,10 +21,6 @@ advance_level
     and     ANIMATION_FRAME             ; calculate (acc AND frame) to check if the low bit pattern matches a multiple of 4
     bne     advance_exit                ; if the AND operation didn't zero out, frame is not a multiple of 4. leave subroutine.
 
-    jsr     restore_scrolling
-    jsr     update_sprite_position      ; move character if applicable
-    jsr     backup_scrolling
-
     ldy     #0                          ; initialize loop counter
     ldx     #2                          ; we need an offset that is always 2 ahead of y
 
@@ -68,7 +64,6 @@ advance_final
     sta     LEVEL_DATA,y                ; store it in LEVEL_DATA[32]
 
 advance_char_pos
-    dec     NEW_Y_COOR                  ; the level is moving up, so the player sprite also needs to move up
-
+    jsr check_block_down
 advance_exit
     rts
