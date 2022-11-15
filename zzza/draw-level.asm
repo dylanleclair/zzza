@@ -462,6 +462,7 @@ draw_high_res
 
 
 
+
 push_all_registers
     ; pushes all registers onto stack
     pha ; push the accumulator
@@ -798,7 +799,7 @@ eva_move_done
     inc LOOP_CTR
     ldx LOOP_CTR
 draw_shift_vertical_test
-    cpx ANIMATION_FRAME
+    cpx FRAMES_SINCE_MOVE
     bne draw_shift_vertical_loop 
 draw_shift_vertical_return
     rts
@@ -817,8 +818,12 @@ draw_shift_horizontal_loop
 eva_move_right
     jsr shift_right
     jsr shift_right
+    jsr shift_right
+    jsr shift_right
     jmp eva_move_horizontal_done
 eva_move_left
+    jsr shift_left
+    jsr shift_left
     jsr shift_left
     jsr shift_left
 
@@ -826,7 +831,7 @@ eva_move_horizontal_done
     inc LOOP_CTR
     ldx LOOP_CTR
 draw_shift_horizontal_test
-    cpx ANIMATION_FRAME
+    cpx FRAMES_SINCE_MOVE
     bne draw_shift_horizontal_loop 
 draw_shift_horizontal_return
     rts

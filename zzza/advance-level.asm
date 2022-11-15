@@ -64,6 +64,6 @@ advance_final
     sta     LEVEL_DATA,y                ; store it in LEVEL_DATA[32]
 
 advance_char_pos
-    jsr check_block_down
+    ; jsr     check_block_down
 advance_exit
     rts

@@ -50,6 +50,8 @@ BACKUP_HIGH_RES_SCROLL = $50        ; 9 bytes - one for each char in the high re
 MOVE_DIR_X = $05a
 MOVE_DIR_Y = $05b
 
+FRAMES_SINCE_MOVE = $05c
+
 
 ; -----------------------------------------------------------------------------
 ; TODO: please don't leave these as custom_char_n, what a terrible
@@ -167,11 +169,12 @@ set_repeat                              ; sets the repeat value so holding down 
     sta     KEY_REPEAT                  ; sets all keys to repeat
 
     jsr     init_level                  ; ensure that there's valid level data ready to go
-    jsr     fill_level
+    jsr     fill_level                  ; 
     jsr     backup_scrolling
 
     lda #0
     sta MOVE_DIR_X
+    sta FRAMES_SINCE_MOVE
 
     lda #1
     sta MOVE_DIR_Y
@@ -187,24 +190,31 @@ game_loop_reset_scroll
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
+    jsr     get_input                  ; check for user input and update player X,Y coords    
+    jsr     update_sprite_direction
 
+    ; lda ANIMATION_FRAME
+    ; cmp #0
+    ; bne skip_direction
 
+; skip_direction
 
-    lda     #$03                        ; for now, run advance_level once every 4 loops
-    and     ANIMATION_FRAME             ; calculate (acc AND frame) to check if the low bit pattern matches a multiple of 4
+    lda     FRAMES_SINCE_MOVE                        ; for now, run advance_level once every 4 loops
+    cmp     #2                         ; calculate (acc AND frame) to check if the low bit pattern matches a multiple of 4
     bne     continue_code              ; if the AND operation didn't zero out, frame is not a multiple of 4. leave subroutine.
-    
+
+    ; start movement right away. only change direction when done animation.
+
+
     jsr     restore_scrolling
     jsr     update_sprite_position      ; update position   (must be in between restore / backup)
     jsr     backup_scrolling
-
-    jsr     advance_level               ; update the state of the LEVEL_DATA array
-    jsr     get_input                   ; check for user input and update player X,Y coords    
-
-
+    jsr     reset_frames_count
 
 
 continue_code
+
+    jsr     advance_level               ; update the state of the LEVEL_DATA array
 
     ; DEATH CHECK: once all states have been updated, check for a game over
     jsr     game_over_check
@@ -223,10 +233,12 @@ continue_code
 
     ; jsr     animate_level
 
+    inc     FRAMES_SINCE_MOVE           ; increment frames since last move !
+
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #15                         ; set desired delay 
+    ldy     #5                         ; set desired delay 
     jsr     delay                       ; jump to delay
     
 

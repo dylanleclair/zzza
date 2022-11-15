@@ -56,12 +56,11 @@ draw_sprite
     lda     #8                      ; heart character
     sta     SCREEN_ADDR,x           ; store the heart at position offset
 
-update_sprite_position
+update_sprite_direction
 
-
-    lda #0
-    sta MOVE_DIR_X
-    sta MOVE_DIR_Y
+    lda     #0
+    sta     MOVE_DIR_X
+    sta     MOVE_DIR_Y
 
     ; ; check if there is a diff between the old and new coords
     ; ; set direction of animation accordingly
@@ -70,13 +69,16 @@ update_sprite_position
     beq     set_y_dir           ; if there is, the char has moved
     bmi     x_dir_right             ; x - new x is negative! new x is larger -> move right
 
+
                                     ; else move left
 x_dir_left
+
     lda #-1
     sta MOVE_DIR_X
     jmp set_y_dir
 
 x_dir_right
+    
     lda #1
     sta MOVE_DIR_X
 
@@ -89,27 +91,37 @@ set_y_dir
 
 ; else, move down
 y_dir_up
+
     lda #-1
     sta MOVE_DIR_Y
     jmp update_position_cleanup
                                
 y_dir_down
+
     lda #1
     sta MOVE_DIR_Y
 
-
     ; ; else, set direction!
 update_position_cleanup
-    lda     NEW_X_COOR              ; update the old x coordinate
-    sta     X_COOR
-    lda     NEW_Y_COOR              ; update the old y coordinate
-    sta     Y_COOR
 
 draw_eva_exit
     rts
 
 
+reset_frames_count 
+    lda #0
+    sta FRAMES_SINCE_MOVE
+    rts
 
+
+update_sprite_position
+
+    lda     NEW_X_COOR              ; update the old x coordinate
+    sta     X_COOR
+    lda     NEW_Y_COOR              ; update the old y coordinate
+    sta     Y_COOR
+
+    rts
 
 
 get_position

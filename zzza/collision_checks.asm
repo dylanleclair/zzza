@@ -69,6 +69,8 @@ check_block_left
     jsr     rotate_loop                 ; get the bit we're looking for!
     bmi     blocked_2                   ; hi bit set (reads as negative), go back to get input and don't move        
     dec     NEW_X_COOR                  ; move sprite left by decrementing x coordinate
+    jsr     reset_frames_count
+
 blocked_2
     rts                                 ; return back to the get_input loop
 
@@ -113,6 +115,7 @@ check_block_right
     jsr     rotate_loop                 ; get the bit we're looking for!
     bmi     blocked_3                   ; hi bit set (reads as negative), go back to get input and don't move        
     inc     NEW_X_COOR                  ; move sprite right by incrementing x coordinate
+    jsr     reset_frames_count
 blocked_3
     rts                                 ; return back to the get_input loop
 
@@ -184,5 +187,6 @@ skip_y_inc0
     bmi     blocked_1                   ; hi bit set (reads as negative), go back to get input and don't move        
     
     inc     NEW_Y_COOR                  ; increment the y coordinate by 1 (move down) 
+
 blocked_1
     rts                                 ; return back to the get_input loop
