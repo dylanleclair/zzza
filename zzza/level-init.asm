@@ -5,6 +5,9 @@
 ; - this subroutine can be optimized quite a bit, but it's been left big for now
 ;   so that it's more readable
 ; -----------------------------------------------------------------------------
+
+
+; LOOP 1: initialize the level data
 init_level
     lda     #0                          ; the level starts out empty so fill with pattern 0
     tay                                 ; initialize loop counter to 0 as well

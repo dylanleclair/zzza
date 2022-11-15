@@ -5,7 +5,7 @@
 ; -----------------------------------------------------------------------------
 
     ; change the location of the charset
-    lda     #255 ; set location of charset to 7168 ($1c00)
+    lda     #$fc         ; set location of charset to 7168 ($1c00)
     sta     CHARSET_CTRL ; store in register controlling base charset 
 
     ; copy the 8 character bytes at given address to the custom character set memory (CUSTOM_CHAR_ADDR)
