@@ -64,6 +64,7 @@ advance_final
     sta     LEVEL_DATA,y                ; store it in LEVEL_DATA[32]
 
 advance_char_pos
-    ; jsr     check_block_down
+    dec     NEW_Y_COOR                  ; the level is moving up, so the player sprite also needs to move up
+
 advance_exit
     rts

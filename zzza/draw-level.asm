@@ -147,10 +147,11 @@ fill_level_test
 draw_master
     jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
     jsr     draw_level                  ; do scrolly scroll
+    ; jsr     draw_block                  ; draw any falling blocks
     jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
     jsr     reset_high_res              ; clear high res graphics
-    jsr     draw_shift_vertical             ; draw the appropriate shift down (currently based on frame counter)
-    jsr     draw_shift_horizontal
+    ; jsr     draw_shift_vertical             ; draw the appropriate shift down (currently based on frame counter)
+    ; jsr     draw_shift_horizontal
     jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
     rts
@@ -254,17 +255,20 @@ backup_helper
 ; -----------------------------------------------------------------------------
 restore_scrolling
 
+
+    ; start in top left corner of the hi-res graphics buffer
     dec     Y_COOR
     dec     X_COOR
     jsr     get_position
 
     ldy     #0  ; reset y to 0
 
+    ; top row
     jsr     restore_helper
     jsr     restore_helper
     jsr     restore_helper
 
-
+    ; shift to middle row
     inc     Y_COOR
     jsr     get_position
     ldy     #3
@@ -272,7 +276,8 @@ restore_scrolling
     jsr     restore_helper
     jsr     restore_helper
     jsr     restore_helper
-
+    
+    ; shift to bottom row
     inc     Y_COOR
     jsr     get_position
     ldy     #6
@@ -281,7 +286,7 @@ restore_scrolling
     jsr     restore_helper
     jsr     restore_helper
 
-    ; restore position
+    ; restore position (VERY IMPORTANT !!!)
     dec     Y_COOR
     inc     X_COOR
 
@@ -298,10 +303,13 @@ restore_helper
     rts
 
 ; -----------------------------------------------------------------------------
-; SUBROUTINE: RESTORE_SCROLLING
+; SUBROUTINE: XOR_CHARACTER_TO_HIGH_RES
 ; - character code of source character is in acc
 ; - high-res character code to XOR data onto is in x
 ; - XORs all bytes from source character onto high-res character
+; - is in this file mostly because is used exclusively on level data
+; - note that max character code is 32 (256 / 8) since it must multiply
+;   by 8 to index into character data
 ; -----------------------------------------------------------------------------
 xor_character_to_high_res
 ; assume: character code of character to XOR is in acc
@@ -338,13 +346,20 @@ mask_loop_test
 
     rts
 
-
-
-
-
+; -----------------------------------------------------------------------------
+; SUBROUTINE: RESET_HIGH_RES
+; - zeroes out high resolution bit buffer
+; - places character in middle of buffer
+; - to be used in conjunction with shift_left (right, up, down too!)
+; - for example, the following might be used as PART of an animation to shift
+;   EVA two bits down:
+;       - jsr reset_hi_res
+;       - jsr shift_left
+;       - jsr shift_left
+;       - jsr draw_hi_res
+; -----------------------------------------------------------------------------
 reset_high_res
     ; set all chars back to 0
-
     ldx #0
 zero_hi_res_loop
     lda #0
@@ -400,20 +415,21 @@ zero_hi_res_loop
 
     rts
 
-
+; -----------------------------------------------------------------------------
+; SUBROUTINE: DRAW_HIGH_RES
+; - uses X_COOR and Y_COOR (EVA's position) to draw the high-res
+;   character codes to the correct part of the screen
+; - currently the character codes r hard coded !!!
+; -----------------------------------------------------------------------------
 draw_high_res
     
+    ; start in top left corner of the hi-res graphics buffer
     dec Y_COOR
     dec X_COOR
 
     jsr get_position ; top left corner of high res graphics
 
-    ; use the position to store results
-    ; dex ; character in middle of the buffer, decrement to previous
-    ; lda #2
-    ; sta $1e00,x
-    ; inx
-    
+    ; top row
     lda #11
     sta $1e00,x
     inx
@@ -425,6 +441,7 @@ draw_high_res
     lda #13
     sta $1e00,x
 
+    ; shift to middle row
     inc Y_COOR
     jsr get_position
 
@@ -439,7 +456,7 @@ draw_high_res
     lda #16
     sta $1e00,x
 
-
+    ; shift to bottom row
     inc Y_COOR
     jsr get_position
 
@@ -454,400 +471,10 @@ draw_high_res
     lda #19
     sta $1e00,x
 
-    ; reset position to proper value
+    ; reset position to proper value (VERY IMPORTANT !!!)
     dec Y_COOR
     inc X_COOR
 
     rts 
 
 
-
-
-push_all_registers
-    ; pushes all registers onto stack
-    pha ; push the accumulator
-    txa
-    pha ; push x
-    tya 
-    pha ; push y
-
-
-pull_all_registers
-    pla ; pull y
-    tay
-    pla ; pull x
-    tax
-    pla ; pull acc
-
-
-
-
-
-
-;==================================================================================
-;----------------------------------------------------------------------------------
-;   High resolution shifts (see custom_charset.asm for a brief on high-res buffer)
-;----------------------------------------------------------------------------------
-;==================================================================================
-
-;----------------------------------------------------------------------------------
-;   Shift the entire framebuffer right one bit
-;----------------------------------------------------------------------------------
-
-shift_right
-    ldx #0                              ; loop count in this code is the row of bytes being shifted
-    
-    ; for now just assume rightmost bit in section does not need to be rotated (pretty safe bet)
-shift_right_loop
-    ; first row
-    clc
-; rotate ENTIRE hi res buffer to the right
-    lda hi_res_0_0,x
-    ror
-    sta hi_res_0_0,x
-
-    lda hi_res_0_1,x
-    ror
-    sta hi_res_0_1,x
-    
-    lda hi_res_0_2,x
-    ror
-    sta hi_res_0_2,x
-
-    ; second row
-
-    clc
-    lda hi_res_1_0,x
-    ror
-    sta hi_res_1_0,x
-
-    lda hi_res_1_1,x
-    ror
-    sta hi_res_1_1,x
-    
-    lda hi_res_1_2,x
-    ror
-    sta hi_res_1_2,x
-
-    ; third row
-    clc
-    lda hi_res_2_0,x
-    ror
-    sta hi_res_2_0,x
-
-    lda hi_res_2_1,x
-    ror
-    sta hi_res_2_1,x
-    
-    lda hi_res_2_2,x
-    ror
-    sta hi_res_2_2,x
-
-
-    inx
-
-    cpx #8
-    bne shift_right_loop
-
-    rts
-
-
-
-;----------------------------------------------------------------------------------
-;   Shift the entire framebuffer right one bit
-;----------------------------------------------------------------------------------
-shift_left
-    ldx #0                              ; loop count in this code is the row of bytes being shifted
-    
-    ; for now just assume rightmost bit in section does not need to be rotated (pretty safe bet)
-shift_left_loop
-    ; first row
-    clc
-; rotate ENTIRE hi res buffer to the right
-    lda hi_res_0_2,x
-    rol
-    sta hi_res_0_2,x
-
-    lda hi_res_0_1,x
-    rol
-    sta hi_res_0_1,x
-    
-    lda hi_res_0_0,x
-    rol
-    sta hi_res_0_0,x
-
-    ; second row
-
-    clc
-    lda hi_res_1_2,x
-    rol
-    sta hi_res_1_2,x
-
-    lda hi_res_1_1,x
-    rol
-    sta hi_res_1_1,x
-    
-    lda hi_res_1_0,x
-    rol
-    sta hi_res_1_0,x
-
-    ; third row
-    clc
-    lda hi_res_2_2,x
-    rol
-    sta hi_res_2_2,x
-
-    lda hi_res_2_1,x
-    rol
-    sta hi_res_2_1,x
-    
-    lda hi_res_2_0,x
-    rol
-    sta hi_res_2_0,x
-
-
-    inx
-
-    cpx #8
-    bne shift_left_loop
-
-    rts
-
-;----------------------------------------------------------------------------------
-;   Shift the entire framebuffer up one bit
-;----------------------------------------------------------------------------------
-
-shift_up
-    ; 0,1 are the first two bytes of first column
-    ldx #0                  
-    ldy #1
-    jsr shift_up_column
-
-    ; 8,9 are the first two bytes of middle column
-    ldx #8
-    ldy #9
-    jsr shift_up_column
-
-    ; 16 and 17 are first two bytes of final column
-    ldx #16
-    ldy #17
-    jsr shift_up_column
-
-    rts
-
-shift_up_column
-    ; rotate the entire column down
-
-    jsr shift_character_up
-    ; at the end of this character.
-    ; need to:
-    ;   - move first byte of next character to this one
-    ;   - switch to next character
-    jsr wrap_char
-    jsr shift_character_up
-    jsr wrap_char
-    jsr shift_character_up
-
-    rts
-
-
-; shift the 8 bytes in a character up
-shift_character_up
-    lda #0
-    sta INNER_LOOP_CTR
-
-shift_character_up_loop
-
-    ; copy next byte of character to current
-    ; repeat this 7 times to do the whole character!
-
-    lda hi_res_0_0,y
-    sta hi_res_0_0,x
-
-    ; increment both
-    inx
-    iny
-
-    ; load byte 
-    inc INNER_LOOP_CTR
-    lda INNER_LOOP_CTR
-    cmp #7
-    bne shift_character_up_loop  ; loop until whole character shifted
-
-    rts
-
-wrap_char
-    ; add 24 to the variable in y (target location)
-    tya
-    clc
-    adc #16
-    tay
-
-    lda hi_res_0_0,y    ; load the first byte of character under this one
-    sta hi_res_0_0,x    ; store it in last byte of original
-    
-    tya ; put x to byte character of next character
-    tax
-    ; dex
-    iny ; increment y
-
-    rts
-
-
-
-;----------------------------------------------------------------------------------
-;   Shift the entire framebuffer DOWN one bit
-;----------------------------------------------------------------------------------
-
-shift_down
-    ldx #54
-    ldy #55
-    jsr shift_down_column
-
-
-    ldx #62
-    ldy #63
-    jsr shift_down_column
-
-    ldx #70
-    ldy #71
-    jsr shift_down_column
-
-    rts
-
-shift_down_column
-    ; rotate the entire column down
-
-    jsr shift_character_down
-    ; at the end of this character.
-    ; need to:
-    ;   - move first byte of next character to this one
-    ;   - switch to next character
-    jsr wrap_char_down
-    jsr shift_character_down
-    jsr wrap_char_down
-    jsr shift_character_down
-
-    rts
-
-
-; shift the 8 bytes in a character up
-shift_character_down
-    lda #0
-    sta INNER_LOOP_CTR
-
-shift_character_down_loop
-
-    ; copy next byte of character to current
-    ; repeat this 7 times to do the whole character!
-
-    lda hi_res_0_0,x
-    sta hi_res_0_0,y
-
-    ; increment both
-    dex
-    dey
-
-    ; load byte 
-    inc INNER_LOOP_CTR
-    lda INNER_LOOP_CTR
-    cmp #7
-    bne shift_character_down_loop  ; loop until whole character shifted
-
-    rts
-
-wrap_char_down
-    ; add 24 to the variable in y (target location)
-    txa
-    clc
-    adc #-16
-    tax
-
-    lda hi_res_0_0,x    ; load the last byte of character above this one
-    sta hi_res_0_0,y    ; store it in first byte of new
-    
-    txa ; put x to byte character of next character
-    tay
-    ; dex
-    dex ; increment y
-
-    rts
-
-
-;----------------------------------------------------------------------------------
-;   Shift the entire framebuffer DOWN one bit
-;----------------------------------------------------------------------------------
-
-draw_shift_vertical
-    ldx #0
-    stx LOOP_CTR
-    jmp draw_shift_vertical_test
-draw_shift_vertical_loop
-    ldy MOVE_DIR_Y
-    cpy #0
-    beq eva_move_done
-    bmi eva_move_up
-eva_move_down
-    jsr shift_down
-    jsr shift_down
-    jmp eva_move_done
-eva_move_up
-    jsr shift_up
-    jsr shift_up
-
-eva_move_done
-    inc LOOP_CTR
-    ldx LOOP_CTR
-draw_shift_vertical_test
-    cpx FRAMES_SINCE_MOVE
-    bne draw_shift_vertical_loop 
-draw_shift_vertical_return
-    rts
-
-
-
-draw_shift_horizontal
-    ldx #0
-    stx LOOP_CTR
-    jmp draw_shift_horizontal_test
-draw_shift_horizontal_loop
-    ldy MOVE_DIR_X
-    cpy #0
-    beq eva_move_horizontal_done
-    bmi eva_move_left
-eva_move_right
-    jsr shift_right
-    jsr shift_right
-    jsr shift_right
-    jsr shift_right
-    jmp eva_move_horizontal_done
-eva_move_left
-    jsr shift_left
-    jsr shift_left
-    jsr shift_left
-    jsr shift_left
-
-eva_move_horizontal_done
-    inc LOOP_CTR
-    ldx LOOP_CTR
-draw_shift_horizontal_test
-    cpx FRAMES_SINCE_MOVE
-    bne draw_shift_horizontal_loop 
-draw_shift_horizontal_return
-    rts
-
-
-
-; draw_shift_down
-;     ldx #0
-;     stx LOOP_CTR
-;     jmp draw_shift_down_test
-; draw_shift_down_loop
-;     jsr shift_down
-;     jsr shift_down
-;     inc LOOP_CTR
-;     ldx LOOP_CTR
-; draw_shift_down_test
-;     cpx ANIMATION_FRAME
-;     bne draw_shift_down_loop 
-;     rts

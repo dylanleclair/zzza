@@ -55,10 +55,10 @@ INNER_LOOP_CTR = $55
 
 BACKUP_HIGH_RES_SCROLL = $56        ; 9 bytes - one for each char in the high res graphics
 
-MOVE_DIR_X = $05f
-MOVE_DIR_Y = $060
+MOVE_DIR_X = $065
+MOVE_DIR_Y = $066
 
-FRAMES_SINCE_MOVE = $061
+FRAMES_SINCE_MOVE = $067
 
 
 ; -----------------------------------------------------------------------------
@@ -218,6 +218,7 @@ set_repeat                              ; sets the repeat value so holding down 
 
     lda #1
     sta MOVE_DIR_Y
+    
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_LOOP
 ; - the main game loop
@@ -239,17 +240,16 @@ game_loop
     jsr     game_over_check
 
     ; ANIMATION: draw the current state of all the game elements to the screen
-    jsr     draw_level                  ; draw the level data onto the screen
-    jsr     draw_block                  ; draw any falling blocks
     jsr     draw_eva                    ; draw the player character
+    jsr     draw_master                 ; draw the update to scrolling data
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #10                          ; set desired delay 
+    ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
     
-
+    ; check if full loop of scroll animation is done, reset frame counter if needed
     lda     ANIMATION_FRAME
     cmp     #4
     bne     game_loop

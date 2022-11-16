@@ -352,7 +352,7 @@ movement_loop
     ; jsr shift_left
     jsr shift_down
 
-    jsr delay_init
+    jsr stall
     inc FRAME_COUNT_ADDR
     lda FRAME_COUNT_ADDR
     cmp #8
@@ -589,7 +589,7 @@ animate
 
 animate_loop
     ; each iteration of this loop is one frame of the animation 
-    jsr     delay_init
+    jsr     stall
     ; dynamic state transition
     ;   1. get position
     ;   2. update character player begins in (initial position)
@@ -662,7 +662,7 @@ scroll_eva
 
 scroll_eva_loop
 
-    jsr     delay_init
+    jsr     stall
     ; fetch current position
     jsr     get_position ; position is in x register
     
@@ -733,6 +733,19 @@ draw_sprite
     sta     SCREEN_ADDR,x               ; store the heart at position offset
 
     rts
+
+
+
+stall
+    ldx #0
+stall_loop
+    inx
+stall_test
+    cpx #0
+    bne stall_loop
+
+    rts
+
 
 ; remove the sprite from it's current location
 clear_sprite
