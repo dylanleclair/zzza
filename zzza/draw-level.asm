@@ -78,11 +78,9 @@ draw_level_exit
 draw_master
     jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
     jsr     draw_level                  ; do scrolly scroll
-    ; jsr     draw_block                  ; draw any falling blocks
+    jsr     draw_block                  ; draw any falling blocks
     jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
     jsr     reset_high_res              ; clear high res graphics
-    ; jsr     draw_shift_vertical             ; draw the appropriate shift down (currently based on frame counter)
-    ; jsr     draw_shift_horizontal
     jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
     rts

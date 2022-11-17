@@ -182,9 +182,9 @@ check_fall
     sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
 
     jsr     check_block_down            ; jump to down collision check
-    bne     move_down                   ; if return value == 0, player is falling
+    bne     no_fall                     ; if return value != 0, player is not falling
     inc     NEW_Y_COOR                  ; player should now transition to this new Y position
-move_down
+no_fall
     rts
 
 ; -----------------------------------------------------------------------------
@@ -219,10 +219,33 @@ stomp
     bmi     clear_block                 ; if block x < 8, you're on left half of screen, don't inc y
     iny                                 ; if you're on right half, inc y
 
-clear_block                             ; remove the block's old position from LEVEL_DATA
+; remove the block's old position from LEVEL_DATA
+clear_block
     lda     collision_mask,x            ; get collision_mask[x] (this is the particular bit correlating to X position)
     eor     LEVEL_DATA,y                ; clear the block out of the level by xoring the bitmask with the onscreen data
     sta     LEVEL_DATA,y                ; store the new pattern back in LEVEL_DATA at correct offset
+
+; reset delta to ensure no half-frame animations show up in this space
+clear_block_delta
+    
+    ; first, deal with the delta above you
+    lda     collision_mask,x            ; get the collision mask again
+    eor     LEVEL_DELTA,y 
+    sta     LEVEL_DELTA,y
+
+    ; then deal with the delta below you
+    lda     collision_mask,x            ; get the collision mask again
+    iny 
+    iny 
+    eor     LEVEL_DELTA,y 
+    sta     LEVEL_DELTA,y
+
+; in order for this block to get stomped, it must be under Eva
+; this means it's also stored in the backup buffer
+; get it outta there!
+clear_block_backup
+    lda     #02                         ; char for an empty space
+    sta     BACKUP_HIGH_RES_SCROLL+7    ; this is the char of the backup buf that is below Eva
 
 ; ; TODO: i think there are some optimizations here to avoid accessing BLOCK_Y_COOR so many times
     inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall
