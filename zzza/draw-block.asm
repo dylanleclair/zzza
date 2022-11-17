@@ -30,7 +30,7 @@ clear_block_sprite
     tax                             ; put this value into x so that we can use it as an offset
 
     ; draw a blank space where the character was
-    lda     #0                      ; char for a blank space
+    lda     #2                      ; char for a blank space
     sta     SCREEN_ADDR,x           ; store the space at the correct offset
     lda     #4                      ; colour for purple
     sta     COLOR_ADDR,x            ; ensure that the old space goes back to purple
@@ -44,7 +44,7 @@ draw_block_sprite
     tax                             ; put this value into x so that we can use it as an offset
 
     ; draw the sprite to the new location
-    lda     #4                      ; full fill
+    lda     #6                      ; full fill
     sta     SCREEN_ADDR,x           ; store the heart at position offset
     lda     #3                      ; colour cyan
     sta     COLOR_ADDR,x            ; store the colour so that falling block is different

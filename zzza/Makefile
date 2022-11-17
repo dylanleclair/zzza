@@ -2,12 +2,12 @@
 DASM=dasm
 
 %.prg:
-	$(DASM) $< -o$@ -l$*.lst
+	$(DASM) main.asm -omain.prg -lmain.lst
 
 all: main.prg
 
 clean:
 	rm *.prg *.lst
 
-main.prg: main.asm
+main.prg: *.asm
 

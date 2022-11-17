@@ -37,6 +37,7 @@ Y_COOR = $4a                        ; 1 byte: Y coordinate of the player charact
 NEW_X_COOR = $4b                    ; 1 byte: player character's new X position
 NEW_Y_COOR = $4c                    ; 1 byte: player character's new Y position
 
+
 SPRITE_POSITION = $4d               ; 1 byte: sprite position relative to screen start in memory
 
 LOOP_CTR = $4e                      ; 1 byte: just another loop counter
@@ -48,6 +49,17 @@ NEW_BLOCK_Y = $52                   ; 1 byte: Y coord of stomped block's new loc
 
 WORKING_COOR = $53                  ; 1 byte: used for indirect addressing of coordinates
 WORKING_COOR_HI = $54               ; 1 byte: used for indirect addressing of coordinates
+
+INNER_LOOP_CTR = $55
+
+
+BACKUP_HIGH_RES_SCROLL = $56        ; 9 bytes - one for each char in the high res graphics
+
+MOVE_DIR_X = $065
+MOVE_DIR_Y = $066
+
+FRAMES_SINCE_MOVE = $067
+
 
 ; -----------------------------------------------------------------------------
 ; TODO: please don't leave these as custom_char_n, what a terrible
@@ -65,15 +77,16 @@ CUSTOM_CHAR_7 = $83c0
 CUSTOM_CHAR_8 = $8298
 
 ; custom char memory offsets (hardcoded)
-CUSTOM_CHAR_ADDR_0 = $1c00
-CUSTOM_CHAR_ADDR_1 = $1c08
-CUSTOM_CHAR_ADDR_2 = $1c10
-CUSTOM_CHAR_ADDR_3 = $1c18
-CUSTOM_CHAR_ADDR_4 = $1c20
-CUSTOM_CHAR_ADDR_5 = $1c28
-CUSTOM_CHAR_ADDR_6 = $1c30
-CUSTOM_CHAR_ADDR_7 = $1c38
-CUSTOM_CHAR_ADDR_8 = $1c40
+CUSTOM_CHAR_ADDR_0 = $1010 ; character #2
+CUSTOM_CHAR_ADDR_1 = $1018 ; character #3 
+CUSTOM_CHAR_ADDR_2 = $1020 ; ...
+CUSTOM_CHAR_ADDR_3 = $1028
+CUSTOM_CHAR_ADDR_4 = $1030
+CUSTOM_CHAR_ADDR_5 = $1038
+CUSTOM_CHAR_ADDR_6 = $1040
+CUSTOM_CHAR_ADDR_7 = $1048
+CUSTOM_CHAR_ADDR_8 = $1050
+
 
 ; -----------------------------------------------------------------------------
 ; BASIC STUB
@@ -84,12 +97,24 @@ CUSTOM_CHAR_ADDR_8 = $1c40
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4157", 0
+    dc.b $9e, "4304", 0
 stubend
     dc.w 0
 
 ; -----------------------------------------------------------------------------
-; Lookup table to translate y coords into onscreen offsets. Multiples of 16
+; Character set initialization voodoo.
+; -----------------------------------------------------------------------------
+
+    org $100d       ; where stub ends
+    dc.b #0,#0,#0   ; round off to 8 byte alignment for proper characters
+
+    ; REMINDER: start at character #2 instead of 0
+
+    org $1058 ; 0x1010 (start of charset) + 64
+    ; after 8 chars of space reserved (for copied block chars), slot in the rest of the characters
+    include "custom_charset.asm"
+; -----------------------------------------------------------------------------
+; Lookup table for the y-coordinates on the screen. Multiples of 16
 ; -----------------------------------------------------------------------------
 y_lookup: dc.b #0, #16, #32, #48, #64, #80, #96, #112, #128, #144, #160, #176, #192, #208, #224, #240
 
@@ -169,7 +194,7 @@ game
     sta     X_COOR                      ; set the x coordinate to 7
     sta     NEW_X_COOR                  ; set the x coordinate to 7
     
-    lda     #$0
+    lda     #$1
     sta     Y_COOR                      ; set the y coordinate to 0
     sta     NEW_Y_COOR                  ; set the y coordinate to 0
 
@@ -184,13 +209,25 @@ set_repeat                              ; sets the repeat value so holding down 
     sta     KEY_REPEAT                  ; sets all keys to repeat
 
     jsr     init_level                  ; ensure that there's valid level data ready to go
-    jsr     draw_eva                    ; draw the sprite at the 0,0 position
+    jsr     fill_level                  ; 
+    jsr     backup_scrolling
 
+    lda #0
+    sta MOVE_DIR_X
+    sta FRAMES_SINCE_MOVE
+
+    lda #1
+    sta MOVE_DIR_Y
+    
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_LOOP
 ; - the main game loop
 ; - TODO: should keep track of the current animation counter
 ; -----------------------------------------------------------------------------
+game_loop_reset_scroll
+
+    lda #0
+    sta ANIMATION_FRAME
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
@@ -203,17 +240,21 @@ game_loop
     jsr     game_over_check
 
     ; ANIMATION: draw the current state of all the game elements to the screen
-    jsr     draw_level                  ; draw the level data onto the screen
-    jsr     draw_block                  ; draw any falling blocks
     jsr     draw_eva                    ; draw the player character
+    jsr     draw_master                 ; draw the update to scrolling data
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #10                          ; set desired delay 
+    ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
     
-    jmp     game_loop                   ; loop forever
+    ; check if full loop of scroll animation is done, reset frame counter if needed
+    lda     ANIMATION_FRAME
+    cmp     #4
+    bne     game_loop
+
+    jmp     game_loop_reset_scroll      ; loop forever
 
 ; -----------------------------------------------------------------------------
 ; Includes for all the individual subroutines that are called in the main loop
