@@ -67,13 +67,13 @@ FRAMES_SINCE_MOVE = $067
 ; -----------------------------------------------------------------------------
 ; ROM locations that hold chars that we want to copy over for custom chars
 CUSTOM_CHAR_0 = $8300
-CUSTOM_CHAR_1 = $83c8
+CUSTOM_CHAR_1 = $8378
 CUSTOM_CHAR_2 = $8310
 CUSTOM_CHAR_3 = $87b8
 CUSTOM_CHAR_4 = $8700
 CUSTOM_CHAR_5 = $8778
 CUSTOM_CHAR_6 = $8710
-CUSTOM_CHAR_7 = $83c0
+CUSTOM_CHAR_7 = $83b8
 CUSTOM_CHAR_8 = $8298
 
 ; custom char memory offsets (hardcoded)

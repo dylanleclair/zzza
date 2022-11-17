@@ -31,6 +31,7 @@ input_stomp
 
 no_key_pressed
     rts 
+
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: COLLISION_LEFT
 ;   1) checks if sprite is trying to move off the left side of the screen
@@ -40,7 +41,6 @@ no_key_pressed
 collision_left
     ; check if the sprite is moving off the left edge of the screen
     lda     X_COOR                      ; load the X coordinate
-    cmp     #0                          ; compare X coordinate with 0
     beq     blocked_left                ; if X == 0, can't move left, exit the subroutine
 
     ; find proper index into LEVEL_DATA array (if you're on the left or right of the screen)
@@ -58,7 +58,14 @@ collision_left
 check_block_left
     ; check for collision with a block
     lda     collision_mask,x            ; get collision_mask[x]
+    cpx     #$08                        ; check if X == 8, meaning we're crossing a level data boundary
+    bne     same_byte_left              ; we're in the same byte as the level data we're checking against
+    eor     #129                        ; AND the collision_mask with 1000 0001 to reverse the position of the set bit
+    dey                                 ; decrement y to the piece of level data to the left of us
+    jmp     and_check_left              ; jump over the asl used for non-boundary checks 
+same_byte_left
     asl                                 ; shift one bit left so that we check the thing to our left
+and_check_left
     and     LEVEL_DATA,y                ; AND the collision mask with the level data
     bne     blocked_left                ; if result != 0, you're colliding, exit
     dec     NEW_X_COOR                  ; else, move sprite left by decrementing its new x coordinate
@@ -93,7 +100,14 @@ collision_right
 check_block_right
     ; check for collision with a block
     lda     collision_mask,x            ; get collision_mask[x]
+    cpx     #$07                        ; check if X == 7, meaning we're crossing a level data boundary
+    bne     same_byte_right             ; we're in the same byte as the level data we're checking against
+    eor     #129                        ; AND the collision_mask with 1000 0001 to reverse the position of the set bit
+    iny                                 ; increment y to look at the level data to the right of us
+    jmp     and_check_right             ; jump over the lsr used for non-boundary checks
+same_byte_right
     lsr                                 ; shift one bit right so that we check the thing to our right
+and_check_right
     and     LEVEL_DATA,y                ; AND the collision mask with the level data
     bne     blocked_right               ; if result != 0, you're colliding, exit
     inc     NEW_X_COOR                  ; else, move sprite right by incrementing its new x coordinate
