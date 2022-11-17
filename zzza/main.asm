@@ -270,14 +270,20 @@ game_loop
 
 game_over_check
     jsr     edge_death                  ; check if the character has gone off the edge
-    bne     dead_loop                   ; if the return value is not 0, you're dead
+    bne     death_screen                ; if the return value is not 0, you're dead
     rts                                 ; otherwise return to calling code
 
-dead_loop
-    lda     #7                          ; load 7 for screen colour yellow
-    sta     $9607                       ; set block at middle of top line to yellow
-    lda     #4                          ; load 4 (character) into A (solid block)
-    sta     $1e07                       ; set the yellow location to a block (so we can see it)
+; fill screen with all red
+death_screen
+    ldx     #0                          ; initialize loop ctr
+death_screen_loop
+    lda     #2                          ; load colour for red
+    sta     COLOR_ADDR,x
+    lda     #6                          ; load solid block
+    sta     SCREEN_ADDR,x 
+    inx 
+    bne     death_screen_loop
+
 infinitum
     jmp     infinitum                   ; loop infinitely
 
