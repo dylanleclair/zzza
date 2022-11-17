@@ -209,7 +209,6 @@ set_repeat                              ; sets the repeat value so holding down 
     sta     KEY_REPEAT                  ; sets all keys to repeat
 
     jsr     init_level                  ; ensure that there's valid level data ready to go
-    jsr     fill_level                  ; 
     jsr     backup_scrolling
 
     lda #0
