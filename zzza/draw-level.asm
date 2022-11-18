@@ -69,75 +69,6 @@ draw_level_exit
     rts
 
 ; -----------------------------------------------------------------------------
-; SUBROUTINE: FILL_LEVEL
-; - takes the current state of the level, and draws the full blocks / empty spaces on the screen
-; - essentially just the starting state for every frame
-; - afterwards, we go ahead and advance each character being animated by n frames (where n is # of frames into current animation - see: DRAW_LEVEL)
-; -----------------------------------------------------------------------------
-
-fill_level
-    ; outer loop: for each element of the LEVEL_DATA array, animate the screen based off LEVEL_DATA and LEVEL_DELTA at same index
-    ldx     #0                          ; initialize x for outer loop counter
-fill_level_loop
-    ; each byte of input data will become 8 chars on screen, so we need an offset of (i*8) to
-    ; ensure we draw to the right location.
-    
-    txa                                 ; put x into a
-    asl                                 ; a*2
-    asl                                 ; a*2
-    asl                                 ; a*2
-    sta     WORKING_SCREEN              ; store this as the low byte of the working screen memory
-
-    ; get the pattern of the strip we want to work on
-    lda     LEVEL_DATA,x                ; grab LEVEL_DATA[x] to figure out which bits animate and which don't
-    sta     WORKING_DELTA               ; store it for later use
-
-    ; inner loop: for each bit in LEVEL_DELTA[i], update the onscreen character by 1 if delta=1, and leave it alone if delta=0
-    ldy     #0                          ; initialize loop counter for inner loop
-
-fill_strip_loop
-    lda     WORKING_DELTA               ; grab our working delta information
-    bmi     fill_bit_hi                ; leading 1 -> most significant bit is high
-
-fill_bit_lo                            ; if the bit was lo, this char can just stay the same
-    lda     #2                              ; empty character
-    jmp     fill_draw
-fill_bit_hi                            ; if the bit was hi, this char needs to animate
-    lda     #6                            ; load full block
-
-fill_draw
-    sta     (WORKING_SCREEN),y          ; store the updated character back onto the screen
-
-fill_shift
-    ; set up the next loop iteration by rotating the delta pattern
-    rol     WORKING_DELTA               ; rotate the delta left 1 bit so we can read the next highest bit
-    iny                                 ; increment y for the next loop
-
-fill_strip_test
-    cpy     #8                          ; each strip is 8 bits long
-    bne     fill_strip_loop             ; while y<8, branch up to top of loop
-
-    inx                                 ; increment loop counter
-fill_level_test
-    cpx     #32                         ; go through each of the LEVEL_DELTAs
-    bne     fill_level_loop             ; while x<32, branch up to the top of the loop
-
-
-
-    rts
-
-
-
-; restore region of memory overlayed by high resolution graphics
-; call scroll animation frame
-; backup the region of memory that is overlayed by the high resolution graphics
-; xor onto high res graphics
-; place high res graphics onto the screen
-
-
-
-
-; -----------------------------------------------------------------------------
 ; SUBROUTINE: DRAW_MASTER
 ; - takes the current state of the level, and draws the full blocks / empty spaces on the screen
 ; - essentially just the starting state for every frame
@@ -147,11 +78,9 @@ fill_level_test
 draw_master
     jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
     jsr     draw_level                  ; do scrolly scroll
-    ; jsr     draw_block                  ; draw any falling blocks
+    jsr     draw_block                  ; draw any falling blocks
     jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
     jsr     reset_high_res              ; clear high res graphics
-    ; jsr     draw_shift_vertical             ; draw the appropriate shift down (currently based on frame counter)
-    ; jsr     draw_shift_horizontal
     jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
     rts

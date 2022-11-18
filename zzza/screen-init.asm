@@ -22,7 +22,7 @@ screen_dim
 color
     lda #04                     ; set the color to purple
     sta COLOR_ADDR,x
-    lda #0                      ; clear the character (write a space)
+    lda #2                      ; clear the character (write a space)
     sta SCREEN_ADDR,x
     inx
 color_test
