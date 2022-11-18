@@ -24,6 +24,10 @@
 ;   just before calling the scrolling code (which updates it), then save it again before it is masked onto the 
 ;   high-resolution graphics. 
 ;
+;   It's also very important that any time EVA's position is updated that 1. we put the backed-up data back onto the screen
+;   before updating her position and 2. after her position changes, we backup the data again so so it (and any screen data) 
+;   doesn't get lost / clobbered.
+;
 ;   Finally, the high resolution graphics characters are drawn to screen based on EVA's position.
 ;
 ;   The buffer is always centered around EVAs position, and a number of "shifts" either left, right, up or down. 
