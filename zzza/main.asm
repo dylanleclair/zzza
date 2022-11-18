@@ -55,44 +55,18 @@ INNER_LOOP_CTR = $55
 
 BACKUP_HIGH_RES_SCROLL = $56        ; 9 bytes - one for each char in the high res graphics
 
-MOVE_DIR_X = $065
-MOVE_DIR_Y = $066
+MOVE_DIR_X = $65                    ; 1 byte: (-1, 0, 1) representing Left move, standing still, Right move
+MOVE_DIR_Y = $66                    ; 1 byte: (-1, 0, 1) representing up move, standing still, down move
 
-FRAMES_SINCE_MOVE = $067
+FRAMES_SINCE_MOVE = $67             ; 1 byte:
 
+CURRENT_PLAYER_CHAR = $68           ; 1 byte: pointer to the character that should be drawn in hires bitmap
+CURRENT_PLAYER_CHAR_HI = $69
 
-; -----------------------------------------------------------------------------
-; TODO: please don't leave these as custom_char_n, what a terrible
-; naming convention
-; -----------------------------------------------------------------------------
-; ROM locations that hold chars that we want to copy over for custom chars
-CUSTOM_CHAR_0 = $8300
-CUSTOM_CHAR_1 = $8378
-CUSTOM_CHAR_2 = $8310
-CUSTOM_CHAR_3 = $87b8
-CUSTOM_CHAR_4 = $8700
-CUSTOM_CHAR_5 = $8778
-CUSTOM_CHAR_6 = $8710
-CUSTOM_CHAR_7 = $83b8
-CUSTOM_CHAR_8 = $8298
-
-; custom char memory offsets (hardcoded)
-CUSTOM_CHAR_ADDR_0 = $1010 ; character #2
-CUSTOM_CHAR_ADDR_1 = $1018 ; character #3 
-CUSTOM_CHAR_ADDR_2 = $1020 ; ...
-CUSTOM_CHAR_ADDR_3 = $1028
-CUSTOM_CHAR_ADDR_4 = $1030
-CUSTOM_CHAR_ADDR_5 = $1038
-CUSTOM_CHAR_ADDR_6 = $1040
-CUSTOM_CHAR_ADDR_7 = $1048
-CUSTOM_CHAR_ADDR_8 = $1050
-
-
+    processor 6502
 ; -----------------------------------------------------------------------------
 ; BASIC STUB
 ; -----------------------------------------------------------------------------
-    processor 6502
-
     org $1001
     
     dc.w stubend ; define a constant to be address @ stubend
@@ -108,11 +82,9 @@ stubend
     org $100d       ; where stub ends
     dc.b #0,#0,#0   ; round off to 8 byte alignment for proper characters
 
-    ; REMINDER: start at character #2 instead of 0
-
-    org $1058 ; 0x1010 (start of charset) + 64
-    ; after 8 chars of space reserved (for copied block chars), slot in the rest of the characters
+    ; REMINDER: because of alignment, start at character #2 instead of 0
     include "custom_charset.asm"
+
 ; -----------------------------------------------------------------------------
 ; Lookup table for the y-coordinates on the screen. Multiples of 16
 ; -----------------------------------------------------------------------------
@@ -165,18 +137,14 @@ STRIPS
 start
 
 ; -----------------------------------------------------------------------------
-; Files for setting up the screen and the character set
-; Basically everything that needs to be set up before going in to the main
-; game loop
-; -----------------------------------------------------------------------------
-    include "char-init.asm"
-    include "screen-init.asm"
-
-; -----------------------------------------------------------------------------
-; SUBROUTINE: GAME_INITIALIZE
+; SETUP: GAME_INITIALIZE
 ; - initializes values for the game loop
+; - Basically everything that needs to be set up before going in to the main
+;   game loop
 ; -----------------------------------------------------------------------------
 game
+    include "screen-init.asm"           ; initialize screen colour
+    
     lda     #%10011000                  ; seed for the lfsr
     sta     LFSR_ADDR
 
@@ -189,6 +157,9 @@ game
 
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
+
+    lda     #$10                        ; hi byte of player sprite's char will always be 0x10
+    sta     CURRENT_PLAYER_CHAR_HI
 
     lda     #$3
     sta     X_COOR                      ; set the x coordinate to 7

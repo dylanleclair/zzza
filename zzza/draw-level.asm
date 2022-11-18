@@ -289,58 +289,36 @@ mask_loop_test
 ; -----------------------------------------------------------------------------
 reset_high_res
     ; set all chars back to 0
-    ldx #0
+    ldy #0
 zero_hi_res_loop
     lda #0
-    sta hi_res_0_0,x
-    sta hi_res_0_1,x
-    sta hi_res_0_2,x
+    sta hi_res_0_0,y
+    sta hi_res_0_1,y
+    sta hi_res_0_2,y
     
-    sta hi_res_1_0,x
-    sta hi_res_1_1,x
-    sta hi_res_1_2,x
+    sta hi_res_1_0,y
+    sta hi_res_1_1,y
+    sta hi_res_1_2,y
 
-    sta hi_res_2_0,x
-    sta hi_res_2_1,x
-    sta hi_res_2_2,x
+    sta hi_res_2_0,y
+    sta hi_res_2_1,y
+    sta hi_res_2_2,y
 
-    inx
-    cpx #8
+    iny
+    cpy #8
     bne zero_hi_res_loop 
 
-    ldx #0
-    ; draw the character again 
-    lda #%00111100             ; start with the "character" in the middle of the buffer
-	sta hi_res_1_1,x
-    inx
+    lda     #$50                ; location of the eva_front char
+    sta     CURRENT_PLAYER_CHAR ; store it so the next loop can use it
 
-    lda #%01000010
-	sta hi_res_1_1,x
-    inx
+; draw a desired custom character into the centre of the bitmap
+custom_char_hi_res_loop
+    ; expects that the desired char's address is stored in CURRENT_PLAYER_CHAR
+    lda     (CURRENT_PLAYER_CHAR),y
+    sta     hi_res_1_1,y
 
-	lda #%10100101
-	sta hi_res_1_1,x
-    inx
-
-    lda #%10000001
-	sta hi_res_1_1,x
-    inx
-
-    lda #%10100101
-	sta hi_res_1_1,x
-    inx
-    
-    lda #%10011001
-	sta hi_res_1_1,x
-    inx
-
-    lda #%01000010
-	sta hi_res_1_1,x
-    inx
-    
-    lda #%00111100
-	sta hi_res_1_1,x
-    inx
+    dey
+    bne custom_char_hi_res_loop
 
     rts
 
