@@ -1,11 +1,12 @@
 ; -----------------------------------------------------------------------------
 ; SETUP: INIT_CHARSET
-; - activates custom charset starting at 1c00
+; - activates custom charset starting at 1000
 ; - copies desired characters from ROM into proper memory for easy addressing
 ; -----------------------------------------------------------------------------
 
     ; change the location of the charset
-    lda     #$fc         ; set location of charset to 7168 ($1c00)
+    lda     #$fc         ; set location of charset to 1000
+    ; for 1c00, set to 255
     sta     CHARSET_CTRL ; store in register controlling base charset 
 
     ; copy the 8 character bytes at given address to the custom character set memory (CUSTOM_CHAR_ADDR)

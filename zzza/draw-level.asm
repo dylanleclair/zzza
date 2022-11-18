@@ -126,22 +126,11 @@ fill_level_test
 
     rts
 
-
-
-; restore region of memory overlayed by high resolution graphics
-; call scroll animation frame
-; backup the region of memory that is overlayed by the high resolution graphics
-; xor onto high res graphics
-; place high res graphics onto the screen
-
-
-
-
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: DRAW_MASTER
-; - takes the current state of the level, and draws the full blocks / empty spaces on the screen
-; - essentially just the starting state for every frame
-; - afterwards, we go ahead and advance each character being animated by n frames (where n is # of frames into current animation - see: DRAW_LEVEL)
+; - draws the "level" without distorting hi-res graphics / the level itself
+;   - does this by restoring hi-res buffer to screen, calling draw, 
+;       then saving new scrolling data for next time (see custom_charset.asm) for more
 ; -----------------------------------------------------------------------------
 
 draw_master
@@ -172,15 +161,15 @@ mask_level_loop
     ldy     LOOP_CTR
     lda     LOOP_CTR
     clc
-    adc     #11
-    tax
+    adc     #11                         ; base hi-res target character code + loop index = target character code 
+    tax                                 ; hi-res character code gets passed in thru x register
 
-    lda     BACKUP_HIGH_RES_SCROLL,y
+    lda     BACKUP_HIGH_RES_SCROLL,y    ; character code to XOR onto hi-res character goes into acc
     jsr     xor_character_to_high_res
 
     inc     LOOP_CTR
     ldy     LOOP_CTR
-    cpy     #9
+    cpy     #9                          ; run 8 times
     bne     mask_level_loop
 
     rts
@@ -368,7 +357,6 @@ zero_hi_res_loop
     sta hi_res_0_2,x
     
     sta hi_res_1_0,x
-    sta hi_res_1_1,x
     sta hi_res_1_2,x
 
     sta hi_res_2_0,x
@@ -430,37 +418,37 @@ draw_high_res
     jsr get_position ; top left corner of high res graphics
 
     ; top row
-    lda #11
+    lda #11         ; character code representing top left of buffer (macros wouldnt work for literals???)
     sta $1e00,x
     inx
 
-    lda #12
+    lda #12         ; character code representing top middle of buffer (macros wouldnt work for literals???)
     sta $1e00,x
     inx
 
-    lda #13
+    lda #13         ; character code representing top right of buffer (macros wouldnt work for literals???)
     sta $1e00,x
 
     ; shift to middle row
     inc Y_COOR
     jsr get_position
 
-    lda #14
+    lda #14         ; middle row left col
     sta $1e00,x
     inx
 
-    lda #15
+    lda #15         ; middle row middle col
     sta $1e00,x
     inx
 
-    lda #16
+    lda #16         ; middle row right col
     sta $1e00,x
 
     ; shift to bottom row
     inc Y_COOR
     jsr get_position
 
-    lda #17
+    lda #17         ; ...
     sta $1e00,x
     inx
 
