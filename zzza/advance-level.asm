@@ -21,6 +21,14 @@ advance_level
     and     ANIMATION_FRAME             ; calculate (acc AND frame) to check if the low bit pattern matches a multiple of 4
     bne     advance_exit                ; if the AND operation didn't zero out, frame is not a multiple of 4. leave subroutine.
 
+advance_char_pos
+    lda     #$4b                        ; memory location 0049 is where player x and y are stored
+    sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
+    jsr     check_block_down            ; check if there's a block under the player
+    beq     init_advance_loop           ; if not, (return of 0 means no block) then don't lift the sprite up
+    dec     NEW_Y_COOR                  ; the level is moving up, so the player sprite also needs to move up
+
+init_advance_loop
     ldy     #0                          ; initialize loop counter
     ldx     #2                          ; we need an offset that is always 2 ahead of y
 
@@ -63,8 +71,6 @@ advance_new                             ; this section is responsible for fillin
 advance_final
     sta     LEVEL_DATA,y                ; store it in LEVEL_DATA[32]
 
-advance_char_pos
-    dec     NEW_Y_COOR                  ; the level is moving up, so the player sprite also needs to move up
-
 advance_exit
     rts
+
