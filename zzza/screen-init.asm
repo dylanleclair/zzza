@@ -33,5 +33,12 @@ color_test
 ; - sets color of screen to red, clears screen
 ; -----------------------------------------------------------------------------
 ; SET SCREEN BORDER TO BLACK
-    lda     #24                 ; white screen with a black border
+    lda     #12                 ; white screen with a black border
     sta     $900F               ; set screen border color
+
+; -----------------------------------------------------------------------------
+; SETUP: CHARSET LOCATION
+; -----------------------------------------------------------------------------
+    ; change the location of the charset
+    lda     #$fc         ; set location of charset to 7168 ($1c00)
+    sta     CHARSET_CTRL ; store in register controlling base charset 
