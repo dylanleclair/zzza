@@ -22,7 +22,7 @@ advance_level
     bne     advance_exit                ; if the AND operation didn't zero out, frame is not a multiple of 4. leave subroutine.
 
 advance_char_pos
-    lda     #$4b                        ; memory location 0049 is where player x and y are stored
+    lda     #$4b                        ; memory location 004b is where player's newX and newY are stored
     sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
     jsr     check_block_down            ; check if there's a block under the player
     beq     init_advance_loop           ; if not, (return of 0 means no block) then don't lift the sprite up
