@@ -201,11 +201,19 @@ block_stomp
     sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
 
     jsr     check_block_down            ; check if there is a block underneath player
-    bne     stomp                       ; check if return value != 0
+    bne     stomp_check_depth           ; check if return value != 0
     rts                                 ; if there's no block below us, return
 
-; TODO: this currently doesn't take into account the restriction on stomping 2 blocks deep
+stomp_check_depth                       ; prevent the player from stomping if the blocks are 2+ deep
+    inc     Y_COOR                      ; this is the player's y coord, temporarily increment to look one row below us
+    jsr     check_block_down            ; check_block_down should already be set up to use player's coords
+    beq     stomp                       ; if there's nothing 2 rows below us, we can stomp
+    dec     Y_COOR                      ; reset the player's y coord after the depth check
+    rts
+
 stomp
+    dec     Y_COOR                      ; reset the player's y coord after the depth check
+    
     ; store the block's x and y coordinates for later use
     ldx     X_COOR                      ; get player's x coord
     stx     BLOCK_X_COOR                ; store in block's coords (player and block share x position)
