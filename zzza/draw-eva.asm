@@ -36,12 +36,13 @@ draw_sprite
 draw_quick_loop
 
     jsr     reset_high_res              ; clear high res graphics
-    jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
     
     ; once the direction is set...
     ; draw EVA at the appropriate position in buffer
     jsr     draw_shift_horizontal       ; draw the appropriate shift left/right
     jsr     draw_shift_vertical         ; draw the appropriate shift up/down
+    
+    jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
     
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
 
@@ -147,9 +148,9 @@ set_y_dir
 ; set MOVE_DIR_Y to up (-1)
 y_dir_up
 
-    lda     #-1                     ; set y move direction to -1
-    sta     MOVE_DIR_Y
-    jmp     update_position_cleanup
+    ; lda     #-1                     ; set y move direction to -1
+    ; sta     MOVE_DIR_Y
+    ; jmp     update_position_cleanup
 ; set MOVE_DIR_Y to up (1)    
 y_dir_down
 
