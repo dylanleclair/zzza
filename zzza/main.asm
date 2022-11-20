@@ -203,8 +203,8 @@ game_loop
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
     jsr     get_input                   ; check for user input and update player X,Y coords
     jsr     check_fall                  ; try to move the sprite down
-    jsr     advance_level               ; update the state of the LEVEL_DATA array
     jsr     advance_block               ; update location of any falling blocks
+    jsr     advance_level               ; update the state of the LEVEL_DATA array
 
     ; DEATH CHECK: once all states have been updated, check for a game over
     jsr     game_over_check

@@ -42,11 +42,13 @@ place_block
     lda     collision_mask,x            ; get the collision mask for our x position
     eor     LEVEL_DATA,y                ; xor with the level data to place the block back into the level
     sta     LEVEL_DATA,y                ; store the new pattern back in LEVEL_DATA
- 
+
 reset_block_coors
     lda     #$ff                        ; 0xff indicates falling block not in use
     sta     BLOCK_X_COOR
+    sta     NEW_BLOCK_X
     sta     BLOCK_Y_COOR
+    sta     NEW_BLOCK_Y
 
 advance_block_exit
     rts

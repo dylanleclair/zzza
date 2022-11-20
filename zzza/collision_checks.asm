@@ -189,9 +189,14 @@ no_fall
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: BLOCK_STOMP
-;   - Attempts to stomp out a block from under the player
+; - Attempts to stomp out a block from under the player
+; - Limits the game to one in-air block at a time
 ; -----------------------------------------------------------------------------
 block_stomp
+    lda     #$ff                        ; 0xff means no blocks are currently falling
+    cmp     BLOCK_X_COOR                ; check if block coordinates are in use
+    bne     block_stomp_exit            ; if coord != ff, a block is already falling. Exit.
+
     lda     #$49                        ; memory location 0049 is where player x and y are stored
     sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
 
@@ -230,13 +235,13 @@ clear_block_delta
     
     ; first, deal with the delta above you
     lda     collision_mask,x            ; get the collision mask again
-    eor     LEVEL_DELTA,y 
+    eor     LEVEL_DELTA,y               ; collision XOR delta: place a 0 in the delta, stop this bit from animating
     sta     LEVEL_DELTA,y
 
     ; then deal with the delta below you
     lda     collision_mask,x            ; get the collision mask again
-    iny 
-    iny 
+    iny                                 ; the piece of LEVEL_DELTA representing the spot below you is
+    iny                                 ; 2 indices ahead of your current position, so y+=2
     eor     LEVEL_DELTA,y 
     sta     LEVEL_DELTA,y
 
@@ -247,8 +252,8 @@ clear_block_backup
     lda     #02                         ; char for an empty space
     sta     BACKUP_HIGH_RES_SCROLL+7    ; this is the char of the backup buf that is below Eva
 
-; ; TODO: i think there are some optimizations here to avoid accessing BLOCK_Y_COOR so many times
     inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall
     inc     NEW_BLOCK_Y
 
+block_stomp_exit
     rts
