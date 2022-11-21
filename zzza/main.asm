@@ -37,7 +37,6 @@ Y_COOR = $4a                        ; 1 byte: Y coordinate of the player charact
 NEW_X_COOR = $4b                    ; 1 byte: player character's new X position
 NEW_Y_COOR = $4c                    ; 1 byte: player character's new Y position
 
-
 SPRITE_POSITION = $4d               ; 1 byte: sprite position relative to screen start in memory
 
 LOOP_CTR = $4e                      ; 1 byte: just another loop counter
@@ -63,6 +62,9 @@ FRAMES_SINCE_MOVE = $67             ; 1 byte:
 CURRENT_PLAYER_CHAR = $68           ; 1 byte: pointer to the character that should be drawn in hires bitmap
 CURRENT_PLAYER_CHAR_HI = $69
 
+ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
+ENC_BYTE_VAR = $4a            ; temporary variable for title screen (used in the game for Y_COOR) 
+
     processor 6502
 ; -----------------------------------------------------------------------------
 ; BASIC STUB
@@ -71,7 +73,7 @@ CURRENT_PLAYER_CHAR_HI = $69
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4304", 0
+    dc.b $9e, "4483", 0
 stubend
     dc.w 0
 
@@ -90,6 +92,10 @@ stubend
 ; -----------------------------------------------------------------------------
 y_lookup: dc.b #0, #16, #32, #48, #64, #80, #96, #112, #128, #144, #160, #176, #192, #208, #224, #240
 
+; -----------------------------------------------------------------------------
+; Lookup table for "PRESS ANY KEY" used for title screen
+; -----------------------------------------------------------------------------
+press_any_key: dc.b #144, #146, #133, #147, #147, #160, #129, #142, #153, #160, #139, #133, #153
 ; -----------------------------------------------------------------------------
 ; Lookup table for collision masks, indicates which bit a sprite is occupying
 ; TODO: we can move this into the zero page very easily bc it's multiples of 2
@@ -134,7 +140,118 @@ STRIPS
     dc.b #%11011100
     dc.b #%11110011
 
+TITLE_SCREEN_ENCODING
+; number chars encoded: 2370
+; number bytes encoded: 75
+; generated code begins !!!
+; number chars encoded: 2274
+; number bytes encoded: 74
+; generated code begins !!!
+        dc.b #%10011111
+        dc.b #%10011111
+        dc.b #%10011111
+        dc.b #%10011111
+        dc.b #%10011111
+        dc.b #%10010101
+        dc.b #%10100011
+        dc.b #%10010001
+        dc.b #%10100011
+        dc.b #%10010001
+        dc.b #%10100011
+        dc.b #%10010010
+        dc.b #%10100001
+        dc.b #%10010100
+        dc.b #%10100001
+        dc.b #%10010011
+        dc.b #%10100001
+        dc.b #%10010011
+        dc.b #%10100001
+        dc.b #%10010001
+        dc.b #%10100001
+        dc.b #%10010001
+        dc.b #%10100001
+        dc.b #%10010010
+        dc.b #%10100001
+        dc.b #%10010011
+        dc.b #%10100001
+        dc.b #%10010011
+        dc.b #%10100001
+        dc.b #%10010010
+        dc.b #%10100011
+        dc.b #%10010001
+        dc.b #%10100001
+        dc.b #%10010011
+        dc.b #%10100001
+        dc.b #%10010011
+        dc.b #%10100001
+        dc.b #%10010011
+        dc.b #%10100001
+        dc.b #%10010001
+        dc.b #%10100001
+        dc.b #%10010001
+        dc.b #%10100011
+        dc.b #%10010001
+        dc.b #%10100011
+        dc.b #%10010001
+        dc.b #%10100011
+        dc.b #%10010001
+        dc.b #%10100001
+        dc.b #%10010001
+        dc.b #%10100001
+        dc.b #%10011111
+        dc.b #%10010011
+        dc.b #%01100001 ; r
+        dc.b #%10000001 ; u
+        dc.b #%01010001 ; n
+        dc.b #%01110001 ; t
+        dc.b #%00110001 ; i 
+        dc.b #%01000001 ; m 
+        dc.b #%00010001 ; e
+        dc.b #%10010001 ; 
+        dc.b #%01110001 ; t
+        dc.b #%00010001 ; e
+        dc.b #%01100010 ; rr
+        dc.b #%00000001 ; o
+        dc.b #%01100001 ; r
+        dc.b #%10010111  ; skip to 2
+        dc.b #%00100001  ; 2
+        dc.b #%00000001  ; 0
+        dc.b #%00100010  ; 22
+        dc.b #%10011111
+        dc.b #%10011111
+        dc.b #%10011111
+        dc.b #%10011011
+        dc.b #%00000000
+
+; lookup table of characters that we need for the title screen
+char_list
+        dc.b #176       ; 0
+        dc.b #133       ; E
+        dc.b #178       ; 2
+        dc.b #137       ; I
+        dc.b #141       ; M
+        dc.b #142       ; N
+        dc.b #146       ; R
+        dc.b #148       ; T
+        dc.b #149       ; U
+        dc.b #160        ; " " (empty space)
+        dc.b #160       ; full block (to be made purple)
+
 start
+; -----------------------------------------------------------------------------
+; SCREEN_DIM
+; - sets the screen dimensions
+; -----------------------------------------------------------------------------
+    include "screen_dim.asm"
+
+; -----------------------------------------------------------------------------
+; TITLE_SCREEN
+; - displays the title screen 
+; - changes text to "press any key"
+; - waits for user input and goes to main game on any key press
+; -----------------------------------------------------------------------------
+title_screen
+    include "title_screen.asm"
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
