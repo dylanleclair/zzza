@@ -41,8 +41,8 @@ delta_bit_hi                            ; if the bit was hi, this char needs to 
     bne     delta_advance_frame         ; if we aren't about to overflow, just increment the frame
 
 delta_overflow_frame
-    lda     #2      ; if we were at frame 7, overflow back to frame 0 (character 2)
-    jmp     delta_draw                 ; jump over the frame advance
+    lda     #2                          ; if we were at frame 7, overflow back to frame 0 (character 2)
+    jmp     delta_draw                  ; jump over the frame advance
 
 delta_advance_frame
     clc                                 ; clear carry bit just in case
@@ -77,8 +77,8 @@ draw_level_exit
 
 draw_master
     jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
-    jsr     draw_level                  ; do scrolly scroll
     jsr     draw_block                  ; draw any falling blocks
+    jsr     draw_level                  ; do scrolly scroll
     jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
     jsr     reset_high_res              ; clear high res graphics
     jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
