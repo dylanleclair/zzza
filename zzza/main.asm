@@ -63,7 +63,9 @@ CURRENT_PLAYER_CHAR = $68           ; 1 byte: pointer to the character that shou
 CURRENT_PLAYER_CHAR_HI = $69
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
-ENC_BYTE_VAR = $4a            ; temporary variable for title screen (used in the game for Y_COOR) 
+ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
+HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
+HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
 
     processor 6502
 ; -----------------------------------------------------------------------------
@@ -73,7 +75,7 @@ ENC_BYTE_VAR = $4a            ; temporary variable for title screen (used in the
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4483", 0
+    dc.b $9e, "4539", 0
 stubend
     dc.w 0
 
@@ -96,6 +98,14 @@ y_lookup: dc.b #0, #16, #32, #48, #64, #80, #96, #112, #128, #144, #160, #176, #
 ; Lookup table for "PRESS ANY KEY" used for title screen
 ; -----------------------------------------------------------------------------
 press_any_key: dc.b #144, #146, #133, #147, #147, #160, #129, #142, #153, #160, #139, #133, #153
+
+; -----------------------------------------------------------------------------
+; Horizontal scroll lookup table.  Order of blocks from default charset
+; - Order is as follows:
+; - full, three_fourths_horiz, half_horiz, quarter_horiz,
+; - empty_block, three_quarter_empty_horiz, half_empty_horiz, quarter_empty_horiz
+; -----------------------------------------------------------------------------
+horiz_scroll_table: dc.b #224, #234, #97, #116, #96, #106, #225, #244
 ; -----------------------------------------------------------------------------
 ; Lookup table for collision masks, indicates which bit a sprite is occupying
 ; TODO: we can move this into the zero page very easily bc it's multiples of 2
@@ -234,8 +244,8 @@ char_list
         dc.b #146       ; R
         dc.b #148       ; T
         dc.b #149       ; U
-        dc.b #160        ; " " (empty space)
-        dc.b #160       ; full block (to be made purple)
+        dc.b #224        ; " " (empty space)
+        dc.b #224       ; full block (to be made purple)
 
 start
 ; -----------------------------------------------------------------------------
@@ -252,6 +262,10 @@ start
 ; -----------------------------------------------------------------------------
 title_screen
     include "title_screen.asm"
+
+horiz_title_out
+    include "horiz_title_scroll.asm"
+
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
