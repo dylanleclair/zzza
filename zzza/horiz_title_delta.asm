@@ -1,12 +1,9 @@
 ; -----------------------------------------------------------------------------
-; SUBROUTINE: HORIZONTAL SCROLL
-; - moves the current level data off the screen to the left
-; - fills in the missing blocks with black
-; - end when the entire screen is black
+; SUBROUTINE: HORIZONTAL TITLE DELTA
+; - calculates the delta of the screen data to prepare to scroll left
+; - this is built to be particular to the title screen!
 ; -----------------------------------------------------------------------------
 
-; LEVEL_DATA = $00
-; LEVEL_DELTA = $22
 ; HORIZ_DELTA_BYTE = $49
 ; HORIZ_DELTA_ADDR = $4a 
 
@@ -18,18 +15,17 @@ black_on_black
 ; change all the black blocks to empty blocks to make scolling easier
 horiz_block_switch_init
     ldy     #0                      ; zero out the y register (loop counter)
-    lda     #$20                    ; load the empty block character in A register
+    lda     #$20                    ; load the purple block character
 
 ; set all black blocks to empty blocks so we can scroll easily
 horiz_block_switch
     ldx     SCREEN_ADDR,y           ; load a byte of screen character data
-    cpx     #$E0                    ; check if it's a full block of black
-    bne     horiz_bs_inc            ; jump to increment the loop counter and keep going
+    cpx     #$A0                    ; check if it's a purple block
+    beq     horiz_bs_inc            ; jump to increment the loop counter and keep going
     sta     SCREEN_ADDR,y           ; store a blank character at this space
 horiz_bs_inc 
     iny                             ; increment y
     bne     horiz_block_switch      ; if haven't looped over all 256 screen addresses, loop again
-
 
 ; calculate the screen delta for horizontal scrolling
 ; ASSUMES THAT Y IS ALREADY ZERO FROM LAST LOOP
@@ -77,6 +73,16 @@ horiz_change_byte
 horiz_delta_exit
     rol     HORIZ_DELTA_BYTE        ; rotate the HORIZ_DELTA_BYTE for the last time
 
-; TODO: mask out the last bit in each line
-jmpin
-    jmp     jmpin
+; we need to mask out the right most bit on the screen since we're scrolling in black screen
+; TODO: THIS IS INCREDIBLY HACKY AND WON'T WORK FOR ANYTHING BUT THE TITLE SCREEN BUT I'M SO TIRED YOU GUYS
+horiz_mask_end_init
+    ldx     #31                     ; initialize X to 31 (loop backwards for easier branching)
+    ldy     #$FE                    ; load 1111 1110 into the Y register for masking the byte
+
+horiz_mask_end
+    tya                             ; move the bitmask into the A register
+    and     $22,x                   ; mask the 0th bit out of the pattern
+    sta     $22,X                   ; store the masked bit back where it belongs!
+    dex                             ; decrement x
+    dex                             ; decrement x
+    bpl     horiz_mask_end          ; if x still positive, we need to keep looping 
