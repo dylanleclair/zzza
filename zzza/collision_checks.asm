@@ -17,12 +17,12 @@ get_input
 input_left
     cmp     #$41                        ; A key pressed?
     bne     input_right                 ; if A wasn't pressed, keep checking input
-    jsr     collision_left              ; A was pressed, go to check for a collission left
+    jsr     move_left                   ; A was pressed, try to move left
 
 input_right
     cmp     #$44                        ; D key pressed?
     bne     input_stomp                 ; if D wasn't pressed, keep checking
-    jsr     collision_right             ; D was pressed, check for collision right
+    jsr     move_right                  ; D was pressed, try to move right
 
 input_stomp
     cmp     #$53                        ; S key pressed?
@@ -34,15 +34,11 @@ no_key_pressed
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: COLLISION_LEFT
-;   1) checks if sprite is trying to move off the left side of the screen
-;       - jumps to exit the routine if that's the case
-;   2) Finds the byte of level data the sprite is located in
+; - checks if there's a block to the left of the player
+; - if yes, returns something not equal to 0
+; - if no, returns 0
 ; -----------------------------------------------------------------------------
 collision_left
-    ; check if the sprite is moving off the left edge of the screen
-    lda     X_COOR                      ; load the X coordinate
-    beq     blocked_left                ; if X == 0, can't move left, exit the subroutine
-
     ; find proper index into LEVEL_DATA array (if you're on the left or right of the screen)
     ldx     X_COOR                      ; get player's x coord
 
@@ -67,24 +63,34 @@ same_byte_left
     asl                                 ; shift one bit left so that we check the thing to our left
 and_check_left
     and     LEVEL_DATA,y                ; AND the collision mask with the level data
-    bne     blocked_left                ; if result != 0, you're colliding, exit
-    dec     NEW_X_COOR                  ; else, move sprite left by decrementing its new x coordinate
+    rts                                 ; return with whatever value was in the accumulator
 
-blocked_left
-    rts                                 ; return back to the get_input loop
+; -----------------------------------------------------------------------------
+; SUBROUTINE: MOVE_LEFT
+;   1) checks if sprite is trying to move off the left side of the screen
+;       - jumps to exit the routine if that's the case
+;   2) checks if the sprite is about to collide with a block to its left
+;       - if so, does nothing. Else, adjusts X coordinate
+; -----------------------------------------------------------------------------
+move_left 
+    ; check if the sprite is moving off the left edge of the screen
+    lda     X_COOR                      ; load the X coordinate
+    beq     move_left_exit              ; if X == 0, can't move left, exit the subroutine
+
+    ; check if you're going to collide with a block
+    jsr     collision_left              ; jump to check for a collision to your left
+    bne     move_left_exit              ; if result comes back as something other than 0, you're colliding
+    dec     NEW_X_COOR                  ; otherwise, you're not colliding. decrement x coor
+move_left_exit
+    rts
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: COLLISION_RIGHT
-;   1) checks if sprite is trying to move off the right side of the screen
-;       - jumps to exit the routine if that's the case
-;   2) Finds the byte of level data the sprite is located in
+; - checks if there's a block to the right of the player
+; - if yes, returns something not equal to 0
+; - if no, returns 0
 ; -----------------------------------------------------------------------------
 collision_right
-    ; check for screen edge collision
-    lda     X_COOR                      ; load the X coordinate
-    cmp     #15                         ; compare X coordinate with 15
-    beq     blocked_right               ; if X == 15, can't move right, exit the subroutine
-
     ; find proper index into LEVEL_DATA array (if you're on the left or right of the screen)
     ldx     X_COOR                      ; get player's x coord
 
@@ -109,11 +115,28 @@ same_byte_right
     lsr                                 ; shift one bit right so that we check the thing to our right
 and_check_right
     and     LEVEL_DATA,y                ; AND the collision mask with the level data
-    bne     blocked_right               ; if result != 0, you're colliding, exit
-    inc     NEW_X_COOR                  ; else, move sprite right by incrementing its new x coordinate
+    rts                                 ; return with whatever was in the accumulator after AND
 
-blocked_right
-    rts                                 ; return without updating player location
+; -----------------------------------------------------------------------------
+; SUBROUTINE: MOVE_RIGHT
+;   1) checks if sprite is trying to move off the right side of the screen
+;       - jumps to exit the routine if that's the case
+;   2) checks if the sprite is about to collide with a block to its right
+;       - if so, does nothing. Else, adjusts X coordinate
+; -----------------------------------------------------------------------------
+move_right 
+    ; check if the sprite is moving off the right edge of the screen
+    lda     X_COOR                      ; load the X coordinate
+    cmp     #15                         ; compare X coordinate with 15
+    beq     move_right_exit             ; if X == 15, can't move right, exit the subroutine
+
+    ; check if you're going to collide with a block
+    jsr     collision_right             ; jump to check for a collision to your right
+    bne     move_right_exit             ; if result comes back as something other than 0, you're colliding
+    inc     NEW_X_COOR                  ; otherwise, you're not colliding. increment x coor
+move_right_exit
+    rts
+
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: EDGE_DEATH
 ;   - Checks if sprite has moved off the top or bottom of screen
@@ -185,83 +208,4 @@ check_fall
     bne     no_fall                     ; if return value != 0, player is not falling
     inc     NEW_Y_COOR                  ; player should now transition to this new Y position
 no_fall
-    rts
-
-; -----------------------------------------------------------------------------
-; SUBROUTINE: BLOCK_STOMP
-; - Attempts to stomp out a block from under the player
-; - Limits the game to one in-air block at a time
-; -----------------------------------------------------------------------------
-block_stomp
-    lda     #$ff                        ; 0xff means no blocks are currently falling
-    cmp     BLOCK_X_COOR                ; check if block coordinates are in use
-    bne     block_stomp_exit            ; if coord != ff, a block is already falling. Exit.
-
-    lda     #$49                        ; memory location 0049 is where player x and y are stored
-    sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
-
-    jsr     check_block_down            ; check if there is a block underneath player
-    bne     stomp_check_depth           ; check if return value != 0
-    rts                                 ; if there's no block below us, return
-
-stomp_check_depth                       ; prevent the player from stomping if the blocks are 2+ deep
-    inc     Y_COOR                      ; this is the player's y coord, temporarily increment to look one row below us
-    jsr     check_block_down            ; check_block_down should already be set up to use player's coords
-    beq     stomp                       ; if there's nothing 2 rows below us, we can stomp
-    dec     Y_COOR                      ; reset the player's y coord after the depth check
-    rts
-
-stomp
-    dec     Y_COOR                      ; reset the player's y coord after the depth check
-    
-    ; store the block's x and y coordinates for later use
-    ldx     X_COOR                      ; get player's x coord
-    stx     BLOCK_X_COOR                ; store in block's coords (player and block share x position)
-    stx     NEW_BLOCK_X
-
-    lda     Y_COOR                      ; get player's y coord
-    clc 
-    adc     #1                          ; we want the byte below the player
-    sta     BLOCK_Y_COOR                ; store in block's coords
-    sta     NEW_BLOCK_Y
-
-    asl                                 ; multiply Y by 2 to get the index into LEVEL_DATA
-    tay                                 ; put this offset into y
-
-    cpx     #$08                        ; check if block's x coord is less than 8
-    bmi     clear_block                 ; if block x < 8, you're on left half of screen, don't inc y
-    iny                                 ; if you're on right half, inc y
-
-; remove the block's old position from LEVEL_DATA
-clear_block
-    lda     collision_mask,x            ; get collision_mask[x] (this is the particular bit correlating to X position)
-    eor     LEVEL_DATA,y                ; clear the block out of the level by xoring the bitmask with the onscreen data
-    sta     LEVEL_DATA,y                ; store the new pattern back in LEVEL_DATA at correct offset
-
-; reset delta to ensure no half-frame animations show up in this space
-clear_block_delta
-    
-    ; first, deal with the delta above you
-    lda     collision_mask,x            ; get the collision mask again
-    eor     LEVEL_DELTA,y               ; collision XOR delta: place a 0 in the delta, stop this bit from animating
-    sta     LEVEL_DELTA,y
-
-    ; then deal with the delta below you
-    lda     collision_mask,x            ; get the collision mask again
-    iny                                 ; the piece of LEVEL_DELTA representing the spot below you is
-    iny                                 ; 2 indices ahead of your current position, so y+=2
-    eor     LEVEL_DELTA,y 
-    sta     LEVEL_DELTA,y
-
-; in order for this block to get stomped, it must be under Eva
-; this means it's also stored in the backup buffer
-; get it outta there!
-clear_block_backup
-    lda     #02                         ; char for an empty space
-    sta     BACKUP_HIGH_RES_SCROLL+7    ; this is the char of the backup buf that is below Eva
-
-    inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall
-    inc     NEW_BLOCK_Y
-
-block_stomp_exit
     rts

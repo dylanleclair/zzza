@@ -355,6 +355,7 @@ game_loop
     include "collision_checks.asm"
     include "draw-block.asm"
     include "advance-block.asm"
+    include "block-manip.asm"
 
 game_over_check
     jsr     edge_death                  ; check if the character has gone off the edge
