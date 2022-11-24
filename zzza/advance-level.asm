@@ -14,6 +14,8 @@
 ;         LEVEL_DELTA to just be too long.
 ; -----------------------------------------------------------------------------
 advance_level
+    lda     PROGRESS_BAR
+    bmi     advance_exit                ; negative progress bar means level is complete, don't advance
 
     ; this causes the 'advance_level' subroutine to only be called once every n game loops
     ; currently only setup to work with multiples of 2

@@ -70,6 +70,31 @@ update_block_diff
     sta     BLOCK_X_COOR
     lda     NEW_BLOCK_Y             ; update the old y coordinate
     sta     BLOCK_Y_COOR
+    rts                             ; no need to cleanup. just leave
+
+; the block has landed and no longer needs to be drawn as a falling object.
+; however, we still need to get this block and the one below it back in sync with the
+; rest of the screen animation.
+draw_block_cleanup
+    ; convert the old x and y coordinates into a screen offset from 1e00
+    ldx     BLOCK_Y_COOR            ; load the y coordinate
+    lda     y_lookup,x              ; index into the y lookup table to draw to the correct row
+    clc                             ; clear the carry bit!
+    adc     BLOCK_X_COOR            ; add the X coordinate to draw to the correct col
+    tax                             ; put this value into x so that we can use it as an offset
+
+    lda     #4                      ; colour purple
+    sta     COLOR_ADDR,x            ; store so that the old space goes back to purple
+    lda     #6
+    sta     SCREEN_ADDR,x
+
+    txa                             ; put the offset into the accumulator
+    clc 
+    adc     #16                     ; increment the offset by 16 so that we target the block below us
+    tax                             ; flip the offset back into x
+
+    lda     #6                      ; char for full fill
+    sta     SCREEN_ADDR,x           ; ensures that the block underneath is not going to animate
 
 draw_block_exit
     rts
