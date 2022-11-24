@@ -17,6 +17,7 @@ draw_eva
     rts                             ; if nothing has changed, leave subroutine
 
 draw_sprite
+
     ; need to draw the keyframes for moving eva along !!!
 
     ; essentially, we re-draw hi-res buffer 4/8 times very very fast
@@ -63,8 +64,14 @@ draw_quick_test
     ; 2. shift high res graphics 
 
 update_sprite_diff
+    ; make sure Eva's old location is back to purple
+    jsr     get_position
+    lda     #4                      ; colour for purple
+    sta     COLOR_ADDR,x            ; store it!
+
     ; must restore scrolling data before moving so data is not garbled/invalid when EVA's position changes
     jsr     restore_scrolling
+
 
     ; once animation is complete, update the sprite!
     lda     NEW_X_COOR              ; update the old x coordinate
@@ -75,10 +82,10 @@ update_sprite_diff
     ; EXTREMELY IMPORTANT:
     jsr     backup_scrolling        ; backup the scrolling data in new position!!!!!!
 
-    ; should not be necessary!!!
-    ; better to do these in quick loop so that the empty level after buffer resets cannot be seen
-    ; jsr     draw_high_res           ; draw it onto screen so changes to hi-res buffer are reflected on screen immediately
-    ; jsr     mask_level_onto_hi_res  ; once EVA is in updated position, and the data for scrolling is saved, XOR in the level from adjacent level data 
+    ; now that x and y are updated, make eva's new location white
+    jsr     get_position
+    lda     #1                      ; colour for white
+    sta     COLOR_ADDR,x            ; store it!
 
 draw_eva_exit
     rts

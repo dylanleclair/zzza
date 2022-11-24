@@ -31,6 +31,7 @@ input_stomp
 
 no_key_pressed
     rts 
+
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: COLLISION_LEFT
 ;   1) checks if sprite is trying to move off the left side of the screen
@@ -40,7 +41,6 @@ no_key_pressed
 collision_left
     ; check if the sprite is moving off the left edge of the screen
     lda     X_COOR                      ; load the X coordinate
-    cmp     #0                          ; compare X coordinate with 0
     beq     blocked_left                ; if X == 0, can't move left, exit the subroutine
 
     ; find proper index into LEVEL_DATA array (if you're on the left or right of the screen)
@@ -58,7 +58,14 @@ collision_left
 check_block_left
     ; check for collision with a block
     lda     collision_mask,x            ; get collision_mask[x]
+    cpx     #$08                        ; check if X == 8, meaning we're crossing a level data boundary
+    bne     same_byte_left              ; we're in the same byte as the level data we're checking against
+    eor     #129                        ; AND the collision_mask with 1000 0001 to reverse the position of the set bit
+    dey                                 ; decrement y to the piece of level data to the left of us
+    jmp     and_check_left              ; jump over the asl used for non-boundary checks 
+same_byte_left
     asl                                 ; shift one bit left so that we check the thing to our left
+and_check_left
     and     LEVEL_DATA,y                ; AND the collision mask with the level data
     bne     blocked_left                ; if result != 0, you're colliding, exit
     dec     NEW_X_COOR                  ; else, move sprite left by decrementing its new x coordinate
@@ -93,7 +100,14 @@ collision_right
 check_block_right
     ; check for collision with a block
     lda     collision_mask,x            ; get collision_mask[x]
+    cpx     #$07                        ; check if X == 7, meaning we're crossing a level data boundary
+    bne     same_byte_right             ; we're in the same byte as the level data we're checking against
+    eor     #129                        ; AND the collision_mask with 1000 0001 to reverse the position of the set bit
+    iny                                 ; increment y to look at the level data to the right of us
+    jmp     and_check_right             ; jump over the lsr used for non-boundary checks
+same_byte_right
     lsr                                 ; shift one bit right so that we check the thing to our right
+and_check_right
     and     LEVEL_DATA,y                ; AND the collision mask with the level data
     bne     blocked_right               ; if result != 0, you're colliding, exit
     inc     NEW_X_COOR                  ; else, move sprite right by incrementing its new x coordinate
@@ -168,9 +182,9 @@ check_fall
     sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
 
     jsr     check_block_down            ; jump to down collision check
-    bne     move_down                   ; if return value == 0, player is falling
+    bne     no_fall                     ; if return value != 0, player is not falling
     inc     NEW_Y_COOR                  ; player should now transition to this new Y position
-move_down
+no_fall
     rts
 
 ; -----------------------------------------------------------------------------
@@ -205,10 +219,33 @@ stomp
     bmi     clear_block                 ; if block x < 8, you're on left half of screen, don't inc y
     iny                                 ; if you're on right half, inc y
 
-clear_block                             ; remove the block's old position from LEVEL_DATA
+; remove the block's old position from LEVEL_DATA
+clear_block
     lda     collision_mask,x            ; get collision_mask[x] (this is the particular bit correlating to X position)
     eor     LEVEL_DATA,y                ; clear the block out of the level by xoring the bitmask with the onscreen data
     sta     LEVEL_DATA,y                ; store the new pattern back in LEVEL_DATA at correct offset
+
+; reset delta to ensure no half-frame animations show up in this space
+clear_block_delta
+    
+    ; first, deal with the delta above you
+    lda     collision_mask,x            ; get the collision mask again
+    eor     LEVEL_DELTA,y 
+    sta     LEVEL_DELTA,y
+
+    ; then deal with the delta below you
+    lda     collision_mask,x            ; get the collision mask again
+    iny 
+    iny 
+    eor     LEVEL_DELTA,y 
+    sta     LEVEL_DELTA,y
+
+; in order for this block to get stomped, it must be under Eva
+; this means it's also stored in the backup buffer
+; get it outta there!
+clear_block_backup
+    lda     #02                         ; char for an empty space
+    sta     BACKUP_HIGH_RES_SCROLL+7    ; this is the char of the backup buf that is below Eva
 
 ; ; TODO: i think there are some optimizations here to avoid accessing BLOCK_Y_COOR so many times
     inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall

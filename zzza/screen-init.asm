@@ -22,7 +22,7 @@ screen_dim
 color
     lda #04                     ; set the color to purple
     sta COLOR_ADDR,x
-    lda #0                      ; clear the character (write a space)
+    lda #2                      ; clear the character (write a space)
     sta SCREEN_ADDR,x
     inx
 color_test
@@ -33,5 +33,12 @@ color_test
 ; - sets color of screen to red, clears screen
 ; -----------------------------------------------------------------------------
 ; SET SCREEN BORDER TO BLACK
-    lda     #24                 ; white screen with a black border
+    lda     #12                 ; white screen with a black border
     sta     $900F               ; set screen border color
+
+; -----------------------------------------------------------------------------
+; SETUP: CHARSET LOCATION
+; -----------------------------------------------------------------------------
+    ; change the location of the charset
+    lda     #$fc         ; set location of charset to 7168 ($1c00)
+    sta     CHARSET_CTRL ; store in register controlling base charset 
