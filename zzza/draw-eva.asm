@@ -16,8 +16,6 @@ draw_eva
 
     rts                             ; if nothing has changed, leave subroutine
 
-clear_sprite
-
 draw_sprite
 
     ; need to draw the keyframes for moving eva along !!!
@@ -47,12 +45,12 @@ draw_quick_loop
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
 
     ; extremely stupid way of adding delay between each frame
-    jsr     stall
-    jsr     stall
-    jsr     stall
-    jsr     stall
-    jsr     stall
-    jsr     stall
+    ldy #6
+draw_frame_delay
+    jsr stall
+    dey
+    bne draw_frame_delay
+    
 
 draw_quick_test
     inc     FRAMES_SINCE_MOVE
@@ -123,20 +121,18 @@ update_sprite_direction
 
     lda     X_COOR                  ; grab the old x coord
     cmp     NEW_X_COOR              ; check if there is any difference
-    beq     set_y_dir               ; if there is, the char has moved
+    beq     set_y_dir               ; if they r same, no change - move onto y
     bmi     x_dir_right             ; x - new x is negative! new x is larger -> move right
-
+    ; else move left
 ; set MOVE_DIR_Y to up (-1)
 x_dir_left
     ; if move left
-    lda     #-1                     ; set x move direction to -1
-    sta     MOVE_DIR_X
+    dec     MOVE_DIR_X              ; set x move direction to -1
     jmp     set_y_dir
 ; set MOVE_DIR_X to up (1)
 x_dir_right
     ; else move right
-    lda     #1                      ; set x direction to 1
-    sta     MOVE_DIR_X
+    inc     MOVE_DIR_X              ; set x move direction to 1
 
 
 set_y_dir
@@ -154,8 +150,8 @@ y_dir_up
 ; set MOVE_DIR_Y to up (1)    
 y_dir_down
 
-    lda     #1                      ; set y direction to 1 
-    sta     MOVE_DIR_Y
+    ; lda     #1                      
+    inc     MOVE_DIR_Y                ; set y direction to 1 
 
 update_position_cleanup
     rts
@@ -197,47 +193,24 @@ shift_right_loop
     ; first row
     clc
 ; rotate ENTIRE hi res buffer to the right
-    lda     hi_res_0_0,x
-    ror
-    sta     hi_res_0_0,x
-
-    lda     hi_res_0_1,x
-    ror
-    sta     hi_res_0_1,x
-    
-    lda     hi_res_0_2,x
-    ror
-    sta     hi_res_0_2,x
+    ror     hi_res_0_0,x
+    ror     hi_res_0_1,x
+    ror     hi_res_0_2,x
 
     ; second row
 
     clc
-    lda     hi_res_1_0,x
-    ror
-    sta     hi_res_1_0,x
 
-    lda     hi_res_1_1,x
-    ror
-    sta     hi_res_1_1,x
-    
-    lda     hi_res_1_2,x
-    ror
-    sta     hi_res_1_2,x
+    ror     hi_res_1_0,x
+    ror     hi_res_1_1,x
+    ror     hi_res_1_2,x
 
     ; third row
     clc
-    lda     hi_res_2_0,x
-    ror
-    sta     hi_res_2_0,x
 
-    lda     hi_res_2_1,x
-    ror
-    sta     hi_res_2_1,x
-    
-    lda     hi_res_2_2,x
-    ror
-    sta     hi_res_2_2,x
-
+    ror     hi_res_2_0,x
+    ror     hi_res_2_1,x
+    ror     hi_res_2_2,x
 
     inx
 
@@ -259,46 +232,22 @@ shift_left_loop
     ; first row
     clc
 ; rotate ENTIRE hi res buffer to the right
-    lda     hi_res_0_2,x
-    rol
-    sta     hi_res_0_2,x
-
-    lda     hi_res_0_1,x
-    rol
-    sta     hi_res_0_1,x
-    
-    lda     hi_res_0_0,x
-    rol
-    sta     hi_res_0_0,x
+    rol     hi_res_0_2,x
+    rol     hi_res_0_1,x
+    rol     hi_res_0_0,x
 
     ; second row
 
     clc
-    lda     hi_res_1_2,x
-    rol
-    sta     hi_res_1_2,x
-
-    lda     hi_res_1_1,x
-    rol
-    sta     hi_res_1_1,x
-    
-    lda     hi_res_1_0,x
-    rol
-    sta     hi_res_1_0,x
+    rol     hi_res_1_2,x
+    rol     hi_res_1_1,x
+    rol     hi_res_1_0,x
 
     ; third row
     clc
-    lda     hi_res_2_2,x
-    rol
-    sta     hi_res_2_2,x
-
-    lda     hi_res_2_1,x
-    rol
-    sta     hi_res_2_1,x
-    
-    lda     hi_res_2_0,x
-    rol
-    sta     hi_res_2_0,x
+    rol     hi_res_2_2,x
+    rol     hi_res_2_1,x
+    rol     hi_res_2_0,x
 
 
     inx
@@ -452,18 +401,18 @@ shift_character_down_loop
     rts
 
 wrap_char_down
-    ; add 24 to the variable in y (target location)
+    ; subtract 16 to the variable in y (target location)
+    ; this is to transition into the next row!!
     txa
     clc
     adc     #-16
     tax
 
-    lda     hi_res_0_0,x    ; load the last byte of character above this one
-    sta     hi_res_0_0,y    ; store it in first byte of new
+    lda     hi_res_0_0,x    ; load the last byte of character above this one (row above)
+    sta     hi_res_0_0,y    ; store it in first byte of new (row moving to)
     
     txa ; put x to byte character of next character
     tay
-    ; dex
     dex ; increment y
 
     rts
