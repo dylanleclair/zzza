@@ -41,6 +41,7 @@ draw_quick_loop
     jsr     draw_shift_vertical         ; draw the appropriate shift up/down
     
     jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
+    
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
 
     ; extremely stupid way of adding delay between each frame
