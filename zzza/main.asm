@@ -63,7 +63,9 @@ CURRENT_PLAYER_CHAR = $68           ; 1 byte: pointer to the character that shou
 CURRENT_PLAYER_CHAR_HI = $69
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
-ENC_BYTE_VAR = $4a            ; temporary variable for title screen (used in the game for Y_COOR) 
+ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
+HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
+HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
 
     processor 6502
 ; -----------------------------------------------------------------------------
@@ -73,7 +75,7 @@ ENC_BYTE_VAR = $4a            ; temporary variable for title screen (used in the
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4483", 0
+    dc.b $9e, "4714", 0
 stubend
     dc.w 0
 
@@ -95,7 +97,21 @@ y_lookup: dc.b #0, #16, #32, #48, #64, #80, #96, #112, #128, #144, #160, #176, #
 ; -----------------------------------------------------------------------------
 ; Lookup table for "PRESS ANY KEY" used for title screen
 ; -----------------------------------------------------------------------------
-press_any_key: dc.b #144, #146, #133, #147, #147, #160, #129, #142, #153, #160, #139, #133, #153
+press_any_key: dc.b #16, #18, #5, #19, #19, #96, #1, #14, #25, #96, #11, #5, #25
+
+; -----------------------------------------------------------------------------
+; Lookup table for "2022" used for title screen
+; -----------------------------------------------------------------------------
+title_year: dc.b #50, #48, #50, #50, #0
+
+
+; -----------------------------------------------------------------------------
+; Horizontal scroll lookup table.  Order of blocks from default charset
+; - Order is as follows:
+; - full, three_fourths_horiz, half_horiz, quarter_horiz,
+; - empty_block, three_quarter_empty_horiz, half_empty_horiz, quarter_empty_horiz
+; -----------------------------------------------------------------------------
+horiz_scroll_table: dc.b #224, #234, #97, #116, #96, #106, #225, #244
 ; -----------------------------------------------------------------------------
 ; Lookup table for collision masks, indicates which bit a sprite is occupying
 ; TODO: we can move this into the zero page very easily bc it's multiples of 2
@@ -140,102 +156,24 @@ STRIPS
     dc.b #%11011100
     dc.b #%11110011
 
-TITLE_SCREEN_ENCODING
-; number chars encoded: 2370
-; number bytes encoded: 75
-; generated code begins !!!
-; number chars encoded: 2274
-; number bytes encoded: 74
-; generated code begins !!!
-        dc.b #%10011111
-        dc.b #%10011111
-        dc.b #%10011111
-        dc.b #%10011111
-        dc.b #%10011111
-        dc.b #%10010101
-        dc.b #%10100011
-        dc.b #%10010001
-        dc.b #%10100011
-        dc.b #%10010001
-        dc.b #%10100011
-        dc.b #%10010010
-        dc.b #%10100001
-        dc.b #%10010100
-        dc.b #%10100001
-        dc.b #%10010011
-        dc.b #%10100001
-        dc.b #%10010011
-        dc.b #%10100001
-        dc.b #%10010001
-        dc.b #%10100001
-        dc.b #%10010001
-        dc.b #%10100001
-        dc.b #%10010010
-        dc.b #%10100001
-        dc.b #%10010011
-        dc.b #%10100001
-        dc.b #%10010011
-        dc.b #%10100001
-        dc.b #%10010010
-        dc.b #%10100011
-        dc.b #%10010001
-        dc.b #%10100001
-        dc.b #%10010011
-        dc.b #%10100001
-        dc.b #%10010011
-        dc.b #%10100001
-        dc.b #%10010011
-        dc.b #%10100001
-        dc.b #%10010001
-        dc.b #%10100001
-        dc.b #%10010001
-        dc.b #%10100011
-        dc.b #%10010001
-        dc.b #%10100011
-        dc.b #%10010001
-        dc.b #%10100011
-        dc.b #%10010001
-        dc.b #%10100001
-        dc.b #%10010001
-        dc.b #%10100001
-        dc.b #%10011111
-        dc.b #%10010011
-        dc.b #%01100001 ; r
-        dc.b #%10000001 ; u
-        dc.b #%01010001 ; n
-        dc.b #%01110001 ; t
-        dc.b #%00110001 ; i 
-        dc.b #%01000001 ; m 
-        dc.b #%00010001 ; e
-        dc.b #%10010001 ; 
-        dc.b #%01110001 ; t
-        dc.b #%00010001 ; e
-        dc.b #%01100010 ; rr
-        dc.b #%00000001 ; o
-        dc.b #%01100001 ; r
-        dc.b #%10010111  ; skip to 2
-        dc.b #%00100001  ; 2
-        dc.b #%00000001  ; 0
-        dc.b #%00100010  ; 22
-        dc.b #%10011111
-        dc.b #%10011111
-        dc.b #%10011111
-        dc.b #%10011011
-        dc.b #%00000000
 
-; lookup table of characters that we need for the title screen
-char_list
-        dc.b #176       ; 0
-        dc.b #133       ; E
-        dc.b #178       ; 2
-        dc.b #137       ; I
-        dc.b #141       ; M
-        dc.b #142       ; N
-        dc.b #146       ; R
-        dc.b #148       ; T
-        dc.b #149       ; U
-        dc.b #160        ; " " (empty space)
-        dc.b #160       ; full block (to be made purple)
+TITLE_SCREEN
+    dc.b $48,$20,$20,$20,$2E,$20,$20,$20,$20,$20,$48,$20,$20,$20,$20,$2E
+    dc.b $50,$20,$51,$20,$20,$59,$20,$20,$2E,$20,$48,$20,$A0,$A0,$2E,$20
+    dc.b $3A,$74,$20,$20,$20,$59,$20,$20,$20,$A0,$BA,$20,$BA,$A0,$20,$20
+    dc.b $3A,$74,$20,$20,$A0,$A0,$BA,$20,$6F,$BA,$A0,$20,$A0,$BA,$59,$20
+    dc.b $3A,$74,$A0,$A0,$A0,$D4,$BA,$6A,$20,$2E,$A0,$20,$A0,$BA,$AE,$20
+    dc.b $20,$A0,$A0,$D4,$BA,$D4,$A0,$BA,$2E,$20,$A0,$20,$AE,$C2,$A0,$6F
+    dc.b $3A,$BA,$A0,$3A,$3A,$2E,$A0,$A0,$2E,$20,$A0,$A0,$A0,$6F,$6F,$3A
+    dc.b $3A,$20,$BA,$20,$3A,$CF,$D0,$C7,$20,$2E,$BA,$BA,$3A,$20,$20,$74
+    dc.b $63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63
+    dc.b $A0,$A0,$A0,$60,$A0,$A0,$A0,$60,$A0,$A0,$A0,$60,$60,$A0,$60,$60
+    dc.b $60,$60,$A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$A0,$60,$A0,$60
+    dc.b $60,$A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$60,$A0,$A0,$A0,$60
+    dc.b $A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$A0,$60
+    dc.b $A0,$A0,$A0,$60,$A0,$A0,$A0,$60,$A0,$A0,$A0,$20,$A0,$60,$A0,$20
+    dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
+    dc.b $60,$12,$15,$0E,$14,$09,$0D,$05,$20,$14,$05,$12,$12,$0F,$12,$20
 
 start
 ; -----------------------------------------------------------------------------
@@ -250,8 +188,7 @@ start
 ; - changes text to "press any key"
 ; - waits for user input and goes to main game on any key press
 ; -----------------------------------------------------------------------------
-title_screen
-    include "title_screen.asm"
+    jsr     draw_title_screen
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
@@ -355,6 +292,7 @@ game_loop
     include "collision_checks.asm"
     include "draw-block.asm"
     include "advance-block.asm"
+    include "title_screen.asm"
 
 game_over_check
     jsr     edge_death                  ; check if the character has gone off the edge
