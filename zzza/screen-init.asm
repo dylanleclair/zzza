@@ -25,4 +25,10 @@ color_test
 ; -----------------------------------------------------------------------------
     ; change the location of the charset
     lda     #$fc         ; set location of charset to 7168 ($1c00)
-    sta     CHARSET_CTRL ; store in register controlling base charset 
+    sta     CHARSET_CTRL ; store in register controlling base charset
+
+; -----------------------------------------------------------------------------
+; SETUP: HUD
+; -----------------------------------------------------------------------------
+    lda     #1                  ; colour for white
+    jsr     init_hud 
