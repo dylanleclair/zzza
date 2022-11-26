@@ -26,11 +26,63 @@ input_right
 
 input_stomp
     cmp     #$53                        ; S key pressed?
-    bne     no_key_pressed              ; if S wasn't pressed, exit
+    bne     input_left_push             ; if S wasn't pressed, exit
     jsr     block_stomp                 ; S was pressed, try to stomp block
+
+input_left_push
+    cmp     #$51                        ; Q key pressed?
+    bne     no_key_pressed
+    jsr     block_push_left
 
 no_key_pressed
     rts 
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: MOVE_LEFT
+;   1) checks if sprite is trying to move off the left side of the screen
+;       - jumps to exit the routine if that's the case
+;   2) checks if the sprite is about to collide with a block to its left
+;       - if so, does nothing. Else, adjusts X coordinate
+; -----------------------------------------------------------------------------
+move_left 
+    ; set player sprite to left image
+    lda     #$f0                        ; location of eva_left
+    sta     CURRENT_PLAYER_CHAR         ; store it so that the hi-res draw can find it
+
+    ; check if the sprite is moving off the left edge of the screen
+    lda     X_COOR                      ; load the X coordinate
+    beq     move_left_exit              ; if X == 0, can't move left, exit the subroutine
+
+    ; check if you're going to collide with a block
+    jsr     collision_left              ; jump to check for a collision to your left
+    bne     move_left_exit              ; if result comes back as something other than 0, you're colliding
+    dec     NEW_X_COOR                  ; otherwise, you're not colliding. decrement x coor
+move_left_exit
+    rts
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: MOVE_RIGHT
+;   1) checks if sprite is trying to move off the right side of the screen
+;       - jumps to exit the routine if that's the case
+;   2) checks if the sprite is about to collide with a block to its right
+;       - if so, does nothing. Else, adjusts X coordinate
+; -----------------------------------------------------------------------------
+move_right 
+    ; set player sprite to right image
+    lda     #$f8                        ; location of eva_right
+    sta     CURRENT_PLAYER_CHAR         ; store it so that the hi-res draw can find it
+
+    ; check if the sprite is moving off the right edge of the screen
+    lda     X_COOR                      ; load the X coordinate
+    cmp     #15                         ; compare X coordinate with 15
+    beq     move_right_exit             ; if X == 15, can't move right, exit the subroutine
+
+    ; check if you're going to collide with a block
+    jsr     collision_right             ; jump to check for a collision to your right
+    bne     move_right_exit             ; if result comes back as something other than 0, you're colliding
+    inc     NEW_X_COOR                  ; otherwise, you're not colliding. increment x coor
+move_right_exit
+    rts
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: COLLISION_LEFT
@@ -66,29 +118,6 @@ and_check_left
     rts                                 ; return with whatever value was in the accumulator
 
 ; -----------------------------------------------------------------------------
-; SUBROUTINE: MOVE_LEFT
-;   1) checks if sprite is trying to move off the left side of the screen
-;       - jumps to exit the routine if that's the case
-;   2) checks if the sprite is about to collide with a block to its left
-;       - if so, does nothing. Else, adjusts X coordinate
-; -----------------------------------------------------------------------------
-move_left 
-    ; set player sprite to left image
-    lda     #$f0                        ; location of eva_left
-    sta     CURRENT_PLAYER_CHAR         ; store it so that the hi-res draw can find it
-
-    ; check if the sprite is moving off the left edge of the screen
-    lda     X_COOR                      ; load the X coordinate
-    beq     move_left_exit              ; if X == 0, can't move left, exit the subroutine
-
-    ; check if you're going to collide with a block
-    jsr     collision_left              ; jump to check for a collision to your left
-    bne     move_left_exit              ; if result comes back as something other than 0, you're colliding
-    dec     NEW_X_COOR                  ; otherwise, you're not colliding. decrement x coor
-move_left_exit
-    rts
-
-; -----------------------------------------------------------------------------
 ; SUBROUTINE: COLLISION_RIGHT
 ; - checks if there's a block to the right of the player
 ; - if yes, returns something not equal to 0
@@ -120,30 +149,6 @@ same_byte_right
 and_check_right
     and     LEVEL_DATA,y                ; AND the collision mask with the level data
     rts                                 ; return with whatever was in the accumulator after AND
-
-; -----------------------------------------------------------------------------
-; SUBROUTINE: MOVE_RIGHT
-;   1) checks if sprite is trying to move off the right side of the screen
-;       - jumps to exit the routine if that's the case
-;   2) checks if the sprite is about to collide with a block to its right
-;       - if so, does nothing. Else, adjusts X coordinate
-; -----------------------------------------------------------------------------
-move_right 
-    ; set player sprite to right image
-    lda     #$f8                        ; location of eva_right
-    sta     CURRENT_PLAYER_CHAR         ; store it so that the hi-res draw can find it
-
-    ; check if the sprite is moving off the right edge of the screen
-    lda     X_COOR                      ; load the X coordinate
-    cmp     #15                         ; compare X coordinate with 15
-    beq     move_right_exit             ; if X == 15, can't move right, exit the subroutine
-
-    ; check if you're going to collide with a block
-    jsr     collision_right             ; jump to check for a collision to your right
-    bne     move_right_exit             ; if result comes back as something other than 0, you're colliding
-    inc     NEW_X_COOR                  ; otherwise, you're not colliding. increment x coor
-move_right_exit
-    rts
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: EDGE_DEATH

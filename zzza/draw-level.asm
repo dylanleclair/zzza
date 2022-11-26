@@ -3,12 +3,37 @@
 ; =============================================================================
 
 ; -----------------------------------------------------------------------------
+; SUBROUTINE: DRAW_MASTER
+; - takes the current state of the level, and draws the full blocks / empty spaces on the screen
+; - essentially just the starting state for every frame
+; - afterwards, we go ahead and advance each character being animated by n frames (where n is # of frames into current animation - see: DRAW_LEVEL)
+; -----------------------------------------------------------------------------
+draw_master
+    ; check if level is complete, if so don't scroll
+    lda     PROGRESS_BAR
+    bpl     draw_master_scroll          ; positive progress bar indicates level is not yet complete
+
+    ; if level has already been cleared, just finish any falling blocks. don't scroll.
+    jsr     draw_block
+    jmp     draw_master_hi_res
+
+draw_master_scroll
+    jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
+    jsr     draw_block                  ; draw any falling blocks
+    jsr     draw_level                  ; do scrolly scroll
+    jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
+
+draw_master_hi_res
+    jsr     reset_high_res              ; clear high res graphics
+    jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
+    jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
+    rts
+; -----------------------------------------------------------------------------
 ; SUBROUTINE: DRAW_LEVEL
 ; - combines the patterns stored in the LEVEL_DATA array with the information in LEVEL_DELTAS
 ;   to determine which parts of the screen need to advance their animation frame.
 ; - assumes that the valid characters are already being displayed on screen (each character is one in the scrolling state machine)
 ; -----------------------------------------------------------------------------
-
 draw_level
 
     ; outer loop: for each element of the LEVEL_DATA array, animate the screen based off LEVEL_DATA and LEVEL_DELTA at same index
@@ -66,34 +91,6 @@ draw_level_test
     bne     draw_level_loop             ; while x<32, branch up to the top of the loop
 
 draw_level_exit
-    rts
-
-; -----------------------------------------------------------------------------
-; SUBROUTINE: DRAW_MASTER
-; - draws the "level" without distorting hi-res graphics / the level itself
-;   - does this by restoring hi-res buffer to screen, calling draw, 
-;       then saving new scrolling data for next time (see custom_charset.asm) for more
-; -----------------------------------------------------------------------------
-
-draw_master
-    ; check if level is complete, if so don't scroll
-    lda     PROGRESS_BAR
-    bpl     draw_master_scroll          ; positive progress bar indicates level is not yet complete
-
-    ; if level has already been cleared, just finish any falling blocks. don't scroll.
-    jsr     draw_block
-    jmp     draw_master_hi_res
-
-draw_master_scroll
-    jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
-    jsr     draw_block                  ; draw any falling blocks
-    jsr     draw_level                  ; do scrolly scroll
-    jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
-
-draw_master_hi_res
-    jsr     reset_high_res              ; clear high res graphics
-    jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
-    jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
     rts
 
 
