@@ -73,6 +73,10 @@ and_check_left
 ;       - if so, does nothing. Else, adjusts X coordinate
 ; -----------------------------------------------------------------------------
 move_left 
+    ; set player sprite to left image
+    lda     #$f0                        ; location of eva_left
+    sta     CURRENT_PLAYER_CHAR         ; store it so that the hi-res draw can find it
+
     ; check if the sprite is moving off the left edge of the screen
     lda     X_COOR                      ; load the X coordinate
     beq     move_left_exit              ; if X == 0, can't move left, exit the subroutine
@@ -125,6 +129,10 @@ and_check_right
 ;       - if so, does nothing. Else, adjusts X coordinate
 ; -----------------------------------------------------------------------------
 move_right 
+    ; set player sprite to right image
+    lda     #$f8                        ; location of eva_right
+    sta     CURRENT_PLAYER_CHAR         ; store it so that the hi-res draw can find it
+
     ; check if the sprite is moving off the right edge of the screen
     lda     X_COOR                      ; load the X coordinate
     cmp     #15                         ; compare X coordinate with 15

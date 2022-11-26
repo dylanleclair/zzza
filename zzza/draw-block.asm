@@ -23,8 +23,6 @@ clear_block_sprite
     ; draw a blank space where the character was
     lda     #2                      ; char for a blank space
     sta     SCREEN_ADDR,x           ; store the space at the correct offset
-    lda     #4                      ; colour for purple
-    sta     COLOR_ADDR,x            ; ensure that the old space goes back to purple
 
 ; check if block has fallen offscreen
 draw_block_overflow
@@ -42,7 +40,7 @@ draw_block_sprite
     tax                             ; put this value into x so that we can use it as an offset
 
     ; draw the sprite to the new location
-    lda     #6                      ; full fill
+    lda     #32                      ; char for falling block (aux colour)
     sta     SCREEN_ADDR,x           ; store the fill at position offset
 
 ; check whether the block is still a moving entity
@@ -54,6 +52,10 @@ check_block_diff
     lda     NEW_BLOCK_Y             ; get old y coordinate
     cmp     BLOCK_Y_COOR            ; check if y coor has changed
     bne     update_block_diff       ; if y has changed, block is still moving, update its diff
+
+    ; draw the sprite to the new location
+    lda     #6                      ; full fill
+    sta     SCREEN_ADDR,x           ; store the fill at position offset
 
 ; block coordinates need to be reset to 0xff if we detect block is no longer in game
 reset_block_coors

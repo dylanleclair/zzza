@@ -17,7 +17,7 @@ COLUMNS_ADDR = $9002                ; stores the number of columns on screen
 ROWS_ADDR = $9003                   ; stores the number of rows on screen
 
 CHARSET_CTRL = $9005                ; stores a pointer to the beginning of character memory
-
+AUX_COLOR_ADDR = $900e
 ; -----------------------------------------------------------------------------
 ; KERNAL ROUTINES
 ; -----------------------------------------------------------------------------
@@ -88,7 +88,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4730", 0
+    dc.b $9e, "4706", 0
 stubend
     dc.w 0
 
@@ -218,8 +218,8 @@ start
 ; - changes text to "press any key"
 ; - waits for user input and goes to main game on any key press
 ; -----------------------------------------------------------------------------
-    jsr     screen_dim_title
-    jsr     draw_title_screen
+    ; jsr     screen_dim_title
+    ; jsr     draw_title_screen
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE

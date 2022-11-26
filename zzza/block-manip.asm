@@ -4,6 +4,10 @@
 ; - Limits the game to one in-air block at a time
 ; -----------------------------------------------------------------------------
 block_stomp
+    ; player has not moved left or right, set player sprite to front
+    lda     #$50                        ; location of eva_front
+    sta     CURRENT_PLAYER_CHAR         ; store it so that the hi-res draw can find it
+
     lda     #$ff                        ; 0xff means no blocks are currently falling
     cmp     BLOCK_X_COOR                ; check if block coordinates are in use
     bne     block_stomp_exit            ; if coord != ff, a block is already falling. Exit.

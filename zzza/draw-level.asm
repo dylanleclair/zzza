@@ -318,8 +318,8 @@ zero_hi_res_loop
     cpy #8
     bne zero_hi_res_loop 
 
-    lda     #$50                ; location of the eva_front char
-    sta     CURRENT_PLAYER_CHAR ; store it so the next loop can use it
+    ; lda     #$50                ; location of the eva_front char
+    ; sta     CURRENT_PLAYER_CHAR ; store it so the next loop can use it
 
 ; draw a desired custom character into the centre of the bitmap
 custom_char_hi_res_loop
