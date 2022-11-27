@@ -24,7 +24,7 @@ color_test
 ; - sets color of screen to black, clears screen
 ; -----------------------------------------------------------------------------
 ; SET SCREEN BORDER TO BLACK
-    lda     #8                  ; black background, black border
+    lda     #24                 ; white background, black border
     sta     $900F               ; set screen border color
 
 ; -----------------------------------------------------------------------------
