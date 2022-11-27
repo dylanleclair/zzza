@@ -23,8 +23,6 @@ clear_block_sprite
     ; draw a blank space where the character was
     lda     #2                      ; char for a blank space
     sta     SCREEN_ADDR,x           ; store the space at the correct offset
-    lda     #4                      ; colour for purple
-    sta     COLOR_ADDR,x            ; ensure that the old space goes back to purple
 
 ; check if block has fallen offscreen
 draw_block_overflow

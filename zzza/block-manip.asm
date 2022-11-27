@@ -4,13 +4,18 @@
 ; - Limits the game to one in-air block at a time
 ; -----------------------------------------------------------------------------
 block_stomp
-    lda     #$ff                        ; 0xff means no blocks are currently falling
-    cmp     BLOCK_X_COOR                ; check if block coordinates are in use
-    bne     block_stomp_exit            ; if coord != ff, a block is already falling. Exit.
+    ; player has not moved left or right, set player sprite to front
+    lda     #$50                        ; location of eva_front
+    sta     CURRENT_PLAYER_CHAR         ; store it so that the hi-res draw can find it
 
+    ; check if there are already blocks in use (0xff in X indicates block is not being used)
+    lda     BLOCK_X_COOR                ; get block's x
+    bmi     check_block_stomp           ; if it's negative, indicates 0xff so we are free to stomp
+    rts                                 ; otherwise, block is in use, return
+
+check_block_stomp
     lda     #$49                        ; memory location 0049 is where player x and y are stored
     sta     WORKING_COOR                ; store it so the block check can use it for indirect addressing
-
     jsr     check_block_down            ; check if there is a block underneath player
     bne     stomp_check_depth           ; check if return value != 0
     rts                                 ; if there's no block below us, return
@@ -22,29 +27,111 @@ stomp_check_depth                       ; prevent the player from stomping if th
     dec     Y_COOR                      ; reset the player's y coord after the depth check
     rts
 
-stomp
-    dec     Y_COOR                      ; reset the player's y coord after the depth check
-    
+stomp    
     ; store the block's x and y coordinates for later use
+    jsr     set_block_coors             ; set block coordinates using modified player coors
+    dec     Y_COOR                      ; reset the player's y coor in memory
+    
+    ; after set_block_coors, x coor is in x, y coor is in a
+    jsr     clear_block                 ; clear the block out of level data and delta
+
+; in order for this block to get stomped, it must be under Eva
+; this means it's also stored in the backup buffer
+; get it outta there!
+clear_block_stomp_backup
+    lda     #02                         ; char for an empty space
+    sta     BACKUP_HIGH_RES_SCROLL+7    ; this is the char of the backup buf that is below Eva
+
+    inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall
+    inc     NEW_BLOCK_Y
+
+block_stomp_exit
+    rts
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: BLOCK_PUSH_LEFT
+; - Attempts to push a block to the left of the player
+; - Limits the game to one in-air block at a time
+; -----------------------------------------------------------------------------
+block_push_left
+    lda     #0
+    cmp     ANIMATION_FRAME
+    bne     push_left_exit
+
+    ; check if there are already blocks in use (0xff in X indicates block is not being used)
+    lda     BLOCK_X_COOR                ; get block's x
+    bmi     push_left_check             ; if it's negative, indicates 0xff so we are free to push
+    rts                                 ; otherwise, block is in use, return
+
+push_left_check
+; ; Commented out for now because this is only called from within the left collision check
+; ; which should already have done this check for us
+;     jsr     collision_left              ; check if there is a block to our left
+;     beq     push_left_exit              ; if return value == 0, no block to push
+
+; check for block 2 to your left
+push_left_depth                         ; prevent player from pushing if blocks are 2 deep
+    dec     X_COOR                      ; this is player's X coor, temporarily decrement it
+    jsr     collision_left              ; check for a collision one more block to the right
+    beq     push_left                   ; if there's nothing 2 to our right, we can push
+    inc     X_COOR                      ; reset player's x coor
+    rts                                 ; return without pushing
+
+; update block's x,y for a left push
+push_left
+    jsr     set_block_coors             ; set block coordinates using modified player coors
+    inc     X_COOR                      ; reset player's x coor
+
+    ; after set_block_coors, x coor is in x, y coor is in a
+    jsr     clear_block                 ; clear the block out of level data and delta
+
+; clear_left_backup
+    lda     #02                         ; char for empty space
+    sta     BACKUP_HIGH_RES_SCROLL+3    ; this is the char of backup buf that is to Eva's left
+
+    dec     NEW_BLOCK_X
+
+push_left_exit
+    rts
+
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: SET_BLOCK_COORS
+; - takes the player's x,y stored in memory and places those same values
+;   for both block x,y and block new_x,new_y
+; - NOTE: stores block position exactly as player position - expects you to modify
+;   player position before calling it. unless for some reason you *want* to
+;   place Eva inside a block???
+;
+; - returns the block's x position in x, and y position in A
+; -----------------------------------------------------------------------------
+set_block_coors
     ldx     X_COOR                      ; get player's x coord
     stx     BLOCK_X_COOR                ; store in block's coords (player and block share x position)
     stx     NEW_BLOCK_X
 
-    lda     Y_COOR                      ; get player's y coord
-    clc 
-    adc     #1                          ; we want the byte below the player
+    lda     Y_COOR                      ; get y coord, still artificially incremented from depth check
     sta     BLOCK_Y_COOR                ; store in block's coords
     sta     NEW_BLOCK_Y
+    rts
 
+; -----------------------------------------------------------------------------
+; SUBROUTINE: CLEAR_BLOCK
+; - removes a block from LEVEL_DATA and LEVEL_DELTA
+; - assumes that the block's x coordinate comes in on X
+; - and its y coordinate is in A
+; -----------------------------------------------------------------------------
+clear_block
+    ; turn the y coordinate into an index into LEVEL_DATA
     asl                                 ; multiply Y by 2 to get the index into LEVEL_DATA
     tay                                 ; put this offset into y
 
     cpx     #$08                        ; check if block's x coord is less than 8
-    bmi     clear_block                 ; if block x < 8, you're on left half of screen, don't inc y
+    bmi     clear_block_data            ; if block x < 8, you're on left half of screen, don't inc y
     iny                                 ; if you're on right half, inc y
 
-; remove the block's old position from LEVEL_DATA
-clear_block
+clear_block_data
+    ; remove the block's old position from LEVEL_DATA
     lda     collision_mask,x            ; get collision_mask[x] (this is the particular bit correlating to X position)
     eor     LEVEL_DATA,y                ; clear the block out of the level by xoring the bitmask with the onscreen data
     sta     LEVEL_DATA,y                ; store the new pattern back in LEVEL_DATA at correct offset
@@ -63,22 +150,4 @@ clear_block_delta
     iny                                 ; 2 indices ahead of your current position, so y+=2
     eor     LEVEL_DELTA,y 
     sta     LEVEL_DELTA,y
-
-; in order for this block to get stomped, it must be under Eva
-; this means it's also stored in the backup buffer
-; get it outta there!
-clear_block_backup
-    lda     #02                         ; char for an empty space
-    sta     BACKUP_HIGH_RES_SCROLL+7    ; this is the char of the backup buf that is below Eva
-
-    inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall
-    inc     NEW_BLOCK_Y
-
-block_stomp_exit
     rts
-
-; -----------------------------------------------------------------------------
-; SUBROUTINE: BLOCK_PUSH
-; - Attempts to push a block beside the player
-; - Limits the game to one in-air block at a time
-; -----------------------------------------------------------------------------

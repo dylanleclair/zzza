@@ -79,8 +79,13 @@ move_left
 
     ; check if you're going to collide with a block
     jsr     collision_left              ; jump to check for a collision to your left
-    bne     move_left_exit              ; if result comes back as something other than 0, you're colliding
+    bne     try_left_push               ; if result not FALSE (!=0), then collision. Check if push block possible   
     dec     NEW_X_COOR                  ; otherwise, you're not colliding. decrement x coor
+    rts
+
+try_left_push
+    jsr     block_push_left             ; we are colliding with a block, so try to push it
+
 move_left_exit
     rts
 
