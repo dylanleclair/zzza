@@ -9,7 +9,7 @@ advance_block
     beq     advance_block_exit          ; if so, no falling blocks. rts. 
 
 check_block_advance
-    lda     #$4f                        ; the BLOCK_X and BLOCK_Y coords are stored at 004f
+    lda     #$51                        ; the BLOCK_X and BLOCK_Y coords are stored at 004f
     sta     WORKING_COOR                ; store it so the block check can use it as an indirect address
     
     jsr     check_block_down            ; check if there is a block underneath the falling block

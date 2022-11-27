@@ -72,8 +72,8 @@ push_left_check
 ; check for block 2 to your left
 push_left_depth                         ; prevent player from pushing if blocks are 2 deep
     dec     X_COOR                      ; this is player's X coor, temporarily decrement it
-    jsr     collision_left              ; check for a collision one more block to the right
-    beq     push_left                   ; if there's nothing 2 to our right, we can push
+    jsr     collision_left              ; check for a collision one more block to the left
+    beq     push_left                   ; if there's nothing 2 to our left, we can push
     inc     X_COOR                      ; reset player's x coor
     rts                                 ; return without pushing
 
@@ -89,7 +89,8 @@ push_left
     lda     #02                         ; char for empty space
     sta     BACKUP_HIGH_RES_SCROLL+3    ; this is the char of backup buf that is to Eva's left
 
-    dec     NEW_BLOCK_X
+    dec     NEW_BLOCK_X                 ; set block moving to the left
+    ; dec     NEW_X_COOR                  ; set Eva to follow block
 
 push_left_exit
     rts
