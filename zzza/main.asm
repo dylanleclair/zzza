@@ -263,9 +263,9 @@ game_loop_reset_scroll
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
+    jsr     advance_block               ; update location of any falling blocks
     jsr     get_input                   ; check for user input and update player X,Y coords
     jsr     check_fall                  ; try to move the sprite down
-    jsr     advance_block               ; update location of any falling blocks
     jsr     advance_level               ; update the state of the LEVEL_DATA array
 
     ; DEATH CHECK: once all states have been updated, check for a game over
@@ -279,7 +279,7 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #15                          ; set desired delay 
+    ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
 

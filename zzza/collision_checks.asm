@@ -169,8 +169,8 @@ death
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: CHECK_BLOCK_DOWN
 ;   - Checks if there's a block under something
-;   - If yes, returns 1
-;   - If no, returns 0
+;   - If yes, returns 1 in A
+;   - If no, returns 0 in A
 ;   - Parameters:
 ;       - expects WORKING_COOR to hold the address where it can find the coordinates
 ;         of the thing it's checking (sprite, falling block, etc)

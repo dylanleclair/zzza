@@ -42,8 +42,9 @@ clear_block_stomp_backup
     lda     #02                         ; char for an empty space
     sta     BACKUP_HIGH_RES_SCROLL+7    ; this is the char of the backup buf that is below Eva
 
-    inc     BLOCK_Y_COOR                ; increment the block's Y coord so that it will fall
-    inc     NEW_BLOCK_Y
+    inc     BLOCK_Y_COOR
+    inc     NEW_BLOCK_Y                 ; increment the block's Y coord so that it will fall
+    inc     NEW_BLOCK_Y                 ; JUST TRUST ME
 
 block_stomp_exit
     rts

@@ -24,16 +24,12 @@ clear_block_sprite
     lda     #2                      ; char for a blank space
     sta     SCREEN_ADDR,x           ; store the space at the correct offset
 
-; check if block has fallen offscreen
-draw_block_overflow
-    lda     #16                     ; 16 in NEW_Y indicates block is about to go offscreen
-    cmp     NEW_BLOCK_Y
-    beq     reset_block_coors       ; if new_y == 16, block is now gone from game, don't draw it
-
 ; if necessary, draw block in new location
 draw_block_sprite
     ; convert the new x and y coordinates into a screen offset
     ldx     NEW_BLOCK_Y             ; load the y coordinate
+    cpx     #16                     ; check i y == 16 (meaning it's moving off screen)
+    beq     draw_block_exit         ; if the block has moved off screen, don't redraw it
     lda     y_lookup,x              ; index into the y lookup table to draw to the correct row
     clc                             ; clear the carry bit!
     adc     NEW_BLOCK_X             ; add the X coordinate to draw to the correct col
@@ -42,33 +38,6 @@ draw_block_sprite
     ; draw the sprite to the new location
     lda     #6                      ; full fill
     sta     SCREEN_ADDR,x           ; store the fill at position offset
-
-; check whether the block is still a moving entity
-check_block_diff
-    lda     NEW_BLOCK_X             ; get the old x coordinate
-    cmp     BLOCK_X_COOR            ; check if x coor has changed
-    bne     update_block_diff       ; if x has changed, block is still moving, update its diff
-
-    lda     NEW_BLOCK_Y             ; get old y coordinate
-    cmp     BLOCK_Y_COOR            ; check if y coor has changed
-    bne     update_block_diff       ; if y has changed, block is still moving, update its diff
-
-; block coordinates need to be reset to 0xff if we detect block is no longer in game
-reset_block_coors
-    lda     #$ff
-    sta     BLOCK_X_COOR
-    sta     NEW_BLOCK_X
-    sta     BLOCK_Y_COOR
-    sta     NEW_BLOCK_Y
-    rts
-
-; if block's x and y were different, it must still be moving. update its diff.
-update_block_diff
-    lda     NEW_BLOCK_X             ; get the old x coordinate
-    sta     BLOCK_X_COOR
-    lda     NEW_BLOCK_Y             ; update the old y coordinate
-    sta     BLOCK_Y_COOR
-    rts                             ; no need to cleanup. just leave
 
 draw_block_exit
     rts
