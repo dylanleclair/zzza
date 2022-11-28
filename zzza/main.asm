@@ -220,6 +220,7 @@ start
 ; -----------------------------------------------------------------------------
     jsr     screen_dim_title
     jsr     draw_title_screen
+    jsr     title_scroll
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
@@ -358,6 +359,7 @@ infinitum
     include "draw-block.asm"
     include "advance-block.asm"
     include "title_screen.asm"
+    include "title_scroll.asm"
 
 ; -----------------------------------------------------------------------------
 end

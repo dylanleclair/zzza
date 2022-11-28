@@ -1,4 +1,11 @@
 ; -----------------------------------------------------------------------------
+; SETUP: CHARSET LOCATION
+; -----------------------------------------------------------------------------
+    ; change the location of the charset
+    lda     #$fc         ; set location of charset to 7168 ($1c00)
+    sta     CHARSET_CTRL ; store in register controlling base charset
+
+; -----------------------------------------------------------------------------
 ; SETUP: SCREENCOLOR
 ; - sets color of screen to purple, clears screen
 ; -----------------------------------------------------------------------------
@@ -17,15 +24,8 @@ color_test
 ; - sets color of screen to black, clears screen
 ; -----------------------------------------------------------------------------
 ; SET SCREEN BORDER TO BLACK
-    lda     #12                 ; black background, purple border
+    lda     #8                  ; black background, black border
     sta     $900F               ; set screen border color
-
-; -----------------------------------------------------------------------------
-; SETUP: CHARSET LOCATION
-; -----------------------------------------------------------------------------
-    ; change the location of the charset
-    lda     #$fc         ; set location of charset to 7168 ($1c00)
-    sta     CHARSET_CTRL ; store in register controlling base charset
 
 ; -----------------------------------------------------------------------------
 ; SETUP: HUD
