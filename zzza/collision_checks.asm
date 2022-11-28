@@ -137,8 +137,13 @@ move_right
 
     ; check if you're going to collide with a block
     jsr     collision_right             ; jump to check for a collision to your right
-    bne     move_right_exit             ; if result comes back as something other than 0, you're colliding
+    bne     try_right_push              ; if result not FALSE (!=0), then collision, Check if push block possible
     inc     NEW_X_COOR                  ; otherwise, you're not colliding. increment x coor
+    rts
+
+try_right_push
+    jsr     block_push_right
+
 move_right_exit
     rts
 

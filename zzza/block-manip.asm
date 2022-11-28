@@ -60,14 +60,8 @@ block_push_left
 
     ; check if there are already blocks in use (0xff in X indicates block is not being used)
     lda     BLOCK_X_COOR                ; get block's x
-    bmi     push_left_check             ; if it's negative, indicates 0xff so we are free to push
+    bmi     push_left_depth             ; if it's negative, indicates 0xff so we are free to push
     rts                                 ; otherwise, block is in use, return
-
-push_left_check
-; ; Commented out for now because this is only called from within the left collision check
-; ; which should already have done this check for us
-;     jsr     collision_left              ; check if there is a block to our left
-;     beq     push_left_exit              ; if return value == 0, no block to push
 
 ; check for block 2 to your left
 push_left_depth                         ; prevent player from pushing if blocks are 2 deep
@@ -93,6 +87,47 @@ push_left
     ; dec     NEW_X_COOR                  ; set Eva to follow block
 
 push_left_exit
+    rts
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: BLOCK_PUSH_RIGHT
+; - Attempts to push a block to the right of the player
+; - Limits the game to one in-air block at a time
+; -----------------------------------------------------------------------------
+block_push_right
+    lda     #0
+    cmp     ANIMATION_FRAME
+    bne     push_right_exit
+
+    ; check if there are already blocks in use (0xff in X indicates block is not being used)
+    lda     BLOCK_X_COOR                ; get block's x
+    bmi     push_right_depth            ; if it's negative, indicates 0xff so we are free to push
+    rts                                 ; otherwise, block is in use, return
+
+; check for block 2 to your left
+push_right_depth                        ; prevent player from pushing if blocks are 2 deep
+    inc     X_COOR                      ; this is player's X coor, temporarily increment it
+    jsr     collision_right             ; check for a collision one more block to the right
+    beq     push_right                  ; if there's nothing 2 to our right, we can push
+    dec     X_COOR                      ; reset player's x coor
+    rts                                 ; return without pushing
+
+; update block's x,y for a left push
+push_right
+    jsr     set_block_coors             ; set block coordinates using modified player coors
+    dec     X_COOR                      ; reset player's x coor
+
+    ; after set_block_coors, x coor is in x, y coor is in a
+    jsr     clear_block                 ; clear the block out of level data and delta
+
+; clear_right_backup
+    lda     #02                         ; char for empty space
+    sta     BACKUP_HIGH_RES_SCROLL+3    ; this is the char of backup buf that is to Eva's left
+
+    inc     NEW_BLOCK_X                 ; set block moving to the right
+    ; inc     NEW_X_COOR                  ; set Eva to follow block
+
+push_right_exit
     rts
 
 
