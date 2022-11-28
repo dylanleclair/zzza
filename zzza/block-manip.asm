@@ -122,7 +122,7 @@ push_right
 
 ; clear_right_backup
     lda     #02                         ; char for empty space
-    sta     BACKUP_HIGH_RES_SCROLL+3    ; this is the char of backup buf that is to Eva's left
+    sta     BACKUP_HIGH_RES_SCROLL+5    ; this is the char of backup buf that is to Eva's left
 
     inc     NEW_BLOCK_X                 ; set block moving to the right
     ; inc     NEW_X_COOR                  ; set Eva to follow block

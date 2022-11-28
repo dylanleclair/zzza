@@ -113,7 +113,7 @@ check_block_right
     lda     collision_mask,x            ; get collision_mask[x]
     cpx     #$07                        ; check if X == 7, meaning we're crossing a level data boundary
     bne     same_byte_right             ; we're in the same byte as the level data we're checking against
-    eor     #129                        ; AND the collision_mask with 1000 0001 to reverse the position of the set bit
+    eor     #129                        ; XOR the collision_mask with 1000 0001 to reverse the position of the set bit
     iny                                 ; increment y to look at the level data to the right of us
     jmp     and_check_right             ; jump over the lsr used for non-boundary checks
 same_byte_right

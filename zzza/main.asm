@@ -279,7 +279,7 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #5                          ; set desired delay 
+    ldy     #15                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
 
