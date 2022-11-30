@@ -4,8 +4,12 @@
 ;------------------------------------------------------------------------------
 draw_title_screen
 ; SET SCREEN BORDER TO BLACK
-    lda     #8                 ; white background, black border
-    sta     $900F               ; set screen border color
+    lda     #8                           ; white background, black border
+    sta     $900F                        ; set screen border color
+
+    ; change the location of the charset
+    lda     #$F0                        ; set location of charset to default
+    sta     CHARSET_CTRL                ; store in register controlling base charset
 
 title_draw_init
     ldy     #0                          ; zero out y register

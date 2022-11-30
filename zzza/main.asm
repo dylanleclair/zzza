@@ -74,10 +74,14 @@ LEVEL_CLEARED = $6c                 ; 1 byte: flag indicating whether the curren
 PROGRESS_BAR = $6d                  ; 1 byte: stores the current progress thru level
 
 CURRENT_LEVEL = $6e                 ; stores the player's current level
+
 IS_GROUNDED = $6f                   ; stores the player being on the ground
 
 GROUND_COUNT = $70
 CURSED_LOOP_COUNT = $71
+
+PLAYER_LIVES = $72                  ; stores how many lives the player has left
+
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
@@ -237,6 +241,8 @@ game
     sta     CURRENT_LEVEL
     lda     #10
     sta     LEVEL_LENGTH
+    lda     #2                          ; because of the BNE statement, 2 = 3 lives
+    sta     PLAYER_LIVES                 
 
 game_init
     jsr     screen_dim_game
@@ -348,8 +354,23 @@ death_screen_loop
     inx 
     bne     death_screen_loop
 
-infinitum
-    jmp     infinitum                   ; loop infinitely
+    ldy     #$50                        ; delay for 1.5 seconds
+    jsr     delay                       ; jump to the delay function
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: DEATH_LOGIC
+;
+; - Decides what to do when player dies
+;   - If lives remaining, restart the level
+;   - If no lives remaining, goes back to the main menu screen
+; -----------------------------------------------------------------------------
+death_logic 
+    lda     PLAYER_LIVES                ; load the number of lives the player has left
+    bne     lives_left                  ; if lives !=0, jump over the restart
+    jmp     start
+lives_left
+    dec     PLAYER_LIVES                ; remove a live from the player
+    jmp     game_init                   ; restart the level (TODO: THIS ISN'T CORRECT!!!)
 
 ; -----------------------------------------------------------------------------
 ; Includes for all the individual subroutines that are called in the main loop
@@ -369,5 +390,3 @@ infinitum
     include "title_scroll.asm"
 
 ; -----------------------------------------------------------------------------
-end
-    brk                                 ; escape hatch
