@@ -71,7 +71,6 @@ end_pattern_load                        ; load in a piece of end level pattern
 
     rts
 
-
 advance_new                             ; this section is responsible for filling in the last 2 array elements
     dey                                 ; bring y back down to 33
 

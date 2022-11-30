@@ -80,10 +80,10 @@ END_LEVEL_INIT = $70                ; 1 byte: flag to trip the end of level patt
 END_PATTERN_INDEX = $71             ; 1 byte: stores the index into end level pattern data
 END_LEVEL = $72                     ; 1 byte: tells if scrolling needs to finish
 
-IS_GROUNDED = $70                   ; stores the player being on the ground
+IS_GROUNDED = $73                   ; stores the player being on the ground
 
-GROUND_COUNT = $71
-CURSED_LOOP_COUNT = $72
+GROUND_COUNT = $74
+CURSED_LOOP_COUNT = $75
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
@@ -99,7 +99,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4745", 0
+    dc.b $9e, "4756", 0
 stubend
     dc.w 0
 
@@ -131,7 +131,7 @@ title_year: dc.b #50, #48, #50, #50, #0
 ; -----------------------------------------------------------------------------
 ; End level load pattern (loaded backwards to save 1 instruction!)
 ; -----------------------------------------------------------------------------
-end_pattern: dc.b #255, #255, #255, #255, #255, #255, #255, #0, #0, #0, #0, #0, #0
+end_pattern: dc.b #255, #255, #255, #255, #255, #0, #0, #0, #0, #0, #0
 
 ; Lookup table for "EVA! ORDER UP!" used for start of game
 ; -----------------------------------------------------------------------------
@@ -250,7 +250,7 @@ game
     lda     #0
     sta     CURRENT_LEVEL
     sta     END_LEVEL                   ; 0 == FALSE
-    lda     #12                         ; index into the end level pattern data
+    lda     #10                         ; index into the end level pattern data
     sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
     lda     #2
     sta     LEVEL_LENGTH
@@ -306,16 +306,50 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #8                          ; set desired delay 
+    ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
+        ; check if level is complete, if so don't scroll
+    lda     END_PATTERN_INDEX           ; check if END_PATTERN_INDEX is set to 0, if yes...stop scrolling
+    bne     game_loop_continue          ; 0 means we scroll normally (level not done scrolling)
+    jmp     end_loop_entrance
 
+game_loop_continue
     ; check if full loop of scroll animation is done, reset frame counter if needed
     lda     ANIMATION_FRAME
     cmp     #4
     bne     game_loop
 
     jmp     game_loop_reset_scroll      ; loop forever
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: END_GAME_LOOP
+; - logic for ending a level
+; -----------------------------------------------------------------------------
+end_loop_entrance                       ; need to run the draw scroll 4 more times to update the screen to match the level data
+    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
+    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
+    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
+    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
+
+end_loop
+    jsr     get_input                   ; check for user input and update player X,Y coords
+    jsr     check_fall                  ; try to move the sprite down
+    jsr     advance_block               ; update location of any falling blocks
+
+    ; ANIMATION: draw the current state of all the game elements to the screen
+    jsr     draw_eva                    ; draw the player character
+    jsr     draw_hud                    ; draw the HUD at the bottom of the screen
+    jsr     draw_block                  ; draw any falling blocks
+    jsr     draw_master_hi_res          ; draw hi res movement
+
+
+    ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
+    ldy     #5                          ; set desired delay 
+    jsr     delay                       ; jump to delay
+
+    jmp     end_loop  
+
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_OVER_CHECK
