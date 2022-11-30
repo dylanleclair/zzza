@@ -74,6 +74,7 @@ LEVEL_CLEARED = $6c                 ; 1 byte: flag indicating whether the curren
 PROGRESS_BAR = $6d                  ; 1 byte: stores the current progress thru level
 
 CURRENT_LEVEL = $6e                 ; stores the player's current level
+PLAYER_LIVES = $6F                  ; stores how many lives the player has left
 
 IS_GROUNDED = $6f                   ; stores the player being on the ground
 
@@ -97,7 +98,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4730", 0
+    dc.b $9e, "4745", 0
 stubend
     dc.w 0
 
@@ -126,6 +127,10 @@ press_any_key: dc.b #16, #18, #5, #19, #19, #96, #1, #14, #25, #96, #11, #5, #25
 ; -----------------------------------------------------------------------------
 title_year: dc.b #50, #48, #50, #50, #0
 
+; -----------------------------------------------------------------------------
+; Lookup table for "EVA! ORDER UP!" used for start of game
+; -----------------------------------------------------------------------------
+order_up: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33
 
 ; -----------------------------------------------------------------------------
 ; Horizontal scroll lookup table.  Order of blocks from default charset
