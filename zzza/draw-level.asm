@@ -92,6 +92,7 @@ draw_master_scroll
 
 draw_master_hi_res
     jsr     reset_high_res              ; clear high res graphics
+    jsr     draw_shift_is_grounded
     jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
 

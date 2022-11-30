@@ -80,10 +80,19 @@ END_LEVEL_INIT = $70                ; 1 byte: flag to trip the end of level patt
 END_PATTERN_INDEX = $71             ; 1 byte: stores the index into end level pattern data
 END_LEVEL = $72                     ; 1 byte: tells if scrolling needs to finish
 
+IS_GROUNDED = $6f                   ; stores the player being on the ground
+
+GROUND_COUNT = $70
+CURSED_LOOP_COUNT = $71
+
+PLAYER_LIVES = $72                  ; stores how many lives the player has left
+
+
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
 HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
+
 
     processor 6502
 ; -----------------------------------------------------------------------------
@@ -93,7 +102,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4743", 0
+    dc.b $9e, "4745", 0
 stubend
     dc.w 0
 
@@ -126,6 +135,10 @@ title_year: dc.b #50, #48, #50, #50, #0
 ; End level load pattern (loaded backwards to save 1 instruction!)
 ; -----------------------------------------------------------------------------
 end_pattern: dc.b #255, #255, #255, #255, #255, #255, #255, #0, #0, #0, #0, #0, #0
+
+; Lookup table for "EVA! ORDER UP!" used for start of game
+; -----------------------------------------------------------------------------
+order_up: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33
 
 ; -----------------------------------------------------------------------------
 ; Horizontal scroll lookup table.  Order of blocks from default charset
@@ -255,6 +268,8 @@ game_init
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
 
+    sta     IS_GROUNDED
+
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
 
@@ -294,7 +309,7 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #5                          ; set desired delay 
+    ldy     #8                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
 

@@ -44,6 +44,27 @@ title_16_shift
     dec     LOOP_CTR                    ; decrement the outer loop counter (we need to shift the columns 16 times)
     bne     title_scroll_init           ; start the entire shift algorithm again
 
+story_draw
+    ldx     #0                      ; set x to 0
+story_draw_loop
+    lda     order_up,x              ; load the character
+    sta     $1e71,x                 ; set the start location to draw the line
+    inx                             ; decrement x
+    cpx     #15                     ; check if end of line
+    bne     story_draw_loop         ; if x != 0, keep looping
+
+    ldy     #$B4                    ; set delay to 3 seconds
+    jsr     delay
+
+story_cleear
+    ldx     #0                      ; set x to 16
+    lda     #96                     ; set A to the empty block
+story_clear_loop
+    sta     $1e71,x                 ; store empty character at bottom line
+    dex                             ; decrement x
+    cpx     #15                     ; compare with end of line
+    bne     story_clear_loop        ; if x != 0, keep looping
+
 ; initialize variables to set the characters to black (used to prevent glitching screen for charset reset)
 black_on_black_init
     ldx     #0                          ; set x to 0
