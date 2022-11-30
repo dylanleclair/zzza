@@ -14,8 +14,8 @@
 ;         LEVEL_DELTA to just be too long.
 ; -----------------------------------------------------------------------------
 advance_level
-    lda     PROGRESS_BAR
-    bmi     advance_exit                ; negative progress bar means level is complete, don't advance
+    lda     END_PATTERN_INDEX           ; get the index into end pattern so far
+    beq     advance_exit                ; if it's 0, we've loaded all end level data
 
     ; this causes the 'advance_level' subroutine to only be called once every n game loops
     ; currently only setup to work with multiples of 2
@@ -53,6 +53,24 @@ advance_loop
 advance_test
     cpy     #34    
     bne     advance_loop                ; as long as y is not yet 34, jump up to top of loop
+
+    ; check to see if we need to load end level pattern or usual random pattern
+    lda     END_LEVEL_INIT              ; check the END_LEVEL flag, if set load in end level data
+    beq     advance_new                 ; if END_LEVEL == 0, keep loading random patterns
+
+end_pattern_load                        ; load in a piece of end level pattern
+    ldx     END_PATTERN_INDEX           ; load the index into the current end level pattern
+    lda     end_pattern,x               ; load the next level pattern
+    dey                                 ; bring y back down to 33
+    sta     LEVEL_DATA,y                ; store it in LEVEL_DATA at LEVEL_DATA[33]
+    dex     
+    dey
+    sta     LEVEL_DATA,Y                ; store the next piece of LEVEL_DATA at LEVEL_DATA[32]
+    dec     END_PATTERN_INDEX           ; decrement the end pattern index by 2
+    dec     END_PATTERN_INDEX           ; decrement the end pattern index by 2
+
+    rts
+
 
 advance_new                             ; this section is responsible for filling in the last 2 array elements
     dey                                 ; bring y back down to 33

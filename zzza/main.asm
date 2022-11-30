@@ -73,8 +73,12 @@ LEVEL_LENGTH = $6b                  ; 1 byte: player needs to clear 8*LEVEL_LENG
 LEVEL_CLEARED = $6c                 ; 1 byte: flag indicating whether the current level is over
 PROGRESS_BAR = $6d                  ; 1 byte: stores the current progress thru level
 
-CURRENT_LEVEL = $6e                 ; stores the player's current level
-PLAYER_LIVES = $6F                  ; stores how many lives the player has left
+CURRENT_LEVEL = $6e                 ; 1 byte: stores the player's current level
+PLAYER_LIVES = $6F                  ; 1 byte: stores how many lives the player has left
+
+END_LEVEL_INIT = $70                ; 1 byte: flag to trip the end of level pattern generation
+END_PATTERN_INDEX = $71             ; 1 byte: stores the index into end level pattern data
+END_LEVEL = $72                     ; 1 byte: tells if scrolling needs to finish
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
@@ -89,7 +93,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4730", 0
+    dc.b $9e, "4743", 0
 stubend
     dc.w 0
 
@@ -118,6 +122,10 @@ press_any_key: dc.b #16, #18, #5, #19, #19, #96, #1, #14, #25, #96, #11, #5, #25
 ; -----------------------------------------------------------------------------
 title_year: dc.b #50, #48, #50, #50, #0
 
+; -----------------------------------------------------------------------------
+; End level load pattern (loaded backwards to save 1 instruction!)
+; -----------------------------------------------------------------------------
+end_pattern: dc.b #255, #255, #255, #255, #255, #255, #255, #0, #0, #0, #0, #0, #0
 
 ; -----------------------------------------------------------------------------
 ; Horizontal scroll lookup table.  Order of blocks from default charset
@@ -219,9 +227,9 @@ start
 ; - changes text to "press any key"
 ; - waits for user input and goes to main game on any key press
 ; -----------------------------------------------------------------------------
-    jsr     screen_dim_title
-    jsr     draw_title_screen
-    jsr     title_scroll
+    ; jsr     screen_dim_title
+    ; jsr     draw_title_screen
+    ; jsr     title_scroll
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
@@ -231,10 +239,13 @@ game
     ; TODO: these are just hardcoded atm, should be done per-level
     lda     #0
     sta     CURRENT_LEVEL
-    lda     #10
+    sta     END_LEVEL                   ; 0 == FALSE
+    lda     #12                         ; index into the end level pattern data
+    sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
+    lda     #2
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
-    sta     PLAYER_LIVES                 
+    sta     PLAYER_LIVES
 
 game_init
     jsr     screen_dim_game
@@ -323,6 +334,11 @@ inc_lines_cleared                       ; if yes, increment the number of lines 
 inc_progress
     sec                                 ; set carry 
     rol     PROGRESS_BAR                ; shift the progress bar over by 1, filling in lo bit with carry
+
+; check if it's time to set END_LEVEL flag
+    lda     PROGRESS_BAR                ; load the progress bar
+    bpl     game_over_exit              ; if the high bit not set, do not set END_LEVEL flag
+    inc     END_LEVEL_INIT              ; set END_LEVEL flag
 
 game_over_exit
     rts                                 ; otherwise return to calling code

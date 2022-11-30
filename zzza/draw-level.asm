@@ -77,8 +77,8 @@ draw_level_exit
 
 draw_master
     ; check if level is complete, if so don't scroll
-    lda     PROGRESS_BAR
-    bpl     draw_master_scroll          ; positive progress bar indicates level is not yet complete
+    lda     END_LEVEL                   ; check if END_LEVEL = 0 (FALSE), if so, scroll normally
+    beq     draw_master_scroll          ; 0 means we scroll normally (level not done scrolling)
 
     ; if level has already been cleared, just finish any falling blocks. don't scroll.
     jsr     draw_block
@@ -94,6 +94,12 @@ draw_master_hi_res
     jsr     reset_high_res              ; clear high res graphics
     jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
+
+    lda     END_PATTERN_INDEX           ; load the end level index
+    bne     draw_exit                   ; if end pattern not 0 yet, just exit
+    lda     #1                          ; load 1 to set END_LEVEL to true
+    sta     END_LEVEL                   ; END_LEVEL = 1 (TRUE)
+draw_exit
     rts
 
 
