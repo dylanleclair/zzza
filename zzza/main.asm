@@ -80,13 +80,10 @@ END_LEVEL_INIT = $70                ; 1 byte: flag to trip the end of level patt
 END_PATTERN_INDEX = $71             ; 1 byte: stores the index into end level pattern data
 END_LEVEL = $72                     ; 1 byte: tells if scrolling needs to finish
 
-IS_GROUNDED = $6f                   ; stores the player being on the ground
+IS_GROUNDED = $70                   ; stores the player being on the ground
 
-GROUND_COUNT = $70
-CURSED_LOOP_COUNT = $71
-
-PLAYER_LIVES = $72                  ; stores how many lives the player has left
-
+GROUND_COUNT = $71
+CURSED_LOOP_COUNT = $72
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
