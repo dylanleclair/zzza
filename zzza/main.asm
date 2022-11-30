@@ -74,12 +74,20 @@ LEVEL_CLEARED = $6c                 ; 1 byte: flag indicating whether the curren
 PROGRESS_BAR = $6d                  ; 1 byte: stores the current progress thru level
 
 CURRENT_LEVEL = $6e                 ; stores the player's current level
-PLAYER_LIVES = $6F                  ; stores how many lives the player has left
+
+IS_GROUNDED = $6f                   ; stores the player being on the ground
+
+GROUND_COUNT = $70
+CURSED_LOOP_COUNT = $71
+
+PLAYER_LIVES = $72                  ; stores how many lives the player has left
+
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
 HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
+
 
     processor 6502
 ; -----------------------------------------------------------------------------
@@ -244,6 +252,8 @@ game_init
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
 
+    sta     IS_GROUNDED
+
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
 
@@ -283,7 +293,7 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     lfsr                        ; update the lfsr
-    ldy     #5                          ; set desired delay 
+    ldy     #8                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
 
