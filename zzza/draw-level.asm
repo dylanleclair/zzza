@@ -74,15 +74,7 @@ draw_level_exit
 ;   - does this by restoring hi-res buffer to screen, calling draw, 
 ;       then saving new scrolling data for next time (see custom_charset.asm) for more
 ; -----------------------------------------------------------------------------
-
 draw_master
-    ; check if level is complete, if so don't scroll
-    lda     PROGRESS_BAR
-    bpl     draw_master_scroll          ; positive progress bar indicates level is not yet complete
-
-    ; if level has already been cleared, just finish any falling blocks. don't scroll.
-    jsr     draw_block
-    jmp     draw_master_hi_res
 
 draw_master_scroll
     jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
@@ -95,6 +87,8 @@ draw_master_hi_res
     jsr     draw_shift_is_grounded
     jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
+
+draw_exit
     rts
 
 
