@@ -84,6 +84,9 @@ IS_GROUNDED = $73                   ; stores the player being on the ground
 GROUND_COUNT = $74
 CURSED_LOOP_COUNT = $75
 
+DOOR_APPEARED = $76                 ; 1 byte: stores whether or not the door is now on screen at end of level
+EMPTY_BLOCK = $77                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
+
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
@@ -98,7 +101,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4756", 0
+    dc.b $9e, "4777", 0
 stubend
     dc.w 0
 
@@ -132,10 +135,15 @@ title_year: dc.b #50, #48, #50, #50, #0
 ; -----------------------------------------------------------------------------
 end_pattern: dc.b #255, #255, #255, #255, #255, #0, #0, #0, #0, #0, #0
 
+; -----------------------------------------------------------------------------
 ; Lookup table for "EVA! ORDER UP!" used for start of game
 ; -----------------------------------------------------------------------------
-order_up: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33
+order_up_text: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33
 
+; -----------------------------------------------------------------------------
+; Lookup table for "THANKS EVA!!!" used for start of game
+; -----------------------------------------------------------------------------
+thanks_eva_text: dc.b #20, #8, #1, #14, #11, #19, #32, #5, #22, #1, #33, #33, #33
 ; -----------------------------------------------------------------------------
 ; Horizontal scroll lookup table.  Order of blocks from default charset
 ; - Order is as follows:
@@ -236,9 +244,12 @@ start
 ; - changes text to "press any key"
 ; - waits for user input and goes to main game on any key press
 ; -----------------------------------------------------------------------------
-    ; jsr     screen_dim_title
-    ; jsr     draw_title_screen
-    ; jsr     title_scroll
+    jsr     screen_dim_title
+    jsr     draw_title_screen
+    lda     #96                         ; empty character for the default charset
+    sta     EMPTY_BLOCK                 ; set EMPTY_BLOCK for default scroll
+    jsr     horiz_screen_scroll
+    jsr     order_up
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
@@ -251,7 +262,7 @@ game
     sta     END_LEVEL_INIT              ; set END_LEVEL_INIT to FALSE
     lda     #10                         ; index into the end level pattern data
     sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
-    lda     #10
+    lda     #2
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
@@ -265,6 +276,8 @@ game_init
     sta     WORKING_COOR_HI             ; hi byte of working coord
 
     sta     IS_GROUNDED
+
+    sta     DOOR_APPEARED               ; reset DOOR_APPEARED to false
 
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
@@ -341,13 +354,48 @@ end_loop
     jsr     draw_block                  ; draw any falling blocks
     jsr     draw_master_hi_res          ; draw hi res movement
 
+    lda     Y_COOR                      ; load Eva's current Y coordinate
+    cmp     #14                         ; check if Eva is on the bottom of the level
+    bne     housekeeping                ; if no, keep looping normally
+    lda     #36                         ; else, load the door character
+    sta     $1eef                       ; place it on the right side of the bottom of the screen
+    lda     #1                          ; load 1 (white color)
+    sta     $96ef                       ; make the door white
+    sta     DOOR_APPEARED               ; set DOOR_APPEARED to true
 
+    lda     DOOR_APPEARED               ; load DOOR_APPEARED
+    beq     housekeeping                ; if 0 (FALSE) then keep looping
+    lda     X_COOR                      ; load the X-COOR to check when Eva gets to the door
+    cmp     #14                         ; check if Eva is at the door
+    bne     housekeeping                ; if Eva isn't at the door, keep looping
+    ldy     #$3C                        ; 1 second delay set
+    jsr     delay
+    jmp     level_end_scroll_setup      ; jump to the end level display
+
+housekeeping
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
     jmp     end_loop  
 
+; -----------------------------------------------------------------------------
+; SUBROUTINE: LEVEL_END
+; - runs the end level animation, handles next level logic
+; -----------------------------------------------------------------------------
+level_end_scroll_setup
+    lda     #2                          ; load an empty block
+    sta     $1eee                       ; disappear EVA
+    sta     $1eef                       ; disappear the door
+
+level_end_scroll
+    lda     #2                          ; empty block for horizontal screen scroll
+    sta     EMPTY_BLOCK                 ; store the empty block character
+    jsr     horiz_screen_scroll         ; scroll the screen out
+    lda     #96                         ; load the code for an empty character into a
+    jsr     empty_screen                ; set the screen to empty     
+    jsr     thanks_eva                  ; display "THANKS EVA!!!"
+    jmp     start                       ; RESTART THE GAME...CHANGE THIS LATER!!!!  
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_OVER_CHECK
@@ -436,6 +484,8 @@ lives_left
     include "draw-block.asm"
     include "advance-block.asm"
     include "title_screen.asm"
-    include "title_scroll.asm"
+    include "horiz_screen_scroll.asm"
+    include "utils.asm"
+    include "order_up.asm"
 
 ; -----------------------------------------------------------------------------
