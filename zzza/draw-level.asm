@@ -3,12 +3,32 @@
 ; =============================================================================
 
 ; -----------------------------------------------------------------------------
+; SUBROUTINE: DRAW_MASTER
+; - takes the current state of the level, and draws the full blocks / empty spaces on the screen
+; - essentially just the starting state for every frame
+; - afterwards, we go ahead and advance each character being animated by n frames (where n is # of frames into current animation - see: DRAW_LEVEL)
+; -----------------------------------------------------------------------------
+draw_master
+    ; check if level is complete, if so don't scroll
+
+draw_master_scroll
+    jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
+    jsr     draw_block                  ; draw any falling blocks
+    jsr     draw_level                  ; do scrolly scroll
+    jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
+
+draw_master_hi_res
+    jsr     reset_high_res              ; clear high res graphics
+    jsr     draw_shift_is_grounded
+    jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
+    jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
+    rts
+; -----------------------------------------------------------------------------
 ; SUBROUTINE: DRAW_LEVEL
 ; - combines the patterns stored in the LEVEL_DATA array with the information in LEVEL_DELTAS
 ;   to determine which parts of the screen need to advance their animation frame.
 ; - assumes that the valid characters are already being displayed on screen (each character is one in the scrolling state machine)
 ; -----------------------------------------------------------------------------
-
 draw_level
 
     ; outer loop: for each element of the LEVEL_DATA array, animate the screen based off LEVEL_DATA and LEVEL_DELTA at same index
@@ -67,30 +87,6 @@ draw_level_test
 
 draw_level_exit
     rts
-
-; -----------------------------------------------------------------------------
-; SUBROUTINE: DRAW_MASTER
-; - draws the "level" without distorting hi-res graphics / the level itself
-;   - does this by restoring hi-res buffer to screen, calling draw, 
-;       then saving new scrolling data for next time (see custom_charset.asm) for more
-; -----------------------------------------------------------------------------
-draw_master
-
-draw_master_scroll
-    jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
-    jsr     draw_block                  ; draw any falling blocks
-    jsr     draw_level                  ; do scrolly scroll
-    jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
-
-draw_master_hi_res
-    jsr     reset_high_res              ; clear high res graphics
-    jsr     draw_shift_is_grounded
-    jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
-    jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
-
-draw_exit
-    rts
-
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: MASK_LEVEL_ONTO_HI_RES
@@ -313,9 +309,11 @@ zero_hi_res_loop
     cpy #8
     bne zero_hi_res_loop 
 
-    lda     #$50                ; location of the eva_front char
-    sta     CURRENT_PLAYER_CHAR ; store it so the next loop can use it
+    ; lda     #$50                ; location of the eva_front char
+    ; sta     CURRENT_PLAYER_CHAR ; store it so the next loop can use it
 
+    dey
+    ; ldy     #0
 ; draw a desired custom character into the centre of the bitmap
 custom_char_hi_res_loop
     ; expects that the desired char's address is stored in CURRENT_PLAYER_CHAR
@@ -323,7 +321,7 @@ custom_char_hi_res_loop
     sta     hi_res_1_1,y
 
     dey
-    bne custom_char_hi_res_loop
+    bpl     custom_char_hi_res_loop
 
     rts
 

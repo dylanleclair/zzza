@@ -65,14 +65,8 @@ draw_quick_test
     ; 2. shift high res graphics 
 
 update_sprite_diff
-    ; make sure Eva's old location is back to purple
-    jsr     get_position
-    lda     #4                      ; colour for purple
-    sta     COLOR_ADDR,x            ; store it!
-
     ; must restore scrolling data before moving so data is not garbled/invalid when EVA's position changes
     jsr     restore_scrolling
-
 
     ; once animation is complete, update the sprite!
     lda     NEW_X_COOR              ; update the old x coordinate
@@ -82,11 +76,6 @@ update_sprite_diff
 
     ; EXTREMELY IMPORTANT:
     jsr     backup_scrolling        ; backup the scrolling data in new position!!!!!!
-
-    ; now that x and y are updated, make eva's new location white
-    jsr     get_position
-    lda     #1                      ; colour for white
-    sta     COLOR_ADDR,x            ; store it!
 
 draw_eva_exit
     rts
