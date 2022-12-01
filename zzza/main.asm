@@ -73,12 +73,22 @@ LEVEL_LENGTH = $6b                  ; 1 byte: player needs to clear 8*LEVEL_LENG
 LEVEL_CLEARED = $6c                 ; 1 byte: flag indicating whether the current level is over
 PROGRESS_BAR = $6d                  ; 1 byte: stores the current progress thru level
 
-CURRENT_LEVEL = $6e                 ; stores the player's current level
+CURRENT_LEVEL = $6e                 ; 1 byte: stores the player's current level
+PLAYER_LIVES = $6F                  ; 1 byte: stores how many lives the player has left
+
+END_LEVEL_INIT = $70                ; 1 byte: flag to trip the end of level pattern generation
+END_PATTERN_INDEX = $71             ; 1 byte: stores the index into end level pattern data
+
+IS_GROUNDED = $73                   ; stores the player being on the ground
+
+GROUND_COUNT = $74
+CURSED_LOOP_COUNT = $75
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
 HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
+
 
     processor 6502
 ; -----------------------------------------------------------------------------
@@ -88,7 +98,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4706", 0
+    dc.b $9e, "4732", 0
 stubend
     dc.w 0
 
@@ -117,6 +127,14 @@ press_any_key: dc.b #16, #18, #5, #19, #19, #96, #1, #14, #25, #96, #11, #5, #25
 ; -----------------------------------------------------------------------------
 title_year: dc.b #50, #48, #50, #50, #0
 
+; -----------------------------------------------------------------------------
+; End level load pattern (loaded backwards to save 1 instruction!)
+; -----------------------------------------------------------------------------
+end_pattern: dc.b #255, #255, #255, #255, #255, #0, #0, #0, #0, #0, #0
+
+; Lookup table for "EVA! ORDER UP!" used for start of game
+; -----------------------------------------------------------------------------
+order_up: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33
 
 ; -----------------------------------------------------------------------------
 ; Horizontal scroll lookup table.  Order of blocks from default charset
@@ -218,8 +236,9 @@ start
 ; - changes text to "press any key"
 ; - waits for user input and goes to main game on any key press
 ; -----------------------------------------------------------------------------
-    ; jsr     screen_dim_title
-    ; jsr     draw_title_screen
+    jsr     screen_dim_title
+    jsr     draw_title_screen
+    jsr     title_scroll
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
@@ -229,8 +248,13 @@ game
     ; TODO: these are just hardcoded atm, should be done per-level
     lda     #0
     sta     CURRENT_LEVEL
+    sta     END_LEVEL_INIT              ; set END_LEVEL_INIT to FALSE
+    lda     #10                         ; index into the end level pattern data
+    sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
     lda     #10
     sta     LEVEL_LENGTH
+    lda     #2                          ; because of the BNE statement, 2 = 3 lives
+    sta     PLAYER_LIVES
 
 game_init
     jsr     screen_dim_game
@@ -239,6 +263,8 @@ game_init
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
+
+    sta     IS_GROUNDED
 
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
@@ -282,13 +308,46 @@ game_loop
     ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
+        ; check if level is complete, if so don't scroll
+    lda     END_PATTERN_INDEX           ; check if END_PATTERN_INDEX is set to 0, if yes...stop scrolling
+    bne     game_loop_continue          ; 0 means we scroll normally (level not done scrolling)
+    jmp     end_loop_entrance
 
+game_loop_continue
     ; check if full loop of scroll animation is done, reset frame counter if needed
     lda     ANIMATION_FRAME
     cmp     #4
     bne     game_loop
 
     jmp     game_loop_reset_scroll      ; loop forever
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: END_GAME_LOOP
+; - logic for ending a level
+; -----------------------------------------------------------------------------
+end_loop_entrance                       ; need to run the draw scroll 3 more times to update the screen to match the level data
+    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
+    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
+    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
+
+end_loop
+    jsr     get_input                   ; check for user input and update player X,Y coords
+    jsr     check_fall                  ; try to move the sprite down
+    jsr     advance_block               ; update location of any falling blocks
+
+    ; ANIMATION: draw the current state of all the game elements to the screen
+    jsr     draw_eva                    ; draw the player character
+    jsr     draw_hud                    ; draw the HUD at the bottom of the screen
+    jsr     draw_block                  ; draw any falling blocks
+    jsr     draw_master_hi_res          ; draw hi res movement
+
+
+    ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
+    ldy     #5                          ; set desired delay 
+    jsr     delay                       ; jump to delay
+
+    jmp     end_loop  
+
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_OVER_CHECK
@@ -320,6 +379,10 @@ inc_progress
     sec                                 ; set carry 
     rol     PROGRESS_BAR                ; shift the progress bar over by 1, filling in lo bit with carry
 
+; check if it's time to set END_LEVEL flag
+    bpl     game_over_exit              ; if the high bit not set, do not set END_LEVEL flag
+    inc     END_LEVEL_INIT              ; set END_LEVEL flag
+
 game_over_exit
     rts                                 ; otherwise return to calling code
 
@@ -340,8 +403,23 @@ death_screen_loop
     inx 
     bne     death_screen_loop
 
-infinitum
-    jmp     infinitum                   ; loop infinitely
+    ldy     #$50                        ; delay for 1.5 seconds
+    jsr     delay                       ; jump to the delay function
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: DEATH_LOGIC
+;
+; - Decides what to do when player dies
+;   - If lives remaining, restart the level
+;   - If no lives remaining, goes back to the main menu screen
+; -----------------------------------------------------------------------------
+death_logic 
+    lda     PLAYER_LIVES                ; load the number of lives the player has left
+    bne     lives_left                  ; if lives !=0, jump over the restart
+    jmp     start
+lives_left
+    dec     PLAYER_LIVES                ; remove a live from the player
+    jmp     game_init                   ; restart the level (TODO: THIS ISN'T CORRECT!!!)
 
 ; -----------------------------------------------------------------------------
 ; Includes for all the individual subroutines that are called in the main loop
@@ -359,7 +437,6 @@ infinitum
     include "advance-block.asm"
     include "title_screen.asm"
     include "block-manip.asm"
+    include "title_scroll.asm"
 
 ; -----------------------------------------------------------------------------
-end
-    brk                                 ; escape hatch

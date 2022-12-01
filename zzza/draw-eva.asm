@@ -39,7 +39,7 @@ draw_quick_loop
     ; draw EVA at the appropriate position in buffer
     jsr     draw_shift_horizontal       ; draw the appropriate shift left/right
     jsr     draw_shift_vertical         ; draw the appropriate shift up/down
-    
+
     jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
     
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
@@ -132,10 +132,14 @@ set_y_dir
 
 ; set MOVE_DIR_Y to up (-1)
 y_dir_up
-
+    
     ; lda     #-1                     ; set y move direction to -1
     ; sta     MOVE_DIR_Y
-    ; jmp     update_position_cleanup
+    lda     #1                        ; set is grounded flag so we move eva up
+    sta     IS_GROUNDED               ; set is grounded flag
+    lda     #3
+    sta     GROUND_COUNT 
+    jmp     update_position_cleanup
 ; set MOVE_DIR_Y to up (1)    
 y_dir_down
 
@@ -416,6 +420,12 @@ wrap_char_down
 ;   and position her at 3/4 towards next block in y-axis
 ; -----------------------------------------------------------------------------
 draw_shift_vertical
+
+    ; guard clause: don't worry about shifting vertically if grounded
+    ; since you cannot be falling & grounded at the same time!
+    lda     IS_GROUNDED
+    bne     draw_shift_vertical_return
+
     ldx     #0
     stx     LOOP_CTR
     jmp     draw_shift_vertical_test
@@ -474,3 +484,52 @@ draw_shift_horizontal_test
     bne     draw_shift_horizontal_loop 
 draw_shift_horizontal_return
     rts
+
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: DRAW_SHIFT_IS_GROUND
+; - i'm shocked this works. it's ugly af tho. like most of my code.
+; - uses separate variables to track when EVA is on the ground, and her animation frame
+; - grounded animation is complement of ANIMATION_FRAME (so EVA will meet the level perfectly)
+; - ex. if EVA is ONE frame into animation, this will shift her 6 times, 
+;   and since 2 pixels of ground + 6 px (bottom chunk of EVA) = full character (no space b/w EVA and level!)
+; -----------------------------------------------------------------------------
+draw_shift_is_grounded
+
+    ; guard clause: if not grounded, return immediately.
+    lda     IS_GROUNDED             
+    beq     draw_shift_is_grounded_return
+
+    ; GROUND_COUNT is set to 3 when IS_GROUNDED is set. 
+    ; if it's zero, then the animation has completed & 
+    ; IS_GROUNDED must be reset so the above guard clause works
+    ; on next iteration of game loop!
+    lda     GROUND_COUNT
+    beq     reset_is_grounded       ; reset if needed
+
+    lda     #0                      ; init shift loop counter
+    sta     CURSED_LOOP_COUNT       ; save in cursed loop count (other loop counts conflict with shifts afaik)
+
+    ; until we reach the GROUND_COUNT (i.e. # shifts needed to move EVA  from center of hi-res to EVA standing on ground)
+    ; shift down by 2 pixels
+draw_grounded_loop
+    jsr     shift_down
+    jsr     shift_down
+    
+    inc     CURSED_LOOP_COUNT       ; only increment if loop actually runs
+draw_grounded_test
+    lda     CURSED_LOOP_COUNT       ; check if EVA has been shifted to the correct position
+    cmp     GROUND_COUNT            
+    bne     draw_grounded_loop      ; if not, keep shifting
+    dec     GROUND_COUNT            ; we're done! lower GROUND_COUNT for next function call (animation frame)
+
+draw_shift_is_grounded_return
+    rts                             ; return!
+
+reset_is_grounded
+    ; should only ever be called on last animation frame of draw_shift_is_grounded
+    ldx     #0                      ; set IS_GROUNDED to zero & exit
+    stx     IS_GROUNDED
+    rts
+
+

@@ -25,6 +25,7 @@ draw_master_scroll
 
 draw_master_hi_res
     jsr     reset_high_res              ; clear high res graphics
+    jsr     draw_shift_is_grounded
     jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
     jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
     rts
@@ -92,7 +93,6 @@ draw_level_test
 
 draw_level_exit
     rts
-
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: MASK_LEVEL_ONTO_HI_RES
@@ -318,6 +318,8 @@ zero_hi_res_loop
     ; lda     #$50                ; location of the eva_front char
     ; sta     CURRENT_PLAYER_CHAR ; store it so the next loop can use it
 
+    dey
+    ; ldy     #0
 ; draw a desired custom character into the centre of the bitmap
 custom_char_hi_res_loop
     ; expects that the desired char's address is stored in CURRENT_PLAYER_CHAR
@@ -326,6 +328,9 @@ custom_char_hi_res_loop
 
     dey
     bne custom_char_hi_res_loop
+
+    lda     (CURRENT_PLAYER_CHAR),y
+    sta     hi_res_1_1,y
 
     rts
 

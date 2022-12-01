@@ -1,4 +1,11 @@
 ; -----------------------------------------------------------------------------
+; SETUP: CHARSET LOCATION
+; -----------------------------------------------------------------------------
+    ; change the location of the charset
+    lda     #$fc         ; set location of charset to 7168 ($1c00)
+    sta     CHARSET_CTRL ; store in register controlling base charset
+
+; -----------------------------------------------------------------------------
 ; SETUP: SCREENCOLOR
 ; - sets color of screen to purple, clears screen
 ; -----------------------------------------------------------------------------
@@ -17,7 +24,7 @@ color_test
 ; - sets color of screen to black, clears screen
 ; -----------------------------------------------------------------------------
 ; SET SCREEN BORDER TO BLACK
-    lda     #24                 ; black border, white screen
+    lda     #8                  ; black background, black border
     sta     $900F               ; set screen border color
 
 ; set the auxilliary colour code. aux colour is in the high 4 bits of the address
@@ -28,13 +35,6 @@ color_test
     lda     #$40            ; colour code for light purple in hi 4 bits, nothing in lo 4
     ora     AUX_COLOR_ADDR  ; aux colour addr OR accumulator to put our value in
     sta     AUX_COLOR_ADDR  ; put the result back in the aux colour location
-
-; -----------------------------------------------------------------------------
-; SETUP: CHARSET LOCATION
-; -----------------------------------------------------------------------------
-    ; change the location of the charset
-    lda     #$fc         ; set location of charset to 7168 ($1c00)
-    sta     CHARSET_CTRL ; store in register controlling base charset
 
 ; -----------------------------------------------------------------------------
 ; SETUP: HUD
