@@ -321,10 +321,7 @@ custom_char_hi_res_loop
     sta     hi_res_1_1,y
 
     dey
-    bne custom_char_hi_res_loop
-
-    lda     (CURRENT_PLAYER_CHAR),y
-    sta     hi_res_1_1,y
+    bpl     custom_char_hi_res_loop
 
     rts
 
