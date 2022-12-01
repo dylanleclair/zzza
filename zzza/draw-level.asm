@@ -74,14 +74,7 @@ draw_level_exit
 ;   - does this by restoring hi-res buffer to screen, calling draw, 
 ;       then saving new scrolling data for next time (see custom_charset.asm) for more
 ; -----------------------------------------------------------------------------
-
 draw_master
-    ; check if level is complete, if so don't scroll
-    lda     END_PATTERN_INDEX           ; check if END_PATTERN_INDEX is set to 0, if yes...stop scrolling
-    bne     draw_master_scroll          ; 0 means we scroll normally (level not done scrolling)
-
-    ; if level has already been cleared, just finish any falling blocks. don't scroll.
-    jmp     end_loop_entrance           ; begin the end of the level logic
 
 draw_master_scroll
     jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)

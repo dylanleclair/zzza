@@ -78,7 +78,6 @@ PLAYER_LIVES = $6F                  ; 1 byte: stores how many lives the player h
 
 END_LEVEL_INIT = $70                ; 1 byte: flag to trip the end of level pattern generation
 END_PATTERN_INDEX = $71             ; 1 byte: stores the index into end level pattern data
-END_LEVEL = $72                     ; 1 byte: tells if scrolling needs to finish
 
 IS_GROUNDED = $73                   ; stores the player being on the ground
 
@@ -249,10 +248,10 @@ game
     ; TODO: these are just hardcoded atm, should be done per-level
     lda     #0
     sta     CURRENT_LEVEL
-    sta     END_LEVEL                   ; 0 == FALSE
+    sta     END_LEVEL_INIT              ; set END_LEVEL_INIT to FALSE
     lda     #10                         ; index into the end level pattern data
     sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
-    lda     #2
+    lda     #10
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
@@ -326,8 +325,7 @@ game_loop_continue
 ; SUBROUTINE: END_GAME_LOOP
 ; - logic for ending a level
 ; -----------------------------------------------------------------------------
-end_loop_entrance                       ; need to run the draw scroll 4 more times to update the screen to match the level data
-    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
+end_loop_entrance                       ; need to run the draw scroll 3 more times to update the screen to match the level data
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data

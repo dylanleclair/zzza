@@ -14,9 +14,6 @@
 ;         LEVEL_DELTA to just be too long.
 ; -----------------------------------------------------------------------------
 advance_level
-    lda     END_PATTERN_INDEX           ; get the index into end pattern so far
-    beq     advance_exit                ; if it's 0, we've loaded all end level data
-
     ; this causes the 'advance_level' subroutine to only be called once every n game loops
     ; currently only setup to work with multiples of 2
     lda     #$03                        ; for now, run advance_level once every 4 loops
