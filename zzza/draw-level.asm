@@ -10,12 +10,6 @@
 ; -----------------------------------------------------------------------------
 draw_master
     ; check if level is complete, if so don't scroll
-    lda     PROGRESS_BAR
-    bpl     draw_master_scroll          ; positive progress bar indicates level is not yet complete
-
-    ; if level has already been cleared, just finish any falling blocks. don't scroll.
-    jsr     draw_block
-    jmp     draw_master_hi_res
 
 draw_master_scroll
     jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
