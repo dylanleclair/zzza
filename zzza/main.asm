@@ -84,11 +84,20 @@ IS_GROUNDED = $73                   ; stores the player being on the ground
 GROUND_COUNT = $74
 CURSED_LOOP_COUNT = $75
 
+; song variables
+SONG_DELAY_COUNT = $76  ; counter to delay song to sound decent
+SONG_INDEX = $77        ; current note being player
+
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
 HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
 
+; SOUND REGISTERS
+S_VOL = $900E   ; volume control
+S1 = $900A      ; sound channel 1
+S2 = $900B      ; sound channel 2
+S3 = $900C      ; sound channel 3
 
     processor 6502
 ; -----------------------------------------------------------------------------
@@ -98,7 +107,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4732", 0
+    dc.b $9e, "4744", 0
 stubend
     dc.w 0
 
@@ -229,6 +238,8 @@ TITLE_SCREEN
     dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
     dc.b $60,$12,$15,$0E,$14,$09,$0D,$05,$20,$14,$05,$12,$12,$0F,$12,$20
 
+    include "song.asm"
+
 start
 ; -----------------------------------------------------------------------------
 ; TITLE_SCREEN
@@ -236,9 +247,9 @@ start
 ; - changes text to "press any key"
 ; - waits for user input and goes to main game on any key press
 ; -----------------------------------------------------------------------------
-    jsr     screen_dim_title
-    jsr     draw_title_screen
-    jsr     title_scroll
+    ; jsr     screen_dim_title
+    ; jsr     draw_title_screen
+    ; jsr     title_scroll
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
@@ -256,6 +267,8 @@ game
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
 
+    jsr     soundon
+
 game_init
     jsr     screen_dim_game
     include "screen-init.asm"           ; initialize screen colour
@@ -263,8 +276,9 @@ game_init
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
-
     sta     IS_GROUNDED
+
+    jsr     init_sound
 
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
@@ -284,8 +298,9 @@ set_repeat                              ; sets the repeat value so holding down 
 ; -----------------------------------------------------------------------------
 game_loop_reset_scroll
 
-    lda #0
-    sta ANIMATION_FRAME
+    lda     #0
+    sta     ANIMATION_FRAME
+
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
@@ -304,6 +319,7 @@ game_loop
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
+    jsr     update_sound
     jsr     lfsr                        ; update the lfsr
     ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
@@ -438,5 +454,6 @@ lives_left
     include "title_screen.asm"
     include "block-manip.asm"
     include "title_scroll.asm"
+    include "sound.asm"
 
 ; -----------------------------------------------------------------------------
