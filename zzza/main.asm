@@ -380,7 +380,6 @@ inc_progress
     rol     PROGRESS_BAR                ; shift the progress bar over by 1, filling in lo bit with carry
 
 ; check if it's time to set END_LEVEL flag
-    lda     PROGRESS_BAR                ; load the progress bar
     bpl     game_over_exit              ; if the high bit not set, do not set END_LEVEL flag
     inc     END_LEVEL_INIT              ; set END_LEVEL flag
 
