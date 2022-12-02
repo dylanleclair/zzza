@@ -74,10 +74,12 @@ LEVEL_CLEARED = $6c                 ; 1 byte: flag indicating whether the curren
 PROGRESS_BAR = $6d                  ; 1 byte: stores the current progress thru level
 
 CURRENT_LEVEL = $6e                 ; 1 byte: stores the player's current level
-PLAYER_LIVES = $6F                  ; 1 byte: stores how many lives the player has left
+PLAYER_LIVES = $6f                  ; 1 byte: stores how many lives the player has left
 
 END_LEVEL_INIT = $70                ; 1 byte: flag to trip the end of level pattern generation
 END_PATTERN_INDEX = $71             ; 1 byte: stores the index into end level pattern data
+
+CURRENT_INPUT = $72
 
 IS_GROUNDED = $73                   ; stores the player being on the ground
 
@@ -289,10 +291,10 @@ game_loop_reset_scroll
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
-    jsr     get_input                   ; check for user input and update player X,Y coords
-    jsr     check_fall                  ; try to move the sprite down
-    jsr     advance_block               ; update location of any falling blocks
+    jsr     get_input                   ; check for user input
     jsr     advance_level               ; update the state of the LEVEL_DATA array
+    jsr     move_eva                    ; try to move player based on input
+    jsr     move_block                  ; move any blocks
 
     ; DEATH CHECK: once all states have been updated, check for a game over
     jsr     game_over_check
@@ -332,8 +334,8 @@ end_loop_entrance                       ; need to run the draw scroll 3 more tim
 
 end_loop
     jsr     get_input                   ; check for user input and update player X,Y coords
-    jsr     check_fall                  ; try to move the sprite down
-    jsr     advance_block               ; update location of any falling blocks
+    jsr     move_eva
+    jsr     move_block
 
     ; ANIMATION: draw the current state of all the game elements to the screen
     jsr     draw_eva                    ; draw the player character
@@ -434,9 +436,9 @@ lives_left
     include "collision_checks.asm"
     include "hud.asm"
     include "draw-block.asm"
-    include "advance-block.asm"
     include "title_screen.asm"
-    include "block-manip.asm"
     include "title_scroll.asm"
+    include "move-eva.asm"
+    include "move-block.asm"
 
 ; -----------------------------------------------------------------------------
