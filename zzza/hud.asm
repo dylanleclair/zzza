@@ -11,7 +11,7 @@ init_hud_loop
     sta     HUD_COLOR_ADDR,y            ; store in hud's colour address
     tax                                 ; save the colour in x
 
-    lda     #$06                        ; char for full block
+    lda     #33                        ; char for full block
     sta     HUD_SCREEN_ADDR,y           ; store in hud's screen address
     txa                                 ; put the colour back in a
 

@@ -100,7 +100,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4732", 0
+    dc.b $9e, "4740", 0
 stubend
     dc.w 0
 
@@ -398,9 +398,9 @@ death_screen
 
     ldx     #0                          ; initialize loop ctr
 death_screen_loop
-    lda     #2                          ; colour for red
+    lda     #2                      ; colour for hi-res red
     sta     COLOR_ADDR,x
-    lda     #6                          ; load solid block
+    lda     #33                          ; load solid block
     sta     SCREEN_ADDR,x 
     inx 
     bne     death_screen_loop
