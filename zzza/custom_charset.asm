@@ -257,7 +257,7 @@ hi_res_2_2 ; 19
     dc.b #%00111000
     dc.b #%00000000
 
-eva_left ; 30
+eva_left_sprite ; 30
     dc.b #%00111100
     dc.b #%00011100
     dc.b #%00011100
@@ -266,7 +266,7 @@ eva_left ; 30
     dc.b #%00100010
     dc.b #%01010101
     dc.b #%11000011
-eva_right ; 31
+eva_right_sprite ; 31
     dc.b #%00111100
     dc.b #%00110100
     dc.b #%00110100
