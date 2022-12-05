@@ -41,6 +41,8 @@ thanks_eva
 thanks_eva_loop
     lda     thanks_eva_text,x           ; load the character
     sta     $1e71,x                     ; set the start location to draw the line
+    lda     #4                          ; load purple character
+    sta     $9671,x                     ; set the charater to purple
     inx                                 ; decrement x
     cpx     #13                         ; check if end of line
     bne     thanks_eva_loop             ; if x != 0, keep looping

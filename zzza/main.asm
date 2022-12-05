@@ -103,7 +103,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4740", 0
+    dc.b $9e, "4761", 0
 stubend
     dc.w 0
 
@@ -358,7 +358,7 @@ end_loop
     lda     Y_COOR                      ; load Eva's current Y coordinate
     cmp     #14                         ; check if Eva is on the bottom of the level
     bne     housekeeping                ; if no, keep looping normally
-    lda     #33                         ; else, load the door character
+    lda     #34                         ; else, load the door character
     sta     $1eef                       ; place it on the right side of the bottom of the screen
     lda     #1                          ; load 1 (white color)
     sta     $96ef                       ; make the door white
@@ -393,8 +393,10 @@ level_end_scroll
     lda     #2                          ; empty block for horizontal screen scroll
     sta     EMPTY_BLOCK                 ; store the empty block character
     jsr     horiz_screen_scroll         ; scroll the screen out
+    lda     #0                          ; set A to 0 (0 = black for screen color change)
+    jsr     char_color_change           ; change all characters to black
     lda     #96                         ; load the code for an empty character into a
-    jsr     empty_screen                ; set the screen to empty     
+    jsr     empty_screen                ; set the screen to empty
     jsr     thanks_eva                  ; display "THANKS EVA!!!"
     jmp     start                       ; RESTART THE GAME...CHANGE THIS LATER!!!!  
 
