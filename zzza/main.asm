@@ -90,8 +90,7 @@ IS_GROUNDED = $73                   ; stores the player being on the ground
 GROUND_COUNT = $74
 CURSED_LOOP_COUNT = $75
 
-DOOR_APPEARED = $76                 ; 1 byte: stores whether or not the door is now on screen at end of level
-EMPTY_BLOCK = $77                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
+EMPTY_BLOCK = $76                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
@@ -288,8 +287,6 @@ game_init
 
     sta     IS_GROUNDED
 
-    sta     DOOR_APPEARED               ; reset DOOR_APPEARED to false
-
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
 
@@ -371,9 +368,6 @@ end_loop
     sta     $1eef                       ; place it on the right side of the bottom of the screen
     lda     #1                          ; load 1 (white color)
     sta     $96ef                       ; make the door white
-    sta     DOOR_APPEARED               ; set DOOR_APPEARED to true
-
-    lda     DOOR_APPEARED               ; load DOOR_APPEARED
     beq     housekeeping                ; if 0 (FALSE) then keep looping
     lda     X_COOR                      ; load the X-COOR to check when Eva gets to the door
     cmp     #14                         ; check if Eva is at the door
