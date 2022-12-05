@@ -14,6 +14,7 @@
 init_sound
     lda     #0
     sta     SONG_INDEX
+    sta     SONG_CHUNK_INDEX
     sta     SONG_DELAY_COUNT
     rts
 
@@ -22,21 +23,66 @@ init_sound
 ;   * switches active note to the next note in the song
 ; -----------------------------------------------------------------------------
 next_note
-    ldx SONG_INDEX      ; load current index into song (should point to next note to play)
+    lda SONG_INDEX
 
-    cpx #12             ; check if the end of the song has been reached
-    bne skip_reset
+    cmp #16
+    bne skip_resets
 
-    ; if it has, go back to the beginning!
+    ; if not, we are at the end of the chunk. increment chunk index, reset song index.
     lda #0
     sta SONG_INDEX
+    inc SONG_CHUNK_INDEX
+skip_next_chunk
+    lda SONG_CHUNK_INDEX
+    cmp #13
+    bne skip_resets
+
+    ; if at 13, we're at end of song. reset chunk index.
+    lda #0
+    sta SONG_CHUNK_INDEX
+    
+skip_resets
+
+
+    ldx SONG_CHUNK_INDEX
+    ; for S2, we load channel A
+    lda SONG_CHUNKS_A,x
+
+    ; this load the chunk we're at into ACC
+    ; we must multiple by 16 to get the start of that chunk
+    ; then, add SONG_INDEX to get the right note
+    asl
+    asl
+    asl
+    asl
+
+    clc
+    adc SONG_INDEX
     tax
 
-; otherwise, continue playing music normally
-skip_reset
-    lda     notes,x         ; get next note in the song
-    sta     S2              ; start playing it
-    inc     SONG_INDEX      ; increment for next time!
+    lda SONG_NOTES,x
+    sta S2
+
+    ; for S1, we load channel B
+    ldx SONG_CHUNK_INDEX
+    lda SONG_CHUNKS_B,x
+    ; this load the chunk we're at into ACC
+    ; we must multiple by 16 to get the start of that chunk
+    ; then, add SONG_INDEX to get the right note
+    asl
+    asl
+    asl
+    asl
+
+    clc
+    adc     SONG_INDEX
+    tax 
+    
+    lda     SONG_NOTES,X
+    sta     S1
+
+    inc     SONG_INDEX
+
     rts
 
 ; -----------------------------------------------------------------------------
@@ -44,7 +90,10 @@ skip_reset
 ;   * turns on sound for the VIC
 ; -----------------------------------------------------------------------------
 soundon
-    lda 	#15 		; load 15 in the A register
+    lda     S_VOL
+    and     #%11110000
+    eor     #15
+    ; adc 	#15 		; load 15 in the A register
 	sta		S_VOL		; set the volume to full for low voice (manual recommends it)
     rts
 
@@ -54,8 +103,9 @@ soundon
 ;   * mutes sound input for the vic
 ; -----------------------------------------------------------------------------
 soundoff
-	lda		#0			; load 0 into A register (volume off)
-	sta		S_VOL		; set volume to 0
+	lda		S_VOL			; load 0 into A register (volume off)
+    and     #%11110000
+    sta		S_VOL		; set volume to 0
 	rts
 
 

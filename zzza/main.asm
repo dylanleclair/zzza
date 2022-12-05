@@ -87,6 +87,7 @@ CURSED_LOOP_COUNT = $75
 ; song variables
 SONG_DELAY_COUNT = $76  ; counter to delay song to sound decent
 SONG_INDEX = $77        ; current note being player
+SONG_CHUNK_INDEX = $78        ; current note being player
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
@@ -107,7 +108,7 @@ S3 = $900C      ; sound channel 3
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4744", 0
+    dc.b $9e, "4884", 0
 stubend
     dc.w 0
 
@@ -247,9 +248,9 @@ start
 ; - changes text to "press any key"
 ; - waits for user input and goes to main game on any key press
 ; -----------------------------------------------------------------------------
-    ; jsr     screen_dim_title
-    ; jsr     draw_title_screen
-    ; jsr     title_scroll
+    jsr     screen_dim_title
+    jsr     draw_title_screen
+    jsr     title_scroll
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
@@ -267,8 +268,6 @@ game
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
 
-    jsr     soundon
-
 game_init
     jsr     screen_dim_game
     include "screen-init.asm"           ; initialize screen colour
@@ -279,6 +278,7 @@ game_init
     sta     IS_GROUNDED
 
     jsr     init_sound
+    jsr     soundon
 
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
@@ -345,7 +345,7 @@ end_loop_entrance                       ; need to run the draw scroll 3 more tim
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
-
+    
 end_loop
     jsr     get_input                   ; check for user input and update player X,Y coords
     jsr     check_fall                  ; try to move the sprite down
@@ -357,6 +357,7 @@ end_loop
     jsr     draw_block                  ; draw any falling blocks
     jsr     draw_master_hi_res          ; draw hi res movement
 
+    jsr     next_note
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     ldy     #5                          ; set desired delay 
