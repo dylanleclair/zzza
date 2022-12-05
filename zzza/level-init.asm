@@ -41,6 +41,9 @@ level_init
     lda #1
     sta MOVE_DIR_Y
 
+    ; draw lives onto HUD
+    jsr     draw_lives
+
     ; initialize data
     jsr     init_level_data              ; ensure that there's valid level data ready to go
     jsr     backup_scrolling             ; make sure hi-res is backed up properly
