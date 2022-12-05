@@ -268,12 +268,12 @@ start
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    lda     #2
+    lda     #10
     sta     LEVEL_LENGTH
-    sta     PLAYER_LIVES                ; because of the BNE statement, 2 = 3 lives
+    lda     #2                          ; because of the BNE statement, 2 = 3 lives
+    sta     PLAYER_LIVES
 
     lda     #0
-    sta     CURRENT_LEVEL               ; initialize current level
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
 
@@ -393,8 +393,6 @@ level_end_scroll
     jsr     horiz_screen_scroll         ; scroll the screen out
     lda     #0                          ; set A to 0 (0 = black for screen color change)
     jsr     char_color_change           ; change all characters to black
-    lda     #96                         ; load the code for an empty character into a
-    jsr     empty_screen                ; set the screen to empty
     jsr     thanks_eva                  ; display "THANKS EVA!!!"
 
     lda     CURRENT_LEVEL               ; grab the current level
@@ -475,7 +473,7 @@ death_logic
     bne     lives_left                  ; if lives !=0, jump over the restart
     jmp     start
 lives_left
-    dec     PLAYER_LIVES                ; remove a live from the player
+    dec     PLAYER_LIVES                ; remove a life from the player
     jmp     game_init                   ; restart the level (TODO: THIS ISN'T CORRECT!!!)
 
 ; -----------------------------------------------------------------------------

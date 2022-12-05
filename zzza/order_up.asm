@@ -6,6 +6,9 @@ order_up
     lda     #$f0                        ; change from custom to default charset
     sta     CHARSET_CTRL
 
+    lda     #96                         ; load the code for an empty character into a
+    jsr     empty_screen                ; set the screen to empty
+
     ldx     #0                          ; set x to 0
 story_draw_loop
     lda     order_up_text,x             ; load the character
@@ -38,11 +41,11 @@ story_clear_loop
 ; - Displays the ORDER UP screen
 ;------------------------------------------------------------------------------
 thanks_eva
-    lda     #1                          ; color code for black
-
-    ; jsr     flip_charset                ; change from custom to default charset
     lda     #$f0                        ; change from custom to default charset
     sta     CHARSET_CTRL
+
+    lda     #96                         ; load the code for an empty character into a
+    jsr     empty_screen                ; set the screen to empty
 
     ldx     #0                          ; set x to 0
 thanks_eva_loop
