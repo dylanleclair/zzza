@@ -3,14 +3,33 @@
 ; =============================================================================
 
 ; -----------------------------------------------------------------------------
+; SUBROUTINE: DRAW_MASTER
+; - takes the current state of the level, and draws the full blocks / empty spaces on the screen
+; - essentially just the starting state for every frame
+; - afterwards, we go ahead and advance each character being animated by n frames (where n is # of frames into current animation - see: DRAW_LEVEL)
+; -----------------------------------------------------------------------------
+draw_master
+    ; check if level is complete, if so don't scroll
+
+draw_master_scroll
+    jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
+    jsr     draw_level                  ; do scrolly scroll
+    jsr     draw_block                  ; draw any falling blocks
+    jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
+
+draw_master_hi_res
+    jsr     reset_high_res              ; clear high res graphics
+    jsr     draw_shift_is_grounded
+    jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
+    jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
+    rts
+; -----------------------------------------------------------------------------
 ; SUBROUTINE: DRAW_LEVEL
 ; - combines the patterns stored in the LEVEL_DATA array with the information in LEVEL_DELTAS
 ;   to determine which parts of the screen need to advance their animation frame.
 ; - assumes that the valid characters are already being displayed on screen (each character is one in the scrolling state machine)
 ; -----------------------------------------------------------------------------
-
 draw_level
-
     ; outer loop: for each element of the LEVEL_DATA array, animate the screen based off LEVEL_DATA and LEVEL_DELTA at same index
     ldx     #0                          ; initialize x for outer loop counter
 draw_level_loop
@@ -22,22 +41,42 @@ draw_level_loop
     asl                                 ; a*2
     sta     WORKING_SCREEN              ; store this as the low byte of the working screen memory
 
-    ; get the pattern of the strip we want to work on
+    lda     ANIMATION_FRAME             ; check animation frame
+    cmp     #3                          ; check if we are on frame 3
+    bne     load_delta                  ; if frame != 3, jump down to load the delta info
+    lda     LEVEL_DATA,x                ; if frame == 3, we'll draw the data directly onscreen
+    sta     WORKING_DELTA               ; still store it in delta to save space
+    jmp     draw_strip
+
+; in this case where frame != 0, animate using the delta
+load_delta
     lda     LEVEL_DELTA,x               ; grab LEVEL_DELTA[x] to figure out which bits animate and which don't
     sta     WORKING_DELTA               ; store it for later use
 
     ; inner loop: for each bit in LEVEL_DELTA[i], update the onscreen character by 1 if delta=1, and leave it alone if delta=0
+draw_strip
     ldy     #0                          ; initialize loop counter for inner loop
 draw_strip_loop
     lda     WORKING_DELTA               ; grab our working delta information
-    bmi     delta_bit_hi                ; leading 1 -> most significant bit is high
+    bmi     bit_hi                      ; leading 1 -> most significant bit is high
 
-delta_bit_lo                            ; if the bit was lo, this char can just stay the same
-    jmp     delta_shift                 ; just jump straight past the draw code
+bit_lo                                  ; if the bit was lo, this char is empty (draw DATA case) or is not animating (draw DELTA case)
+    lda     ANIMATION_FRAME             ; check the animation frame
+    cmp     #3                          ; check if we are on frame 3
+    bne     delta_shift                 ; if animation frame != 0, this is delta case and nothing needs to be done
+    lda     #2                          ; else, char for empty space
+    jmp     delta_draw                  ; we are done with this bit. jump down to draw it onscreen
 
-delta_bit_hi                            ; if the bit was hi, this char needs to animate
+bit_hi                                  ; if the bit was hi, this char is full (draw DATA case) or needs to animate (draw DELTA case)
+    lda     ANIMATION_FRAME             ; check the animation frame
+    cmp     #3                          ; check if we are on frame 3
+    bne     delta_bit_hi                ; if animation frame !=0, this is the delta case and we need to cycle the animation frame
+    lda     #6                          ; else, load char for full fill
+    jmp     delta_draw                  ; we are done with this bit, jump down to draw it onscreen
+
+delta_bit_hi
     lda     (WORKING_SCREEN),y          ; go to SCREEN+y and get the current character stored there
-    cmp     #9                          ; we only have 8 animation frames, so we want to overflow after 7
+    cmp     #9                          ; we only have 8 animation frames in positions 2-9, so we want to overflow after char 9
     bne     delta_advance_frame         ; if we aren't about to overflow, just increment the frame
 
 delta_overflow_frame
@@ -67,30 +106,6 @@ draw_level_test
 
 draw_level_exit
     rts
-
-; -----------------------------------------------------------------------------
-; SUBROUTINE: DRAW_MASTER
-; - draws the "level" without distorting hi-res graphics / the level itself
-;   - does this by restoring hi-res buffer to screen, calling draw, 
-;       then saving new scrolling data for next time (see custom_charset.asm) for more
-; -----------------------------------------------------------------------------
-draw_master
-
-draw_master_scroll
-    jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
-    jsr     draw_block                  ; draw any falling blocks
-    jsr     draw_level                  ; do scrolly scroll
-    jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
-
-draw_master_hi_res
-    jsr     reset_high_res              ; clear high res graphics
-    jsr     draw_shift_is_grounded
-    jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
-    jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
-
-draw_exit
-    rts
-
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: MASK_LEVEL_ONTO_HI_RES
@@ -313,9 +328,11 @@ zero_hi_res_loop
     cpy #8
     bne zero_hi_res_loop 
 
-    lda     #$50                ; location of the eva_front char
-    sta     CURRENT_PLAYER_CHAR ; store it so the next loop can use it
+    ; lda     #$50                ; location of the eva_front char
+    ; sta     CURRENT_PLAYER_CHAR ; store it so the next loop can use it
 
+    dey
+    ; ldy     #0
 ; draw a desired custom character into the centre of the bitmap
 custom_char_hi_res_loop
     ; expects that the desired char's address is stored in CURRENT_PLAYER_CHAR
@@ -323,7 +340,7 @@ custom_char_hi_res_loop
     sta     hi_res_1_1,y
 
     dey
-    bne custom_char_hi_res_loop
+    bpl     custom_char_hi_res_loop
 
     rts
 

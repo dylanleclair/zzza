@@ -17,7 +17,7 @@ COLUMNS_ADDR = $9002                ; stores the number of columns on screen
 ROWS_ADDR = $9003                   ; stores the number of rows on screen
 
 CHARSET_CTRL = $9005                ; stores a pointer to the beginning of character memory
-
+AUX_COLOR_ADDR = $900e
 ; -----------------------------------------------------------------------------
 ; KERNAL ROUTINES
 ; -----------------------------------------------------------------------------
@@ -74,10 +74,12 @@ LEVEL_CLEARED = $6c                 ; 1 byte: flag indicating whether the curren
 PROGRESS_BAR = $6d                  ; 1 byte: stores the current progress thru level
 
 CURRENT_LEVEL = $6e                 ; 1 byte: stores the player's current level
-PLAYER_LIVES = $6F                  ; 1 byte: stores how many lives the player has left
+PLAYER_LIVES = $6f                  ; 1 byte: stores how many lives the player has left
 
 END_LEVEL_INIT = $70                ; 1 byte: flag to trip the end of level pattern generation
 END_PATTERN_INDEX = $71             ; 1 byte: stores the index into end level pattern data
+
+CURRENT_INPUT = $72
 
 IS_GROUNDED = $73                   ; stores the player being on the ground
 
@@ -101,7 +103,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4777", 0
+    dc.b $9e, "4753", 0
 stubend
     dc.w 0
 
@@ -302,10 +304,10 @@ game_loop_reset_scroll
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
-    jsr     get_input                   ; check for user input and update player X,Y coords
-    jsr     check_fall                  ; try to move the sprite down
-    jsr     advance_block               ; update location of any falling blocks
+    jsr     get_input                   ; check for user input
     jsr     advance_level               ; update the state of the LEVEL_DATA array
+    jsr     move_eva                    ; try to move player based on input
+    jsr     move_block                  ; move any blocks
 
     ; DEATH CHECK: once all states have been updated, check for a game over
     jsr     game_over_check
@@ -345,8 +347,8 @@ end_loop_entrance                       ; need to run the draw scroll 3 more tim
 
 end_loop
     jsr     get_input                   ; check for user input and update player X,Y coords
-    jsr     check_fall                  ; try to move the sprite down
-    jsr     advance_block               ; update location of any falling blocks
+    jsr     move_eva
+    jsr     move_block
 
     ; ANIMATION: draw the current state of all the game elements to the screen
     jsr     draw_eva                    ; draw the player character
@@ -357,7 +359,7 @@ end_loop
     lda     Y_COOR                      ; load Eva's current Y coordinate
     cmp     #14                         ; check if Eva is on the bottom of the level
     bne     housekeeping                ; if no, keep looping normally
-    lda     #36                         ; else, load the door character
+    lda     #33                         ; else, load the door character
     sta     $1eef                       ; place it on the right side of the bottom of the screen
     lda     #1                          ; load 1 (white color)
     sta     $96ef                       ; make the door white
@@ -482,10 +484,11 @@ lives_left
     include "collision_checks.asm"
     include "hud.asm"
     include "draw-block.asm"
-    include "advance-block.asm"
     include "title_screen.asm"
     include "horiz_screen_scroll.asm"
     include "utils.asm"
     include "order_up.asm"
+    include "move-eva.asm"
+    include "move-block.asm"
 
 ; -----------------------------------------------------------------------------
