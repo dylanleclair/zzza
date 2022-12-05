@@ -8,7 +8,7 @@ draw_title_screen
     sta     $900F                        ; set screen border color
 
     ; change the location of the charset
-    lda     #$F0                        ; set location of charset to default
+    lda     #$f0                        ; set location of charset to default
     sta     CHARSET_CTRL                ; store in register controlling base charset
 
 title_draw_init

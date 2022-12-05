@@ -3,10 +3,15 @@
 ; - Displays the ORDER UP screen
 ;------------------------------------------------------------------------------
 order_up
+    lda     #$f0                        ; change from custom to default charset
+    sta     CHARSET_CTRL
+
     ldx     #0                          ; set x to 0
 story_draw_loop
-    lda     order_up_text,x                  ; load the character
-    sta     $1e71,x                     ; set the start location to draw the line
+    lda     order_up_text,x             ; load the character
+    sta     STORY_SCREEN_ADDR,x         ; set the start location to draw the line
+    lda     #4                          ; load purple character
+    sta     STORY_COLOUR_ADDR,x         ; set the charater to purple
     inx                                 ; decrement x
     cpx     #15                         ; check if end of line
     bne     story_draw_loop             ; if x != 0, keep looping
@@ -18,7 +23,7 @@ story_clear
     ldx     #16                          ; set x to 16
     lda     #96                         ; set A to the empty block
 story_clear_loop
-    sta     $1e71,x                     ; store empty character at bottom line
+    sta     STORY_SCREEN_ADDR,x         ; store empty character at bottom line
     dex                                 ; decrement x
     bpl     story_clear_loop            ; if x != -1, keep looping
 
@@ -35,14 +40,16 @@ story_clear_loop
 thanks_eva
     lda     #1                          ; color code for black
 
-    jsr     flip_charset                ; change from custom to default charset
+    ; jsr     flip_charset                ; change from custom to default charset
+    lda     #$f0                        ; change from custom to default charset
+    sta     CHARSET_CTRL
 
     ldx     #0                          ; set x to 0
 thanks_eva_loop
     lda     thanks_eva_text,x           ; load the character
-    sta     $1e71,x                     ; set the start location to draw the line
+    sta     STORY_SCREEN_ADDR,x         ; set the start location to draw the line
     lda     #4                          ; load purple character
-    sta     $9671,x                     ; set the charater to purple
+    sta     STORY_COLOUR_ADDR,x         ; set the charater to purple
     inx                                 ; decrement x
     cpx     #13                         ; check if end of line
     bne     thanks_eva_loop             ; if x != 0, keep looping
@@ -54,7 +61,7 @@ thanks_eva_clear
     ldx     #14                         ; set x to 16
     lda     #96                         ; set A to the empty block
 thanks_eva_clear_loop
-    sta     $1e71,x                     ; store empty character at bottom line
+    sta     STORY_SCREEN_ADDR,x         ; store empty character at bottom line
     dex                                 ; decrement x
     bpl     thanks_eva_clear_loop       ; if x != -1, keep looping
 

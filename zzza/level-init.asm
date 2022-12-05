@@ -18,6 +18,7 @@ level_init
     sta     WORKING_SCREEN              ; lo byte of screen memory should start at 0x00
     sta     LINES_CLEARED
     sta     LEVEL_CLEARED
+    sta     IS_GROUNDED
 
     ; reset stuff associated with ending the level
     lda     #10                         ; index into the end level pattern data

@@ -12,6 +12,9 @@ HUD_COLOR_ADDR = $9700              ; default location of HUD's colour memory
 PROGRESS_SCREEN_ADDR = $1f11        ; start location to draw progress bar
 PROGRESS_COLOUR_ADDR = $9711        ; start location to draw progress bar
 
+STORY_SCREEN_ADDR = $1e71
+STORY_COLOUR_ADDR = $9671
+
 LIVES_SCREEN_ADDR = $1f1b           ; start location to draw lives on hud
 LIVES_COLOUR_ADDR = $971b           ; start location to draw lives on hud
 
@@ -259,7 +262,6 @@ start
     lda     #96                         ; empty character for the default charset
     sta     EMPTY_BLOCK                 ; set EMPTY_BLOCK for default scroll
     jsr     horiz_screen_scroll
-    jsr     order_up
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
@@ -273,15 +275,9 @@ game
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
 
-game_init
-    jsr     screen_dim_game
-    include "screen-init.asm"           ; initialize screen colour
-
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
-
-    sta     IS_GROUNDED
 
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
@@ -289,9 +285,14 @@ game_init
     lda     #$10                        ; hi byte of player sprite's char will always be 0x10
     sta     CURRENT_PLAYER_CHAR_HI
 
-set_repeat                              ; sets the repeat value so holding down a key will keep moving the sprite
     lda     #128                        ; 128 = repeat all keys
     sta     KEY_REPEAT                  ; sets all keys to repeat
+
+game_init
+    jsr     order_up
+    jsr     screen_dim_game
+    include "screen-init.asm"           ; initialize screen colour
+
 
     jsr     level_init                  ; set level-specific values
 ; -----------------------------------------------------------------------------
