@@ -24,7 +24,7 @@ color_test
 ; - sets color of screen to black, clears screen
 ; -----------------------------------------------------------------------------
 ; SET SCREEN BORDER TO BLACK
-    lda     #8                  ; black background, black border
+    lda     #12                  ; black background, purple border
     sta     $900F               ; set screen border color
 
 ; set the auxilliary colour code. aux colour is in the high 4 bits of the address
@@ -32,7 +32,7 @@ color_test
     and     AUX_COLOR_ADDR  ; aux colour addr AND accumulator to zero out the top 4
     sta     AUX_COLOR_ADDR  ; put the result back in the aux colour location
 
-    lda     #$40            ; colour code for light purple in hi 4 bits, nothing in lo 4
+    lda     #$10            ; colour code for white in hi 4 bits, nothing in lo 4
     ora     AUX_COLOR_ADDR  ; aux colour addr OR accumulator to put our value in
     sta     AUX_COLOR_ADDR  ; put the result back in the aux colour location
 
