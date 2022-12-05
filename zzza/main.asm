@@ -173,7 +173,7 @@ collision_mask:
 ; TODO: THESE ALL ARE RANDOM AND PROBABLY SUCK
 ; -----------------------------------------------------------------------------
 random_seeds:
-    dc.b #%10011000
+    dc.b #%00100001
     dc.b #%10001001
     dc.b #%10011100
     dc.b #%01000100
@@ -197,20 +197,20 @@ random_seeds:
 STRIPS
     dc.b #%00000000
     dc.b #%00000000
-    dc.b #%00011000
-    dc.b #%00011001
-    dc.b #%00011100
-    dc.b #%00100110
-    dc.b #%00110011
     dc.b #%00111100
-    dc.b #%01100000
-    dc.b #%10001100
-    dc.b #%11000001
-    dc.b #%11000011
-    dc.b #%11000110
-    dc.b #%11001100
-    dc.b #%11011100
-    dc.b #%11110011
+    dc.b #%00110000
+    dc.b #%01111000
+    dc.b #%00000000
+    dc.b #%11110000
+    dc.b #%01110011
+    dc.b #%00111000
+    dc.b #%00011100
+    dc.b #%01101110
+    dc.b #%00000011
+    dc.b #%11100000
+    dc.b #%00001100
+    dc.b #%00011100
+    dc.b #%00011011
 
 
 TITLE_SCREEN
@@ -306,7 +306,6 @@ game_loop
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
-    jsr     lfsr                        ; update the lfsr
     ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
