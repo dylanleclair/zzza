@@ -21,6 +21,8 @@ advance_level
     bne     advance_exit                ; if the AND operation didn't zero out, frame is not a multiple of 4. leave subroutine.
 
 init_advance_loop
+    jsr     lfsr                        ; update the lfsr
+
     ldy     #0                          ; initialize loop counter
     ldx     #2                          ; we need an offset that is always 2 ahead of y
 
