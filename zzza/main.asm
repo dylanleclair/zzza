@@ -266,12 +266,8 @@ start
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    ; TODO: these are just hardcoded atm, should be done per-level
     lda     #0
     sta     CURRENT_LEVEL
-    sta     END_LEVEL_INIT              ; set END_LEVEL_INIT to FALSE
-    lda     #10                         ; index into the end level pattern data
-    sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
     lda     #2
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives

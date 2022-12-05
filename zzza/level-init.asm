@@ -12,11 +12,16 @@ level_init
 
     ; reset counters and such
     lda     #00                         ; initialize lots of stuff to 0
+    sta     END_LEVEL_INIT              ; set END_LEVEL_INIT to FALSE
     sta     ANIMATION_FRAME             ; set the animation frame to 0                
     sta     PROGRESS_BAR                ; set progress bar to empty
     sta     WORKING_SCREEN              ; lo byte of screen memory should start at 0x00
     sta     LINES_CLEARED
     sta     LEVEL_CLEARED
+
+    ; reset stuff associated with ending the level
+    lda     #10                         ; index into the end level pattern data
+    sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
 
     ; reset coordinates
     lda     #$7
