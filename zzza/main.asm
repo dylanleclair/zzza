@@ -177,7 +177,7 @@ collision_mask:
 ; TODO: THESE ALL ARE RANDOM AND PROBABLY SUCK
 ; -----------------------------------------------------------------------------
 random_seeds:
-    dc.b #%00100001
+    dc.b #%00100101
     dc.b #%10001001
     dc.b #%10011100
     dc.b #%01000100
@@ -197,23 +197,28 @@ random_seeds:
 ; -----------------------------------------------------------------------------
 ; the patterns that can be used as level data. Each 8-bit strip will be translated into 8 spaces of on-screen
 ; data, where a 0 indicates an empty space, and a 1 indicates a block
+; Some notes on generating levels:
+; - levels are generated line by line, where a line is made up of one STRIP and the
+;   STRIP adjacent to it. eg: STRIP[2],STRIP[1] or STRIP[14],STRIP[13]
+; - so any strips more than 1 index away from each other will never appear together on a line
+; - we want a mix of some full 0x00 lines, some medium density lines, and 1 or 2 hi density lines
 ; -----------------------------------------------------------------------------
 STRIPS
     dc.b #%00000000
     dc.b #%00000000
-    dc.b #%00111100
+    dc.b #%01100100
     dc.b #%00110000
-    dc.b #%01111000
-    dc.b #%00000000
-    dc.b #%11110000
-    dc.b #%01110011
-    dc.b #%00111000
-    dc.b #%00011100
-    dc.b #%01101110
+    dc.b #%10011000
     dc.b #%00000011
-    dc.b #%11100000
+    dc.b #%00000000
+    dc.b #%11100001
     dc.b #%00001100
-    dc.b #%00011100
+    dc.b #%10011100
+    dc.b #%11000110
+    dc.b #%00010011
+    dc.b #%10010000
+    dc.b #%11111100
+    dc.b #%00110000
     dc.b #%00011011
 
 
