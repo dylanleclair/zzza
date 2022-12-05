@@ -401,6 +401,14 @@ level_end_scroll
     lda     #96                         ; load the code for an empty character into a
     jsr     empty_screen                ; set the screen to empty
     jsr     thanks_eva                  ; display "THANKS EVA!!!"
+
+    lda     CURRENT_LEVEL               ; grab the current level
+    cmp     #16                         ; check if we've done all levels
+    beq     reset_game                  ; if yes, go back to very beginning
+    inc     CURRENT_LEVEL               ; else, inc current level
+    jmp     game_init                   ; and jump to top of game stuff
+
+reset_game
     jmp     start                       ; RESTART THE GAME...CHANGE THIS LATER!!!!  
 
 ; -----------------------------------------------------------------------------
