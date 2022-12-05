@@ -9,7 +9,11 @@ COLOR_ADDR = $9600                  ; default location of colour memory
 HUD_SCREEN_ADDR = $1f00             ; default location of HUD's screen memory
 HUD_COLOR_ADDR = $9700              ; default location of HUD's colour memory
 
+PROGRESS_SCREEN_ADDR = $1f11        ; start location to draw progress bar
 PROGRESS_COLOUR_ADDR = $9711        ; start location to draw progress bar
+
+LIVES_SCREEN_ADDR = $1f1b           ; start location to draw lives on hud
+LIVES_COLOUR_ADDR = $971b           ; start location to draw lives on hud
 
 H_CENTERING_ADDR = $9000            ; horizontal screen centering
 V_CENTERING_ADDR = $9001            ; vertical screen centering
@@ -79,7 +83,7 @@ PLAYER_LIVES = $6f                  ; 1 byte: stores how many lives the player h
 END_LEVEL_INIT = $70                ; 1 byte: flag to trip the end of level pattern generation
 END_PATTERN_INDEX = $71             ; 1 byte: stores the index into end level pattern data
 
-CURRENT_INPUT = $72
+CURRENT_INPUT = $72                 ; 1 byte: stores the most recent keyboard input
 
 IS_GROUNDED = $73                   ; stores the player being on the ground
 
@@ -100,7 +104,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4740", 0
+    dc.b $9e, "4748", 0
 stubend
     dc.w 0
 
