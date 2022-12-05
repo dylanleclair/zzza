@@ -268,14 +268,12 @@ start
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    lda     #0
-    sta     CURRENT_LEVEL
     lda     #2
     sta     LEVEL_LENGTH
-    lda     #2                          ; because of the BNE statement, 2 = 3 lives
-    sta     PLAYER_LIVES
+    sta     PLAYER_LIVES                ; because of the BNE statement, 2 = 3 lives
 
     lda     #0
+    sta     CURRENT_LEVEL               ; initialize current level
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
 
