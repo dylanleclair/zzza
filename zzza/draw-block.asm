@@ -23,7 +23,7 @@ draw_block_sprite
     tax                             ; put this value into x so that we can use it as an offset
 
     ; draw a full fill where the block is now
-    lda     #32                      ; full fill
+    lda     #22                     ; falling block
     sta     SCREEN_ADDR,x           ; store the fill at position offset
 
 

@@ -14,6 +14,8 @@ get_input
     ldx     #00                         ; set x to 0 for GETTIN kernal call
     jsr     GETIN                       ; get 1 bytes from keyboard buffer
 
+; input_kill                              ; stops the game immediately and removes a life
+
 input_left
     cmp     #$41                        ; A key pressed?
     bne     input_right                 ; if A wasn't pressed, keep checking input

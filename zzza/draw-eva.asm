@@ -133,17 +133,14 @@ set_y_dir
 ; set MOVE_DIR_Y to up (-1)
 y_dir_up
     
-    ; lda     #-1                     ; set y move direction to -1
-    ; sta     MOVE_DIR_Y
     lda     #1                        ; set is grounded flag so we move eva up
     sta     IS_GROUNDED               ; set is grounded flag
     lda     #3
     sta     GROUND_COUNT 
     jmp     update_position_cleanup
-; set MOVE_DIR_Y to up (1)    
-y_dir_down
 
-    ; lda     #1                      
+; set MOVE_DIR_Y to up (1)    
+y_dir_down                     
     inc     MOVE_DIR_Y                ; set y direction to 1 
 
 update_position_cleanup
