@@ -185,18 +185,25 @@ channel_b = [2,2,2,2,2,2,2,2,7,7,2,2,12,14,15,15]   # use as indexes on top of I
 def print_channel_asm(channel):
     stub = "dc.b "
     for entry in channel:
+        stub += f"#{entry-1}, "
+
+    print(stub)
+
+
+def print_chunk_asm(channel,label):
+    print(label)
+    stub = "dc.b "
+    for entry in channel:
         stub += f"#{entry}, "
 
     print(stub)
 
 
 print_channel_asm(channel_a)
+
 print_channel_asm(channel_b)
 
-
-def print_chunk_asm(chunk, label):
-    print(label)
-    print_channel_asm(chunk)
+# quite possibly some orf the ugliest code ive ever written but it gets the job done (mostly)
 
 def gather_chunks():
     print("; gathering chunks")
