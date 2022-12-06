@@ -14,10 +14,16 @@ get_input
     ldx     #00                         ; set x to 0 for GETTIN kernal call
     jsr     GETIN                       ; get 1 bytes from keyboard buffer
 
-input_kill                              ; stops the game immediately and removes a life
+input_kill                              ; restart level immediately and removes a life
     cmp     #$4b                        ; K key pressed?
-    bne     input_left                  ; if K not pressed, keep checking input
+    bne     input_mute                  ; if K not pressed, keep checking input
     jmp     death_screen                ; immediately jump to death screen
+
+input_mute                              ; toggle sound on or off
+    cmp     #$77                        ; M key pressed?
+    bne     input_left                  ; if M key not pressed, keep checking input
+    jsr     soundoff                    ; jump to the soundoff subroutine
+    rts
 
 input_left
     cmp     #$41                        ; A key pressed?
