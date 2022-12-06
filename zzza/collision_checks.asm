@@ -65,18 +65,8 @@ collision_left
     rts
 
 check_left
-    ; find proper index into LEVEL_DATA array (if you're on the left or right of the screen)
-    ldx     NEW_X_COOR
-    lda     NEW_Y_COOR                  ; get player's y coord
-    clc
-    asl                                 ; multiply by 2 to get the index into LEVEL_DATA
-    tay                                 ; put this offset into y
+    jsr     get_data_index              ; get the player's index into LEVEL_DATA
 
-    cpx     #$08                        ; check if player's x coord is less than 8
-    bmi     check_level_left            ; if player's x < 8, you're on lhs. don't inc y
-    iny                                 ; else you're on rhs, inc y
-
-check_level_left
     ; check for collision with a block
     lda     collision_mask,x            ; get collision_mask[x]
     cpx     #$08                        ; check if X == 8, meaning we're crossing a level data boundary
@@ -107,18 +97,8 @@ collision_right
     rts
 
 check_right
-    ; find proper index into LEVEL_DATA array (if you're on the left or right of the screen)
-    ldx     NEW_X_COOR
-    lda     NEW_Y_COOR                  ; get player's y coord
-    clc
-    asl                                 ; multiply by 2 to get the index into LEVEL_DATA
-    tay                                 ; put this offset into y
+    jsr     get_data_index              ; get player's current index into LEVEL_DATA
 
-    cpx     #$08                        ; check if player's x coord is less than 8
-    bmi     check_level_right           ; if player's x < 8, you're on lhs. don't inc y
-    iny                                 ; else you're on rhs, inc y
-
-check_level_right
     ; check for collision with a block
     lda     collision_mask,x            ; get collision_mask[x]
     cpx     #$07                        ; check if X == 7, meaning we're crossing a level data boundary
@@ -169,15 +149,9 @@ check_block_down
     iny                                 ; indirect offset + 1 should have y coord
     lda     (WORKING_COOR),y            ; get the y coord
 
-    asl                                 ; multiply Y coordinate by 2 to get the index into level data
     clc                                 ; beacuse.you.always.have.to!
-    adc     #2                          ; add 2 to the level byte (we want the level piece under us)
-    tay                                 ; store the level index variable into the y register
-
-    cpx     #$08                        ; x < 8 ?
-    bmi     skip_y_inc                  ; if so you're on lhs. don't inc y
-    iny                                 ; else you're on rhs. inc y
-
+    adc     #1                          ; add 2 to the level byte (we want the level piece under us)
+    jsr     get_data_index_sneeky       ; get the index into LEVEL_DATA
 skip_y_inc
     lda     collision_mask,x            ; get the bit pattern for the player's position
     and     LEVEL_DATA,y                ; do an AND on the collision mask and lvl data to see if there's something under you

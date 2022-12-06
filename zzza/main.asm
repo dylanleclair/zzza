@@ -70,7 +70,6 @@ WORKING_COOR_HI = $54               ; 1 byte: used for indirect addressing of co
 
 INNER_LOOP_CTR = $55
 
-
 BACKUP_HIGH_RES_SCROLL = $56        ; 9 bytes - one for each char in the high res graphics
 
 MOVE_DIR_X = $65                    ; 1 byte: (-1, 0, 1) representing Left move, standing still, Right move
@@ -80,6 +79,10 @@ FRAMES_SINCE_MOVE = $67             ; 1 byte:
 
 CURRENT_PLAYER_CHAR = $68           ; 1 byte: pointer to the character that should be drawn in hires bitmap
 CURRENT_PLAYER_CHAR_HI = $69
+
+STRING_LOCATION = $68               ; 1 byte: used for indirect addressing of string locations
+STRING_LOCATION_HI = $69            ; 1 byte: used for indirect addressing of string locations
+
 
 LINES_CLEARED = $6a                 ; 1 byte: number of lines the player has cleared
 LEVEL_LENGTH = $6b                  ; 1 byte: player needs to clear 8*LEVEL_LENGTH to complete level
@@ -100,11 +103,11 @@ GROUND_COUNT = $74
 CURSED_LOOP_COUNT = $75
 
 ; song variables
-SONG_INDEX = $77        ; current note being player
-SONG_CHUNK_INDEX = $78        ; current note being player
-EMPTY_BLOCK = $79                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
+SONG_INDEX = $77                    ; current note being player
+SONG_CHUNK_INDEX = $78              ; current note being player
+EMPTY_BLOCK = $79                   ; 1 byte: stores the char value of the current emtpy block (because charset changes)
 
-GAME_SPEED = $78                    ; 1 byte: controls the speed of the scrolling in the game
+GAME_SPEED = $7a                    ; 1 byte: controls the speed of the scrolling in the game
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
@@ -119,7 +122,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4969", 0
+    dc.b $9e, "4960", 0
 stubend
     dc.w 0
 
@@ -134,11 +137,6 @@ stubend
     include "custom_charset.asm"
 
 ; -----------------------------------------------------------------------------
-; Lookup table for the y-coordinates on the screen. Multiples of 16
-; -----------------------------------------------------------------------------
-y_lookup: dc.b #0, #16, #32, #48, #64, #80, #96, #112, #128, #144, #160, #176, #192, #208, #224, #240
-
-; -----------------------------------------------------------------------------
 ; Lookup table for "PRESS ANY KEY" used for title screen
 ; -----------------------------------------------------------------------------
 press_any_key: dc.b #16, #18, #5, #19, #19, #96, #1, #14, #25, #96, #11, #5, #25
@@ -149,19 +147,20 @@ press_any_key: dc.b #16, #18, #5, #19, #19, #96, #1, #14, #25, #96, #11, #5, #25
 title_year: dc.b #50, #48, #50, #50, #0
 
 ; -----------------------------------------------------------------------------
-; End level load pattern (loaded backwards to save 1 instruction!)
-; -----------------------------------------------------------------------------
-end_pattern: dc.b #255, #255, #255, #255, #255, #0, #0, #0, #0, #0, #0
-
-; -----------------------------------------------------------------------------
 ; Lookup table for "EVA! ORDER UP!" used for start of game
 ; -----------------------------------------------------------------------------
-order_up_text: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33
+order_up_text: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33, #0
 
 ; -----------------------------------------------------------------------------
 ; Lookup table for "THANKS EVA!!!" used for start of game
 ; -----------------------------------------------------------------------------
-thanks_eva_text: dc.b #20, #8, #1, #14, #11, #19, #32, #5, #22, #1, #33, #33, #33
+thanks_eva_text: dc.b #20, #8, #1, #14, #11, #19, #32, #5, #22, #1, #33, #33, #33, #0
+
+; -----------------------------------------------------------------------------
+; Lookup table for the y-coordinates on the screen. Multiples of 16
+; -----------------------------------------------------------------------------
+y_lookup: dc.b #0, #16, #32, #48, #64, #80, #96, #112, #128, #144, #160, #176, #192, #208, #224, #240
+
 ; -----------------------------------------------------------------------------
 ; Horizontal scroll lookup table.  Order of blocks from default charset
 ; - Order is as follows:
@@ -269,7 +268,8 @@ start
 ; - changes text to "press any key"
 ; - waits for user input and goes to main game on any key press
 ; -----------------------------------------------------------------------------
-    jsr     screen_dim_title
+    lda     #%00100000                  ; bit pattern 00101000, bits 1to6 = 16
+    jsr     screen_dim
     jsr     draw_title_screen
     lda     #96                         ; empty character for the default charset
     sta     EMPTY_BLOCK                 ; set EMPTY_BLOCK for default scroll
@@ -299,7 +299,7 @@ game
     sta     WORKING_SCREEN_HI
 
     lda     #$10                        ; hi byte of player sprite's char will always be 0x10
-    sta     CURRENT_PLAYER_CHAR_HI
+    sta     CURRENT_PLAYER_CHAR_HI      ; note: this is also STRING_LOCATION!
 
     lda     #128                        ; 128 = repeat all keys
     sta     KEY_REPEAT                  ; sets all keys to repeat
@@ -314,11 +314,18 @@ game
     lda     #12                         ; black background, purple border
     sta     $900F                       ; set screen border color
 
-    jsr     screen_dim_game             ; setup dimensions for the rest of the game
+    lda     #%00100110                  ; bit pattern 00100110, bits 1to6 = 19 (screen = 16, hud = 3)
+    jsr     screen_dim                  ; setup dimensions for the rest of the game
+
 
 level_start
     jsr     set_default_charset         ; set the charset to default
-    jsr     order_up                    ; display order_up screen
+
+    lda     #$e2                        ; lo byte of 'order up' string's location
+    sta     STRING_LOCATION             ; store in 0 page for string writer to find
+    lda     #$51                        ; desired screen offset for string
+    jsr     string_writer               ; display order_up screen
+
     jsr     begin_level                 ; set new-level data
 
 level_restart
@@ -429,8 +436,13 @@ level_end_scroll
     jsr     horiz_screen_scroll         ; scroll the screen out
     lda     #0                          ; set A to 0 (0 = black for screen color change)
     jsr     char_color_change           ; change all characters to black
-    jsr     set_default_charset         ; set charset back to default for "thanks eva"
-    jsr     thanks_eva                  ; display "THANKS EVA!!!"
+
+    jsr     set_default_charset         ; flip charset before writing to screen
+    lda     #$f2                        ; lo byte of 'order up' string's location
+    sta     STRING_LOCATION             ; store in 0 page for string writer to find
+    lda     #$51                        ; desired screen offset for string
+    jsr     string_writer               ; display order_up screen
+
 
 ; check level player is on to decide what to load next
 end_level_logic
@@ -470,8 +482,7 @@ inc_lines_cleared                       ; if yes, increment the number of lines 
     cmp     LINES_CLEARED               ; check if we've cleared that many lines
     bne     game_over_exit              ; if no, exit
     
-    lda     #0                          ; if yes, reset LINES_CLEARED
-    sta     LINES_CLEARED
+    sta     LINES_CLEARED               ; else, A=0 (beq). store that in LINES_CLEARED to reset
 
 ; REMINDER: on account of only having 3 registers, the progress bar fills in backward from its bit pattern
 inc_progress
@@ -538,7 +549,6 @@ lives_left
     include "sound.asm"
     include "horiz_screen_scroll.asm"
     include "utils.asm"
-    include "order_up.asm"
     include "move-eva.asm"
     include "move-block.asm"
     include "screen-init.asm"

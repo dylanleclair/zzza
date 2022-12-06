@@ -48,17 +48,18 @@ advance_test
     beq     advance_new                 ; if END_LEVEL == 0, keep loading random patterns
 
 end_pattern_load                        ; load in a piece of end level pattern
-    ldx     END_PATTERN_INDEX           ; load the index into the current end level pattern
-    lda     end_pattern,x               ; load the next level pattern
-    dey                                 ; bring y back down to 33
-    sta     LEVEL_DATA,y                ; store it in LEVEL_DATA at LEVEL_DATA[33]
-    dex     
-    dey
-    sta     LEVEL_DATA,Y                ; store the next piece of LEVEL_DATA at LEVEL_DATA[32]
-    dec     END_PATTERN_INDEX           ; decrement the end pattern index by 2
-    dec     END_PATTERN_INDEX           ; decrement the end pattern index by 2
+    ldx     #0                          ; initialize x
+    lda     END_PATTERN_INDEX           ; check our end pattern loop counter
+    cmp     #3
+    bpl     end_pattern_draw            ; if pattern still >= 2, keep x at 0 (empty line)
+    dex                                 ; else decrement x to 0xff (full line)
 
+end_pattern_draw
+    stx     LEVEL_DATA-1,y              ; store in level data
+    stx     LEVEL_DATA-2,y              ; store in level data
+    dec     END_PATTERN_INDEX           ; decrement the end pattern index 
     rts
+
 
 advance_new                             ; this section is responsible for filling in the last 2 array elements
     dey                                 ; bring y back down to 33
@@ -73,8 +74,7 @@ advance_final                           ; fills in the very last byte of level d
     pla                                 ; grab our level index off the stack
     tax                                 ; flip it into x
 
-    cpx     #0                          ; check if x is already 0
-    beq     advance_level_gen           ; if it is already 0, don't decrement
+    beq     advance_level_gen           ; if x = 0, don't decrement
     dex                                 ; otherwise, dec X by 1
 
 advance_level_gen
