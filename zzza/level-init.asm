@@ -38,7 +38,7 @@ level_init
     sta     IS_GROUNDED
 
     ; reset stuff associated with ending the level
-    lda     #10                         ; index into the end level pattern data
+    lda     #4                         ; index into the end level pattern data
     sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
 
     ; reset coordinates

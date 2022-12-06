@@ -38,12 +38,7 @@ block_landed
     ; if block collided, add it back into the level data and mark it as not moving (0xff)
     ldx     NEW_BLOCK_X                 ; get the block's x coord
     lda     NEW_BLOCK_Y                 ; get the block's y location
-    asl                                 ; double it to get the index into level_data
-    tay
-
-    cpx     #$08                        ; x < 8 ?
-    bmi     place_block_data            ; if so, you're on lhs
-    iny                                 ; else you're on rhs. increase y
+    jsr     get_data_index_sneeky       ; get an index into LEVEL_DATA
 
 ; put the fallen block into level data so that it is part of the level
 place_block_data
@@ -194,13 +189,7 @@ create_new_block
     sta     BLOCK_Y_COOR                ; store in block's coords
     sta     NEW_BLOCK_Y
 
-    ; turn the y coordinate into an index into LEVEL_DATA
-    asl                                 ; multiply Y by 2 to get the index into LEVEL_DATA
-    tay                                 ; put this offset into y
-
-    cpx     #$08                        ; check if block's x coord is less than 8
-    bmi     clear_block_data            ; if block x < 8, you're on left half of screen, don't inc y
-    iny                                 ; if you're on right half, inc y
+    jsr     get_data_index              ; get the block's index into level_data
 
 clear_block_data
     ; remove the block's old position from LEVEL_DATA

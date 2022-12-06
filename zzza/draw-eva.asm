@@ -47,7 +47,6 @@ draw_quick_loop
     ; extremely stupid way of adding delay between each frame
     ldy #6
 draw_frame_delay
-    jsr stall
     dey
     bne draw_frame_delay
     
@@ -78,21 +77,6 @@ update_sprite_diff
     jsr     backup_scrolling        ; backup the scrolling data in new position!!!!!!
 
 draw_eva_exit
-    rts
-
-; -----------------------------------------------------------------------------
-; SUBROUTINE: STALL
-; - is simply a counting loop that doesn't do anything
-; - intended to stall animations, etc. without having to be fixed around clock timing
-; -----------------------------------------------------------------------------
-
-stall
-    ldx     #0
-stall_loop
-    inx
-stall_test
-    cpx     #0
-    bne     stall_loop
     rts
 
 ; -----------------------------------------------------------------------------
