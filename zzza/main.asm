@@ -12,6 +12,9 @@ HUD_COLOR_ADDR = $9700              ; default location of HUD's colour memory
 PROGRESS_SCREEN_ADDR = $1f11        ; start location to draw progress bar
 PROGRESS_COLOUR_ADDR = $9711        ; start location to draw progress bar
 
+STORY_SCREEN_ADDR = $1e71
+STORY_COLOUR_ADDR = $9671
+
 LIVES_SCREEN_ADDR = $1f1b           ; start location to draw lives on hud
 LIVES_COLOUR_ADDR = $971b           ; start location to draw lives on hud
 
@@ -90,8 +93,7 @@ IS_GROUNDED = $73                   ; stores the player being on the ground
 GROUND_COUNT = $74
 CURSED_LOOP_COUNT = $75
 
-DOOR_APPEARED = $76                 ; 1 byte: stores whether or not the door is now on screen at end of level
-EMPTY_BLOCK = $77                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
+EMPTY_BLOCK = $76                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
@@ -260,35 +262,20 @@ start
     lda     #96                         ; empty character for the default charset
     sta     EMPTY_BLOCK                 ; set EMPTY_BLOCK for default scroll
     jsr     horiz_screen_scroll
-    jsr     order_up
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    ; TODO: these are just hardcoded atm, should be done per-level
-    lda     #0
-    sta     CURRENT_LEVEL
-    sta     END_LEVEL_INIT              ; set END_LEVEL_INIT to FALSE
-    lda     #10                         ; index into the end level pattern data
-    sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
-    lda     #2
+    lda     #10
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
 
-game_init
-    jsr     screen_dim_game
-    include "screen-init.asm"           ; initialize screen colour
-
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
-
-    sta     IS_GROUNDED
-
-    sta     DOOR_APPEARED               ; reset DOOR_APPEARED to false
 
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
@@ -296,9 +283,14 @@ game_init
     lda     #$10                        ; hi byte of player sprite's char will always be 0x10
     sta     CURRENT_PLAYER_CHAR_HI
 
-set_repeat                              ; sets the repeat value so holding down a key will keep moving the sprite
     lda     #128                        ; 128 = repeat all keys
     sta     KEY_REPEAT                  ; sets all keys to repeat
+
+game_init
+    jsr     order_up
+    jsr     screen_dim_game
+    include "screen-init.asm"           ; initialize screen colour
+
 
     jsr     level_init                  ; set level-specific values
 ; -----------------------------------------------------------------------------
@@ -371,9 +363,6 @@ end_loop
     sta     $1eef                       ; place it on the right side of the bottom of the screen
     lda     #1                          ; load 1 (white color)
     sta     $96ef                       ; make the door white
-    sta     DOOR_APPEARED               ; set DOOR_APPEARED to true
-
-    lda     DOOR_APPEARED               ; load DOOR_APPEARED
     beq     housekeeping                ; if 0 (FALSE) then keep looping
     lda     X_COOR                      ; load the X-COOR to check when Eva gets to the door
     cmp     #14                         ; check if Eva is at the door
@@ -404,9 +393,15 @@ level_end_scroll
     jsr     horiz_screen_scroll         ; scroll the screen out
     lda     #0                          ; set A to 0 (0 = black for screen color change)
     jsr     char_color_change           ; change all characters to black
-    lda     #96                         ; load the code for an empty character into a
-    jsr     empty_screen                ; set the screen to empty
     jsr     thanks_eva                  ; display "THANKS EVA!!!"
+
+    lda     CURRENT_LEVEL               ; grab the current level
+    cmp     #16                         ; check if we've done all levels
+    beq     reset_game                  ; if yes, go back to very beginning
+    inc     CURRENT_LEVEL               ; else, inc current level
+    jmp     game_init                   ; and jump to top of game stuff
+
+reset_game
     jmp     start                       ; RESTART THE GAME...CHANGE THIS LATER!!!!  
 
 ; -----------------------------------------------------------------------------
@@ -478,7 +473,7 @@ death_logic
     bne     lives_left                  ; if lives !=0, jump over the restart
     jmp     start
 lives_left
-    dec     PLAYER_LIVES                ; remove a live from the player
+    dec     PLAYER_LIVES                ; remove a life from the player
     jmp     game_init                   ; restart the level (TODO: THIS ISN'T CORRECT!!!)
 
 ; -----------------------------------------------------------------------------

@@ -28,13 +28,10 @@ color_test
     sta     $900F               ; set screen border color
 
 ; set the auxilliary colour code. aux colour is in the high 4 bits of the address
-    lda     #$0f            ; bitmask out the top 4 bits
-    and     AUX_COLOR_ADDR  ; aux colour addr AND accumulator to zero out the top 4
-    sta     AUX_COLOR_ADDR  ; put the result back in the aux colour location
-
-    lda     #$10            ; colour code for white in hi 4 bits, nothing in lo 4
-    ora     AUX_COLOR_ADDR  ; aux colour addr OR accumulator to put our value in
-    sta     AUX_COLOR_ADDR  ; put the result back in the aux colour location
+    lda     #$0f            ; bitmask to remove value of top 4 bits
+    and     AUX_COLOR_ADDR  ; grab lower 4 bits of aux colour addr
+    ora     #$10            ; place our desired value in top 4 bits
+    sta     AUX_COLOR_ADDR
 
 ; -----------------------------------------------------------------------------
 ; SETUP: HUD
