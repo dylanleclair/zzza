@@ -126,8 +126,13 @@ check_push_left
     ; exists to her left. Now we just need to check that there's an empty space
     ; to push the block into
     dec     NEW_X_COOR                  ; temporarily decrement Eva's x coor
-    jsr     collision_left              ; so we can check collision of block one to her left
+    beq     push_left_exit              ; if block is on left side, can't push
+    bmi     push_left_exit              ; if Eva was on left side, also can't push
+
+    jsr     collision_left              ; else, can check collision of block one to her left
     beq     push_left                   ; if return 0, the space is empty and we can push
+
+push_left_exit
     inc     NEW_X_COOR                  ; else: restore player x
     rts                                 ; and exit
 
@@ -150,8 +155,14 @@ check_push_right
     ; exists to her right. Now we just need to check that there's an empty space
     ; to push the block into
     inc     NEW_X_COOR                  ; temporarily increment Eva's x coor
+    lda     NEW_X_COOR
+    cmp     #15
+    bpl     push_right_exit             ; if block is on the right, can't push right
+
     jsr     collision_right             ; so we can check collision of block one to her right
     beq     push_right                  ; if return 0, the space is empty and we can push
+
+push_right_exit
     dec     NEW_X_COOR                  ; else: restore player x
     rts                                 ; and exit
 

@@ -89,6 +89,8 @@ and_check_left
 collision_right
     lda     NEW_X_COOR                  ; get player's x coord
     beq     check_right                 ; terrible overflow things happen when x=0
+    
+    ; check for collision with in-air block
     sec
     sbc     NEW_BLOCK_X                 ; make sure player isn't about to hit a block
     cmp     #1
