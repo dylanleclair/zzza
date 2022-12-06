@@ -374,10 +374,9 @@ game_loop_continue
 ; SUBROUTINE: END_GAME_LOOP
 ; - logic for ending a level
 ; -----------------------------------------------------------------------------
-end_loop_entrance                       ; need to run the draw scroll 3 more times to update the screen to match the level data
-    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
-    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
-    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
+
+end_loop_entrance                       ; set animation frame to 3 to stop scrolling and allow block pushes
+                                        ; NOTE: this is wildly hacky, and it's insane that this just works!
     lda     #3                          ; load end animation loop value
     sta     ANIMATION_FRAME
     
@@ -389,7 +388,7 @@ end_loop
     ; ANIMATION: draw the current state of all the game elements to the screen
     jsr     draw_eva                    ; draw the player character
     jsr     draw_hud                    ; draw the HUD at the bottom of the screen
-    jsr     draw_master_scroll
+    jsr     draw_master
 
     jsr     next_note
     lda     Y_COOR                      ; load Eva's current Y coordinate
