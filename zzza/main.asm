@@ -9,7 +9,14 @@ COLOR_ADDR = $9600                  ; default location of colour memory
 HUD_SCREEN_ADDR = $1f00             ; default location of HUD's screen memory
 HUD_COLOR_ADDR = $9700              ; default location of HUD's colour memory
 
+PROGRESS_SCREEN_ADDR = $1f11        ; start location to draw progress bar
 PROGRESS_COLOUR_ADDR = $9711        ; start location to draw progress bar
+
+STORY_SCREEN_ADDR = $1e71
+STORY_COLOUR_ADDR = $9671
+
+LIVES_SCREEN_ADDR = $1f1b           ; start location to draw lives on hud
+LIVES_COLOUR_ADDR = $971b           ; start location to draw lives on hud
 
 H_CENTERING_ADDR = $9000            ; horizontal screen centering
 V_CENTERING_ADDR = $9001            ; vertical screen centering
@@ -74,10 +81,12 @@ LEVEL_CLEARED = $6c                 ; 1 byte: flag indicating whether the curren
 PROGRESS_BAR = $6d                  ; 1 byte: stores the current progress thru level
 
 CURRENT_LEVEL = $6e                 ; 1 byte: stores the player's current level
-PLAYER_LIVES = $6F                  ; 1 byte: stores how many lives the player has left
+PLAYER_LIVES = $6f                  ; 1 byte: stores how many lives the player has left
 
 END_LEVEL_INIT = $70                ; 1 byte: flag to trip the end of level pattern generation
 END_PATTERN_INDEX = $71             ; 1 byte: stores the index into end level pattern data
+
+CURRENT_INPUT = $72                 ; 1 byte: stores the most recent keyboard input
 
 IS_GROUNDED = $73                   ; stores the player being on the ground
 
@@ -88,6 +97,7 @@ CURSED_LOOP_COUNT = $75
 SONG_DELAY_COUNT = $76  ; counter to delay song to sound decent
 SONG_INDEX = $77        ; current note being player
 SONG_CHUNK_INDEX = $78        ; current note being player
+EMPTY_BLOCK = $79                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
@@ -108,7 +118,7 @@ S3 = $900C      ; sound channel 3
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4884", 0
+    dc.b $9e, "4921", 0
 stubend
     dc.w 0
 
@@ -142,10 +152,15 @@ title_year: dc.b #50, #48, #50, #50, #0
 ; -----------------------------------------------------------------------------
 end_pattern: dc.b #255, #255, #255, #255, #255, #0, #0, #0, #0, #0, #0
 
+; -----------------------------------------------------------------------------
 ; Lookup table for "EVA! ORDER UP!" used for start of game
 ; -----------------------------------------------------------------------------
-order_up: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33
+order_up_text: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33
 
+; -----------------------------------------------------------------------------
+; Lookup table for "THANKS EVA!!!" used for start of game
+; -----------------------------------------------------------------------------
+thanks_eva_text: dc.b #20, #8, #1, #14, #11, #19, #32, #5, #22, #1, #33, #33, #33
 ; -----------------------------------------------------------------------------
 ; Horizontal scroll lookup table.  Order of blocks from default charset
 ; - Order is as follows:
@@ -181,7 +196,7 @@ collision_mask:
 ; TODO: THESE ALL ARE RANDOM AND PROBABLY SUCK
 ; -----------------------------------------------------------------------------
 random_seeds:
-    dc.b #%10011000
+    dc.b #%00100101
     dc.b #%10001001
     dc.b #%10011100
     dc.b #%01000100
@@ -201,24 +216,29 @@ random_seeds:
 ; -----------------------------------------------------------------------------
 ; the patterns that can be used as level data. Each 8-bit strip will be translated into 8 spaces of on-screen
 ; data, where a 0 indicates an empty space, and a 1 indicates a block
+; Some notes on generating levels:
+; - levels are generated line by line, where a line is made up of one STRIP and the
+;   STRIP adjacent to it. eg: STRIP[2],STRIP[1] or STRIP[14],STRIP[13]
+; - so any strips more than 1 index away from each other will never appear together on a line
+; - we want a mix of some full 0x00 lines, some medium density lines, and 1 or 2 hi density lines
 ; -----------------------------------------------------------------------------
 STRIPS
     dc.b #%00000000
     dc.b #%00000000
-    dc.b #%00011000
-    dc.b #%00011001
-    dc.b #%00011100
-    dc.b #%00100110
-    dc.b #%00110011
-    dc.b #%00111100
-    dc.b #%01100000
-    dc.b #%10001100
-    dc.b #%11000001
-    dc.b #%11000011
+    dc.b #%01100100
+    dc.b #%00110000
+    dc.b #%10011000
+    dc.b #%00000011
+    dc.b #%00000000
+    dc.b #%11100001
+    dc.b #%00001100
+    dc.b #%10011100
     dc.b #%11000110
-    dc.b #%11001100
-    dc.b #%11011100
-    dc.b #%11110011
+    dc.b #%00010011
+    dc.b #%10010000
+    dc.b #%11111100
+    dc.b #%00110000
+    dc.b #%00011011
 
 
 TITLE_SCREEN
@@ -250,33 +270,23 @@ start
 ; -----------------------------------------------------------------------------
     jsr     screen_dim_title
     jsr     draw_title_screen
-    jsr     title_scroll
+    lda     #96                         ; empty character for the default charset
+    sta     EMPTY_BLOCK                 ; set EMPTY_BLOCK for default scroll
+    jsr     horiz_screen_scroll
 
 ; -----------------------------------------------------------------------------
 ; SETUP: GAME_INITIALIZE
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    ; TODO: these are just hardcoded atm, should be done per-level
-    lda     #0
-    sta     CURRENT_LEVEL
-    sta     END_LEVEL_INIT              ; set END_LEVEL_INIT to FALSE
-    lda     #10                         ; index into the end level pattern data
-    sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
     lda     #10
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
 
-game_init
-    jsr     screen_dim_game
-    include "screen-init.asm"           ; initialize screen colour
-
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
-    sta     IS_GROUNDED
-
     jsr     init_sound
     jsr     soundon
 
@@ -286,9 +296,14 @@ game_init
     lda     #$10                        ; hi byte of player sprite's char will always be 0x10
     sta     CURRENT_PLAYER_CHAR_HI
 
-set_repeat                              ; sets the repeat value so holding down a key will keep moving the sprite
     lda     #128                        ; 128 = repeat all keys
     sta     KEY_REPEAT                  ; sets all keys to repeat
+
+game_init
+    jsr     order_up
+    jsr     screen_dim_game
+    include "screen-init.asm"           ; initialize screen colour
+
 
     jsr     level_init                  ; set level-specific values
 ; -----------------------------------------------------------------------------
@@ -304,10 +319,10 @@ game_loop_reset_scroll
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
-    jsr     get_input                   ; check for user input and update player X,Y coords
-    jsr     check_fall                  ; try to move the sprite down
-    jsr     advance_block               ; update location of any falling blocks
+    jsr     get_input                   ; check for user input
     jsr     advance_level               ; update the state of the LEVEL_DATA array
+    jsr     move_eva                    ; try to move player based on input
+    jsr     move_block                  ; move any blocks
 
     ; DEATH CHECK: once all states have been updated, check for a game over
     jsr     game_over_check
@@ -320,7 +335,6 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     update_sound
-    jsr     lfsr                        ; update the lfsr
     ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
@@ -348,8 +362,8 @@ end_loop_entrance                       ; need to run the draw scroll 3 more tim
     
 end_loop
     jsr     get_input                   ; check for user input and update player X,Y coords
-    jsr     check_fall                  ; try to move the sprite down
-    jsr     advance_block               ; update location of any falling blocks
+    jsr     move_eva
+    jsr     move_block
 
     ; ANIMATION: draw the current state of all the game elements to the screen
     jsr     draw_eva                    ; draw the player character
@@ -358,13 +372,53 @@ end_loop
     jsr     draw_master_hi_res          ; draw hi res movement
 
     jsr     next_note
+    lda     Y_COOR                      ; load Eva's current Y coordinate
+    cmp     #14                         ; check if Eva is on the bottom of the level
+    bne     housekeeping                ; if no, keep looping normally
+    lda     #35                         ; else, load the door character
+    sta     $1eef                       ; place it on the right side of the bottom of the screen
+    lda     #1                          ; load 1 (white color)
+    sta     $96ef                       ; make the door white
+    beq     housekeeping                ; if 0 (FALSE) then keep looping
+    lda     X_COOR                      ; load the X-COOR to check when Eva gets to the door
+    cmp     #14                         ; check if Eva is at the door
+    bne     housekeeping                ; if Eva isn't at the door, keep looping
+    ldy     #$3C                        ; 1 second delay set
+    jsr     delay
+    jmp     level_end_scroll_setup      ; jump to the end level display
 
+housekeeping
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
     jmp     end_loop  
 
+; -----------------------------------------------------------------------------
+; SUBROUTINE: LEVEL_END
+; - runs the end level animation, handles next level logic
+; -----------------------------------------------------------------------------
+level_end_scroll_setup
+    lda     #2                          ; load an empty block
+    sta     $1eee                       ; disappear EVA
+    sta     $1eef                       ; disappear the door
+
+level_end_scroll
+    lda     #2                          ; empty block for horizontal screen scroll
+    sta     EMPTY_BLOCK                 ; store the empty block character
+    jsr     horiz_screen_scroll         ; scroll the screen out
+    lda     #0                          ; set A to 0 (0 = black for screen color change)
+    jsr     char_color_change           ; change all characters to black
+    jsr     thanks_eva                  ; display "THANKS EVA!!!"
+
+    lda     CURRENT_LEVEL               ; grab the current level
+    cmp     #16                         ; check if we've done all levels
+    beq     reset_game                  ; if yes, go back to very beginning
+    inc     CURRENT_LEVEL               ; else, inc current level
+    jmp     game_init                   ; and jump to top of game stuff
+
+reset_game
+    jmp     start                       ; RESTART THE GAME...CHANGE THIS LATER!!!!  
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_OVER_CHECK
@@ -413,9 +467,9 @@ death_screen
 
     ldx     #0                          ; initialize loop ctr
 death_screen_loop
-    lda     #2                          ; colour for red
+    lda     #2                      ; colour for hi-res red
     sta     COLOR_ADDR,x
-    lda     #6                          ; load solid block
+    lda     #33                          ; load solid block
     sta     SCREEN_ADDR,x 
     inx 
     bne     death_screen_loop
@@ -435,7 +489,7 @@ death_logic
     bne     lives_left                  ; if lives !=0, jump over the restart
     jmp     start
 lives_left
-    dec     PLAYER_LIVES                ; remove a live from the player
+    dec     PLAYER_LIVES                ; remove a life from the player
     jmp     game_init                   ; restart the level (TODO: THIS ISN'T CORRECT!!!)
 
 ; -----------------------------------------------------------------------------
@@ -451,10 +505,12 @@ lives_left
     include "collision_checks.asm"
     include "hud.asm"
     include "draw-block.asm"
-    include "advance-block.asm"
     include "title_screen.asm"
-    include "block-manip.asm"
-    include "title_scroll.asm"
     include "sound.asm"
+    include "horiz_screen_scroll.asm"
+    include "utils.asm"
+    include "order_up.asm"
+    include "move-eva.asm"
+    include "move-block.asm"
 
 ; -----------------------------------------------------------------------------

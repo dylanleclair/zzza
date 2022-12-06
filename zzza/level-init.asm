@@ -12,11 +12,17 @@ level_init
 
     ; reset counters and such
     lda     #00                         ; initialize lots of stuff to 0
+    sta     END_LEVEL_INIT              ; set END_LEVEL_INIT to FALSE
     sta     ANIMATION_FRAME             ; set the animation frame to 0                
     sta     PROGRESS_BAR                ; set progress bar to empty
     sta     WORKING_SCREEN              ; lo byte of screen memory should start at 0x00
     sta     LINES_CLEARED
     sta     LEVEL_CLEARED
+    sta     IS_GROUNDED
+
+    ; reset stuff associated with ending the level
+    lda     #10                         ; index into the end level pattern data
+    sta     END_PATTERN_INDEX           ; set the index into end level pattern to 0
 
     ; reset coordinates
     lda     #$7
@@ -40,6 +46,9 @@ level_init
 
     lda #1
     sta MOVE_DIR_Y
+
+    ; draw lives onto HUD
+    jsr     draw_lives
 
     ; initialize data
     jsr     init_level_data              ; ensure that there's valid level data ready to go

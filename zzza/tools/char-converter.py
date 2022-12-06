@@ -18,11 +18,12 @@ L_YELLOW = 15
 
 # desired screen setup
 SCREEN = BLACK
-BORDER = WHITE
-CHAR = PURPLE
-AUX = CYAN
+BORDER = PURPLE
+CHAR = CYAN
+AUX = WHITE
 
 colour_pattern = [
+    # # Eva front:
     # [BLACK, CYAN, CYAN, BLACK],
     # [CYAN, WHITE, WHITE, CYAN],
     # [CYAN, WHITE, WHITE, CYAN],
@@ -31,14 +32,26 @@ colour_pattern = [
     # [PURPLE, BLACK, BLACK, PURPLE],
     # [WHITE, WHITE, WHITE, WHITE],
     # [CYAN, BLACK, BLACK, CYAN]
-    [BLACK, CYAN, CYAN, BLACK],
-    [BLACK, CYAN, WHITE, BLACK],
+
+    # # Eva left:
+    # [BLACK, CYAN, CYAN, CYAN],
+    # [BLACK, WHITE, CYAN, CYAN],
+    # [BLACK, WHITE, CYAN, BLACK],
+    # [BLACK, PURPLE, PURPLE, WHITE],
+    # [WHITE, CYAN, CYAN, BLACK],
+    # [BLACK, PURPLE, BLACK, PURPLE],
+    # [WHITE, WHITE, WHITE, WHITE],
+    # [CYAN, BLACK, CYAN, BLACK]
+
+    # Eva right:
+    [CYAN, CYAN, CYAN, BLACK],
+    [CYAN, CYAN, WHITE, BLACK],
     [BLACK, CYAN, WHITE, BLACK],
     [WHITE, PURPLE, PURPLE, BLACK],
     [BLACK, CYAN, CYAN, WHITE],
     [PURPLE, BLACK, PURPLE, BLACK],
     [WHITE, WHITE, WHITE, WHITE],
-    [CYAN, BLACK, BLACK, CYAN]
+    [BLACK, CYAN, BLACK, CYAN]
 
 ]
 

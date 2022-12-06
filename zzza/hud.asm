@@ -11,7 +11,7 @@ init_hud_loop
     sta     HUD_COLOR_ADDR,y            ; store in hud's colour address
     tax                                 ; save the colour in x
 
-    lda     #$06                        ; char for full block
+    lda     #33                        ; char for full block
     sta     HUD_SCREEN_ADDR,y           ; store in hud's screen address
     txa                                 ; put the colour back in a
 
@@ -55,4 +55,23 @@ draw_progress_bar_check
     bne     draw_progress_bar_loop
 
     rol     PROGRESS_BAR                ; rol one more time to ensure progress bar is back to original
+    rts
+
+; -----------------------------------------------------------------------------
+; SUBROUTINE: DRAW_LIVES
+; - draws up to 3 lives on screen in the hud
+; - only needs to be drawn once per level, as lives don't change during gameplay
+; -----------------------------------------------------------------------------
+draw_lives
+    lda     PLAYER_LIVES                ; grab player lives
+    and     #%00000011                  ; bitmask out the top values - draws max 3 lives
+    tax                                 ; put in x to use as loop ctr
+
+draw_lives_loop
+    lda     #34                         ; char for the pizza sprite
+    sta     LIVES_SCREEN_ADDR,x         ; store on screen
+
+    dex                                 ; decrement loop ctr
+draw_lives_check
+    bpl     draw_lives_loop             ; loop while x <= 0
     rts
