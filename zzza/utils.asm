@@ -59,8 +59,6 @@ set_default_charset
     sta     CHARSET_CTRL ; store in register controlling base charset
     rts
 
-<<<<<<< zzza/utils.asm
-=======
 ;------------------------------------------------------------------------------
 ; SUBROUTINE: GET_DATA_INDEX
 ; - returns in Y reg the LEVEL_DATA index associated with the player's current position
@@ -130,4 +128,3 @@ string_clear                            ; clear the space on screen that we just
 
 string_writer_exit
     rts
->>>>>>> zzza/utils.asm
