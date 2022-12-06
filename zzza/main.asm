@@ -280,7 +280,7 @@ start
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    lda     #8                          ; set the length of the level
+    lda     #2                          ; set the length of the level
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
@@ -334,12 +334,10 @@ level_restart
 ; - TODO: should keep track of the current animation counter
 ; -----------------------------------------------------------------------------
 game_loop_reset_scroll
-
     lda     #0
     sta     ANIMATION_FRAME
 
 game_loop
-
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
     jsr     get_input                   ; check for user input
     jsr     advance_level               ; update the state of the LEVEL_DATA array
@@ -381,17 +379,18 @@ end_loop_entrance                       ; need to run the draw scroll 3 more tim
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
+    lda     #3                          ; load end animation loop value
+    sta     ANIMATION_FRAME
     
 end_loop
     jsr     get_input                   ; check for user input and update player X,Y coords
-    jsr     move_eva
-    jsr     move_block
+    jsr     move_eva                    ; update player location based on input
+    jsr     move_block                  ; move any blocks that need to be moved
 
     ; ANIMATION: draw the current state of all the game elements to the screen
     jsr     draw_eva                    ; draw the player character
     jsr     draw_hud                    ; draw the HUD at the bottom of the screen
-    jsr     draw_block                  ; draw any falling blocks
-    jsr     draw_master_hi_res          ; draw hi res movement
+    jsr     draw_master_scroll
 
     jsr     next_note
     lda     Y_COOR                      ; load Eva's current Y coordinate
@@ -441,7 +440,6 @@ end_level_logic
     beq     next_level_logic            ; TODO: CHANGE THIS TO WIN GAME SCREEN!!!!
 next_level_logic
     inc     CURRENT_LEVEL               ; increment the current level
-    jsr     thanks_eva                  ; display "THANKS EVA!!!"
     jmp     level_start                 ; RESTART THE GAME...CHANGE THIS LATER!!!!
     jmp     level_start                 ; jump to the start of the next level
 
