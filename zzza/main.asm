@@ -93,7 +93,10 @@ IS_GROUNDED = $73                   ; stores the player being on the ground
 GROUND_COUNT = $74
 CURSED_LOOP_COUNT = $75
 
-EMPTY_BLOCK = $76                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
+; song variables
+SONG_INDEX = $77        ; current note being player
+SONG_CHUNK_INDEX = $78        ; current note being player
+EMPTY_BLOCK = $79                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
 
 GAME_SPEED = $78                    ; 1 byte: controls the speed of the scrolling in the game
 
@@ -102,6 +105,11 @@ ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used 
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
 HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
 
+; SOUND REGISTERS
+S_VOL = $900E   ; volume control
+S1 = $900A      ; sound channel 1
+S2 = $900B      ; sound channel 2
+S3 = $900C      ; sound channel 3
 
     processor 6502
 ; -----------------------------------------------------------------------------
@@ -111,7 +119,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4769", 0
+    dc.b $9e, "5049", 0
 stubend
     dc.w 0
 
@@ -252,6 +260,8 @@ TITLE_SCREEN
     dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
     dc.b $60,$12,$15,$0E,$14,$09,$0D,$05,$20,$14,$05,$12,$12,$0F,$12,$20
 
+    include "song.asm"
+
 start
 ; -----------------------------------------------------------------------------
 ; TITLE_SCREEN
@@ -278,12 +288,13 @@ game
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
-
     lda     #0                          ; set current level to 0
     sta     CURRENT_LEVEL               ; CURRENT_LEVEL = 1 (game start)
 
     lda     #5                          ; delay speed for scrolling
     sta     GAME_SPEED                  ; set the game speed to delays of #5
+    
+    jsr     init_sound
 
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
@@ -315,7 +326,8 @@ level_restart
     jsr     set_custom_charset          ; change to the custom charset
     jsr     main_game_screen            ; set color to cyan (multicolor) and empty custom blocks
     jsr     restart_level               ; set the values to restart the level
-
+    
+    jsr     soundon
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_LOOP
 ; - the main game loop
@@ -323,8 +335,9 @@ level_restart
 ; -----------------------------------------------------------------------------
 game_loop_reset_scroll
 
-    lda #0
-    sta ANIMATION_FRAME
+    lda     #0
+    sta     ANIMATION_FRAME
+
 game_loop
 
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
@@ -343,6 +356,7 @@ game_loop
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
+    jsr     next_note
     ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
@@ -367,7 +381,7 @@ end_loop_entrance                       ; need to run the draw scroll 3 more tim
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
     jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
-
+    
 end_loop
     jsr     get_input                   ; check for user input and update player X,Y coords
     jsr     move_eva
@@ -379,6 +393,7 @@ end_loop
     jsr     draw_block                  ; draw any falling blocks
     jsr     draw_master_hi_res          ; draw hi res movement
 
+    jsr     next_note
     lda     Y_COOR                      ; load Eva's current Y coordinate
     cmp     #14                         ; check if Eva is on the bottom of the level
     bne     housekeeping                ; if no, keep looping normally
@@ -411,6 +426,7 @@ level_end_scroll_setup
     sta     $1eef                       ; disappear the door
 
 level_end_scroll
+    jsr     soundoff
     lda     #2                          ; empty block for horizontal screen scroll
     sta     EMPTY_BLOCK                 ; store the empty block character
     jsr     horiz_screen_scroll         ; scroll the screen out
@@ -477,6 +493,7 @@ game_over_exit
 ; -----------------------------------------------------------------------------
 ; fill screen with all red
 death_screen
+    jsr     soundoff
     lda     #2                          ; colour for red
     jsr     init_hud                    ; clear data out of the HUD
 
@@ -521,6 +538,7 @@ lives_left
     include "hud.asm"
     include "draw-block.asm"
     include "title_screen.asm"
+    include "sound.asm"
     include "horiz_screen_scroll.asm"
     include "utils.asm"
     include "order_up.asm"
