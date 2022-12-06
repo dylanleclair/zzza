@@ -95,6 +95,8 @@ CURSED_LOOP_COUNT = $75
 
 EMPTY_BLOCK = $76                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
 
+GAME_SPEED = $78                    ; 1 byte: controls the speed of the scrolling in the game
+
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
@@ -268,7 +270,7 @@ start
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    lda     #10
+    lda     #2                          ; set the length of the level
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
@@ -276,6 +278,12 @@ game
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
+
+    lda     #3                          ; set current level to 0
+    sta     CURRENT_LEVEL               ; CURRENT_LEVEL = 1 (game start)
+
+    lda     #5                          ; delay speed for scrolling
+    sta     GAME_SPEED                  ; set the game speed to delays of #5
 
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
@@ -286,13 +294,28 @@ game
     lda     #128                        ; 128 = repeat all keys
     sta     KEY_REPEAT                  ; sets all keys to repeat
 
-game_init
-    jsr     order_up
-    jsr     screen_dim_game
-    include "screen-init.asm"           ; initialize screen colour
+    ; set the auxilliary colour code. aux colour is in the high 4 bits of the address
+    lda     #$0f                        ; bitmask to remove value of top 4 bits
+    and     AUX_COLOR_ADDR              ; grab lower 4 bits of aux colour addr
+    ora     #$10                        ; place our desired value in top 4 bits
+    sta     AUX_COLOR_ADDR
 
+    ; SET SCREEN BORDER TO PURPLE
+    lda     #12                         ; black background, purple border
+    sta     $900F                       ; set screen border color
 
-    jsr     level_init                  ; set level-specific values
+    jsr     screen_dim_game             ; setup dimensions for the rest of the game
+
+level_start
+    jsr     set_default_charset         ; set the charset to default
+    jsr     order_up                    ; display order_up screen
+    jsr     begin_level                 ; set new-level data
+
+level_restart
+    jsr     set_custom_charset          ; change to the custom charset
+    jsr     main_game_screen            ; set color to cyan (multicolor) and empty custom blocks
+    jsr     restart_level               ; set the values to restart the level
+
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_LOOP
 ; - the main game loop
@@ -395,14 +418,22 @@ level_end_scroll
     jsr     char_color_change           ; change all characters to black
     jsr     thanks_eva                  ; display "THANKS EVA!!!"
 
-    lda     CURRENT_LEVEL               ; grab the current level
-    cmp     #16                         ; check if we've done all levels
-    beq     reset_game                  ; if yes, go back to very beginning
-    inc     CURRENT_LEVEL               ; else, inc current level
-    jmp     game_init                   ; and jump to top of game stuff
+; check level player is on to decide what to load next
+end_level_logic
+    lda     CURRENT_LEVEL               ; load the current level
+    cmp     #16                         ; check if the last level was just finished
+    beq     next_level_logic            ; TODO: CHANGE THIS TO WIN GAME SCREEN!!!!
+next_level_logic
+    inc     CURRENT_LEVEL               ; increment the current level
+    jsr     thanks_eva                  ; display "THANKS EVA!!!"
+    jmp     level_start                 ; RESTART THE GAME...CHANGE THIS LATER!!!!
+    jmp     level_start                 ; jump to the start of the next level
 
-reset_game
-    jmp     start                       ; RESTART THE GAME...CHANGE THIS LATER!!!!  
+; TODO: THIS WILL SET THE END GAME SCREEN (SEE 6 LINES ABOVE HERE)
+; win_game_logic
+;     jsr     win_game_screen             ; load the win game screen
+;     jmp     start                       ; reinitialize the game to the start screen
+
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_OVER_CHECK
@@ -451,9 +482,9 @@ death_screen
 
     ldx     #0                          ; initialize loop ctr
 death_screen_loop
-    lda     #2                      ; colour for hi-res red
+    lda     #2                          ; colour for hi-res red
     sta     COLOR_ADDR,x
-    lda     #33                          ; load solid block
+    lda     #33                         ; load solid block
     sta     SCREEN_ADDR,x 
     inx 
     bne     death_screen_loop
@@ -471,10 +502,10 @@ death_screen_loop
 death_logic 
     lda     PLAYER_LIVES                ; load the number of lives the player has left
     bne     lives_left                  ; if lives !=0, jump over the restart
-    jmp     start
+    jmp     start                       ; TODO: GAME OVER SCREEN HERE
 lives_left
     dec     PLAYER_LIVES                ; remove a life from the player
-    jmp     game_init                   ; restart the level (TODO: THIS ISN'T CORRECT!!!)
+    jmp     level_restart               ; restart the level (TODO: THIS ISN'T CORRECT!!!)
 
 ; -----------------------------------------------------------------------------
 ; Includes for all the individual subroutines that are called in the main loop
@@ -495,5 +526,6 @@ lives_left
     include "order_up.asm"
     include "move-eva.asm"
     include "move-block.asm"
+    include "screen-init.asm"
 
 ; -----------------------------------------------------------------------------
