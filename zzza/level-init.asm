@@ -1,10 +1,27 @@
 ; -----------------------------------------------------------------------------
+; SUBROUTINE: BEGIN_LEVEL
+; - detects when the game is on a level multiple of 4 and updates values for
+;   difficulty, level strip offsets (for generating levels), speed
+; -----------------------------------------------------------------------------
+begin_level
+    lda     CURRENT_LEVEL               ; load the current level
+    beq     level_changes_exit          ; level is zero, don't change anything
+    and     #3                          ; mask out all but the bottom 2 bits
+    bne     level_changes_exit          ; if not 0, not a multiple of 4, exit
+    inc     $900F                       ; change the border to the next color
+    dec     GAME_SPEED                  ; increase the speed of the game
+    inc     LEVEL_LENGTH                ; increase the length of the level
+    inc     LEVEL_LENGTH                ; increase the length of the level
+
+    rts
+
+restart_level
+; -----------------------------------------------------------------------------
 ; SUBROUTINE: LEVEL_INIT
 ; - sets up all values that need to be initialized on a per-level basis 
 ; -----------------------------------------------------------------------------
 level_init
     ldx     CURRENT_LEVEL               ; get the current level
-
     ; seed the lfsr 
     lda     random_seeds,x              ; get random_seeds[x]
     sta     LFSR_ADDR
@@ -40,12 +57,15 @@ level_init
     sta     NEW_BLOCK_Y                 ; store in block y
 
     ; reset hi-res counters
-    lda #0
-    sta MOVE_DIR_X
-    sta FRAMES_SINCE_MOVE
+    lda     #0
+    sta     MOVE_DIR_X
+    sta     FRAMES_SINCE_MOVE
 
-    lda #1
-    sta MOVE_DIR_Y
+    lda     #1
+    sta     MOVE_DIR_Y
+
+    lda     #1                          ; colour for white
+    jsr     init_hud 
 
     ; draw lives onto HUD
     jsr     draw_lives
@@ -54,7 +74,8 @@ level_init
     jsr     init_level_data              ; ensure that there's valid level data ready to go
     jsr     backup_scrolling             ; make sure hi-res is backed up properly
 
-    rts
+
+level_changes_exit
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: INIT_LEVEL_DATA
@@ -75,5 +96,4 @@ init_data_test
     cpy     #34                         ; 34 elements in LEVEL_DATA
     bne     init_data_loop              ; while y<34, branch to top of loop
 
-init_level_exit
     rts

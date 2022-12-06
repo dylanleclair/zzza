@@ -3,9 +3,6 @@
 ; - Displays the ORDER UP screen
 ;------------------------------------------------------------------------------
 order_up
-    lda     #$f0                        ; change from custom to default charset
-    sta     CHARSET_CTRL
-
     lda     #96                         ; load the code for an empty character into a
     jsr     empty_screen                ; set the screen to empty
 
@@ -23,17 +20,13 @@ story_draw_loop
     jsr     delay
 
 story_clear
-    ldx     #16                          ; set x to 16
+    ldx     #16                         ; set x to 16
     lda     #96                         ; set A to the empty block
 story_clear_loop
     sta     STORY_SCREEN_ADDR,x         ; store empty character at bottom line
     dex                                 ; decrement x
     bpl     story_clear_loop            ; if x != -1, keep looping
 
-; initialize variables to set the characters to black (used to prevent glitching screen for charset reset)
-    ldx     #0                          ; set x to 0 black
-    jsr     char_color_change           ; set the screen characters to this color
-    
     rts
 
 ; -----------------------------------------------------------------------------

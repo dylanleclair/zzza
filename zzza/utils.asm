@@ -41,6 +41,28 @@ empty_hud_loop
 
     rts
 
+; -----------------------------------------------------------------------------
+; CUSTOM_CHARSET
+; - changes between the default and custom character set
+;------------------------------------------------------------------------------
+set_custom_charset
+    lda     #$fc         ; set location of charset to 7168 ($1c00)
+    sta     CHARSET_CTRL ; store in register controlling base charset
+    rts
+
+; -----------------------------------------------------------------------------
+; DEFAULT_CHARSET
+; - changes between the default and custom character set
+;------------------------------------------------------------------------------
+set_default_charset
+    lda     #$f0         ; set location of charset to 7168 ($1c00)
+    sta     CHARSET_CTRL ; store in register controlling base charset
+    rts
+
+; -----------------------------------------------------------------------------
+; FLIP_CHARSET
+; - changes between the default and custom character set
+;------------------------------------------------------------------------------
 
 ; -----------------------------------------------------------------------------
 ; FLIP_CHARSET
