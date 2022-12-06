@@ -22,16 +22,16 @@ SONG_CHUNK_INDEX = $06 ; use byte 06
 
 	dc.w	studend
 	dc.w	12345
-	dc.b	$9e, "4261", 0
+	dc.b	$9e, "4397", 0
 studend
 	dc.w	0
 
 
 
 SONG_CHUNKS_A
-    dc.b #0, #2, #3, #4, #0, #2, #3, #4, #5, #5, #7, #7 
+    dc.b #0, #2, #3, #4, #0, #2, #3, #4, #5, #5, #7, #7, #8, #9, #12, #15
 SONG_CHUNKS_B
-    dc.b #1, #1, #1, #1, #1, #1, #1, #1, #6, #6, #1, #1
+    dc.b #1, #1, #1, #1, #1, #1, #1, #1, #6, #6, #1, #1, #11, #13, #14, #14
 
 SONG_NOTES
     ; gathering chunks
@@ -50,8 +50,23 @@ SONG_NOTES
     ; chunk 7
     dc.b #187, #0, #0, #0, #183, #0, #0, #0, #179, #0, #0, #0, #175, #0, #0, #0
     ; chunk 8
-    dc.b #209, #225, #0, #209, #223, #0, #209, #221, #223, #0, #209, #221, #209, #0, #0, #0
-
+    dc.b #209, #225, #0, #209, #223, #0, #209, #221, #0, #209, #217, #0, #209, #0, #0, #0
+    ; chunk 9
+    dc.b #235, #232, #229, #235, #0, #232, #229, #235, #0, #232, #229, #235, #0, #0, #0, #0
+    ; chunk 10
+    dc.b #235, #232, #229, #235, #0, #232, #229, #235, #0, #0, #0, #0, #0, #217, #219, #221
+    ; chunk 11
+    dc.b #175, #0, #0, #163, #0, #0, #159, #0, #0, #147, #0, #0, #0, #147, #0, #0
+    ; chunk 12
+    dc.b #175, #0, #0, #0, #163, #0, #0, #0, #159, #0, #0, #0, #147, #0, #0, #0
+    ; chunk 13
+    dc.b #223, #223, #223, #223, #0, #0, #0, #0, #0, #0, #0, #0, #0, #0, #0, #0
+    ; chunk 1
+    dc.b #175, #0, #0, #0, #163, #0, #0, #0, #159, #0, #0, #0, #175, #0, #0, #0
+    ; chunk 15
+    dc.b #187, #0, #0, #0, #183, #0, #0, #0, #179, #0, #0, #0, #175, #0, #0, #0
+    ; chunk 16
+    dc.b #0, #0, #0, #0, #0, #0, #0, #0, #0, #0, #0, #0, #0, #0, #0, #0
 start
 
     lda     #0
@@ -94,7 +109,7 @@ next_note
     inc SONG_CHUNK_INDEX
 skip_next_chunk
     lda SONG_CHUNK_INDEX
-    cmp #13
+    cmp #17
     bne skip_resets
 
     ; if at 13, we're at end of song. reset chunk index.
@@ -121,7 +136,7 @@ skip_resets
     tax
 
     lda SONG_NOTES,x
-    sta S2
+    sta S3
 
     ; for S1, we load channel B
     ldx SONG_CHUNK_INDEX
@@ -139,7 +154,7 @@ skip_resets
     tax 
     
     lda     SONG_NOTES,X
-    sta     S1
+    sta     S2
 
     jsr     long_stall
 
@@ -176,6 +191,6 @@ long_stall_loop
     jsr stall
     iny
 long_stall_test
-    cpy #115
+    cpy #100
     bne long_stall_loop
     rts

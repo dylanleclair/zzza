@@ -94,7 +94,6 @@ GROUND_COUNT = $74
 CURSED_LOOP_COUNT = $75
 
 ; song variables
-SONG_DELAY_COUNT = $76  ; counter to delay song to sound decent
 SONG_INDEX = $77        ; current note being player
 SONG_CHUNK_INDEX = $78        ; current note being player
 EMPTY_BLOCK = $79                   ; 1 byte: stores the current empty block for horizontal screen scrolling (because charset changes)
@@ -118,7 +117,7 @@ S3 = $900C      ; sound channel 3
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4921", 0
+    dc.b $9e, "5049", 0
 stubend
     dc.w 0
 
@@ -288,8 +287,6 @@ game
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
     jsr     init_sound
-    jsr     soundon
-
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
 
@@ -304,7 +301,7 @@ game_init
     jsr     screen_dim_game
     include "screen-init.asm"           ; initialize screen colour
 
-
+    jsr     soundon
     jsr     level_init                  ; set level-specific values
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_LOOP
@@ -334,7 +331,7 @@ game_loop
 
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
-    jsr     update_sound
+    jsr     next_note
     ldy     #5                          ; set desired delay 
     jsr     delay                       ; jump to delay
 
@@ -404,6 +401,7 @@ level_end_scroll_setup
     sta     $1eef                       ; disappear the door
 
 level_end_scroll
+    jsr     soundoff
     lda     #2                          ; empty block for horizontal screen scroll
     sta     EMPTY_BLOCK                 ; store the empty block character
     jsr     horiz_screen_scroll         ; scroll the screen out
@@ -462,6 +460,7 @@ game_over_exit
 ; -----------------------------------------------------------------------------
 ; fill screen with all red
 death_screen
+    jsr     soundoff
     lda     #2                          ; colour for red
     jsr     init_hud                    ; clear data out of the HUD
 

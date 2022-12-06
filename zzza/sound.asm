@@ -15,7 +15,6 @@ init_sound
     lda     #0
     sta     SONG_INDEX
     sta     SONG_CHUNK_INDEX
-    sta     SONG_DELAY_COUNT
     rts
 
 ; -----------------------------------------------------------------------------
@@ -34,7 +33,7 @@ next_note
     inc SONG_CHUNK_INDEX
 skip_next_chunk
     lda SONG_CHUNK_INDEX
-    cmp #13
+    cmp #17
     bne skip_resets
 
     ; if at 13, we're at end of song. reset chunk index.
@@ -107,23 +106,3 @@ soundoff
     and     #%11110000
     sta		S_VOL		; set volume to 0
 	rts
-
-
-
-; -----------------------------------------------------------------------------
-; FUNCTION: UPDATE_SOUND
-;   * checks if the next note in the song should be played yet
-; -----------------------------------------------------------------------------
-update_sound
-    lda     SONG_DELAY_COUNT
-    cmp     #2                          ; song delay reset !!! change this to change speed of song.
-    bne     update_sound_cleanup        ; if not yet reached desired count, return
-
-    ; otherwise, reset & switch to next note
-    jsr     next_note
-    lda     #0
-    sta     SONG_DELAY_COUNT
-
-update_sound_cleanup
-    inc SONG_DELAY_COUNT
-    rts

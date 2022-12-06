@@ -108,19 +108,75 @@ chunk_7 = [
 chunk_8 = [
     OCTAVE_MID["F"], OCTAVE_HIGH["C"], EMPTY, OCTAVE_MID["F"],
     OCTAVE_MID["B"], EMPTY, OCTAVE_MID["F"], OCTAVE_MID["A#"],
-    OCTAVE_MID["B"], EMPTY, OCTAVE_MID["F"], OCTAVE_MID["A#"],
+    EMPTY, OCTAVE_MID["F"], OCTAVE_MID["G#"], EMPTY,
     OCTAVE_MID["F"], EMPTY, EMPTY, EMPTY,
 ]
+
+chunk_9 = [
+    OCTAVE_HIGH["G"], OCTAVE_HIGH["F"], OCTAVE_HIGH["D#"], OCTAVE_HIGH["G"],
+    EMPTY, OCTAVE_HIGH["F"], OCTAVE_HIGH["D#"], OCTAVE_HIGH["G"],
+    EMPTY, OCTAVE_HIGH["F"], OCTAVE_HIGH["D#"], OCTAVE_HIGH["G"],
+    EMPTY, EMPTY, EMPTY, EMPTY,
+]
+
+chunk_10 = [
+    OCTAVE_HIGH["G"], OCTAVE_HIGH["F"], OCTAVE_HIGH["D#"], OCTAVE_HIGH["G"],
+    EMPTY, OCTAVE_HIGH["F"], OCTAVE_HIGH["D#"], OCTAVE_HIGH["G"],
+    EMPTY, EMPTY, EMPTY, EMPTY,
+    EMPTY, OCTAVE_MID["G#"], OCTAVE_MID["A"], OCTAVE_MID["A#"],
+]
+
+chunk_11 = [
+    OCTAVE_LOW["G"], EMPTY, EMPTY, OCTAVE_LOW["F"],
+    EMPTY, EMPTY, OCTAVE_LOW["E"], EMPTY,
+    EMPTY, OCTAVE_LOW["D"], EMPTY, EMPTY,
+    EMPTY, OCTAVE_LOW["D"], EMPTY, EMPTY
+]
+
+chunk_12 = [
+    OCTAVE_LOW["G"], EMPTY, EMPTY, EMPTY,
+    OCTAVE_LOW["F"], EMPTY, EMPTY, EMPTY,
+    OCTAVE_LOW["E"], EMPTY, EMPTY, EMPTY,
+    OCTAVE_LOW["D"], EMPTY, EMPTY, EMPTY,
+]
+
+chunk_13 = [
+    OCTAVE_MID["B"], OCTAVE_MID["B"], OCTAVE_MID["B"], OCTAVE_MID["B"],
+    EMPTY, EMPTY, EMPTY, EMPTY,
+    EMPTY, EMPTY, EMPTY, EMPTY,
+    EMPTY, EMPTY, EMPTY, EMPTY,
+]
+
+chunk_14 = [
+    OCTAVE_LOW["G"], EMPTY, EMPTY, EMPTY,
+    OCTAVE_LOW["F"], EMPTY, EMPTY, EMPTY,
+    OCTAVE_LOW["E"], EMPTY, EMPTY, EMPTY,
+    OCTAVE_LOW["G"], EMPTY, EMPTY, EMPTY,
+]
+
+chunk_15 = [
+    OCTAVE_LOW["A#"], EMPTY, EMPTY, EMPTY,
+    OCTAVE_LOW["A"], EMPTY, EMPTY, EMPTY,
+    OCTAVE_LOW["G#"], EMPTY, EMPTY, EMPTY,
+    OCTAVE_LOW["G"], EMPTY, EMPTY, EMPTY,
+]
+chunk_16 = [
+    EMPTY, EMPTY, EMPTY, EMPTY,
+    EMPTY, EMPTY, EMPTY, EMPTY,
+    EMPTY, EMPTY, EMPTY, EMPTY,
+    EMPTY, EMPTY, EMPTY, EMPTY,
+]
+
 
 # plays on S2 register
 
 # SONG_INDEX tracks which note in a sound is being played
 # SONG_CHUNK_INDEX tracks which chunk of song we are in
 
-channel_a = [1,3,4,5,1,3,4,5,6,6,8,8]   # use as indexes on top of INDIRECT_SOUND_X
+channel_a = [1,3,4,5,1,3,4,5,6,6,8,8,9,10,13,16]   # use as indexes on top of INDIRECT_SOUND_X
 
 # plays on S1 register
-channel_b = [2,2,2,2,2,2,2,2,7,7,2,2]   # use as indexes on top of INDIRECT_SOUND_X
+channel_b = [2,2,2,2,2,2,2,2,7,7,2,2,12,14,15,15]   # use as indexes on top of INDIRECT_SOUND_X
 
 # we will then do some math with song_index and song_chunk_index to find the correct note in a huge 2d array of all the notes
 
@@ -129,7 +185,7 @@ channel_b = [2,2,2,2,2,2,2,2,7,7,2,2]   # use as indexes on top of INDIRECT_SOUN
 def print_channel_asm(channel):
     stub = "dc.b "
     for entry in channel:
-        stub += f"#{entry - 1}, "
+        stub += f"#{entry}, "
 
     print(stub)
 
@@ -152,6 +208,14 @@ def gather_chunks():
     print_chunk_asm(chunk_6, "; chunk 6")
     print_chunk_asm(chunk_7, "; chunk 7")
     print_chunk_asm(chunk_8, "; chunk 8")
+    print_chunk_asm(chunk_9, "; chunk 9")
+    print_chunk_asm(chunk_10, "; chunk 10")
+    print_chunk_asm(chunk_11, "; chunk 11")
+    print_chunk_asm(chunk_12, "; chunk 12")
+    print_chunk_asm(chunk_13, "; chunk 13")
+    print_chunk_asm(chunk_14, "; chunk 14")
+    print_chunk_asm(chunk_15, "; chunk 15")
+    print_chunk_asm(chunk_16, "; chunk 16")
 
 
 gather_chunks()
