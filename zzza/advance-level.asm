@@ -74,8 +74,7 @@ advance_final                           ; fills in the very last byte of level d
     pla                                 ; grab our level index off the stack
     tax                                 ; flip it into x
 
-    cpx     #0                          ; check if x is already 0
-    beq     advance_level_gen           ; if it is already 0, don't decrement
+    beq     advance_level_gen           ; if x = 0, don't decrement
     dex                                 ; otherwise, dec X by 1
 
 advance_level_gen

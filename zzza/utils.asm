@@ -59,6 +59,28 @@ set_default_charset
     sta     CHARSET_CTRL ; store in register controlling base charset
     rts
 
+;------------------------------------------------------------------------------
+; SUBROUTINE: GET_DATA_INDEX
+; - returns in Y reg the LEVEL_DATA index associated with the player's current position
+; - comes with a default???? parameter???? we live in the future 
+;   - if you expect to use the player's coors, use get_data_index
+;   - else if you want to set your own (eg for the falling block), use sneeky
+;------------------------------------------------------------------------------
+get_data_index
+    ldx     NEW_X_COOR
+    lda     NEW_Y_COOR                  ; get player's y coord
+    
+get_data_index_sneeky                   ; used for calls that set their own x,y
+    clc
+    asl                                 ; multiply by 2 to get the index into LEVEL_DATA
+    tay                                 ; put this offset into y
+
+    cpx     #$08                        ; check if player's x coord is less than 8
+    bmi     get_data_index_exit         ; if player's x < 8, you're on lhs. don't inc y
+    iny                                 ; else you're on rhs. inc y.
+
+get_data_index_exit
+    rts
 
 ;------------------------------------------------------------------------------
 ; SUBROUTINE: STRING_WRITER
