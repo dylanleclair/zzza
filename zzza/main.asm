@@ -482,7 +482,8 @@ inc_lines_cleared                       ; if yes, increment the number of lines 
     cmp     LINES_CLEARED               ; check if we've cleared that many lines
     bne     game_over_exit              ; if no, exit
     
-    sta     LINES_CLEARED               ; else, A=0 (beq). store that in LINES_CLEARED to reset
+    lda     #0
+    sta     LINES_CLEARED               ; else reset lines cleared
 
 ; REMINDER: on account of only having 3 registers, the progress bar fills in backward from its bit pattern
 inc_progress
