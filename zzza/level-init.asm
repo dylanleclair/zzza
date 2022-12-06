@@ -8,10 +8,27 @@ begin_level
     beq     level_changes_exit          ; level is zero, don't change anything
     and     #3                          ; mask out all but the bottom 2 bits
     bne     level_changes_exit          ; if not 0, not a multiple of 4, exit
+
+    ; update border colour
     inc     $900F                       ; change the border to the next color
+    
+    ; increase speed and make level longer
     dec     GAME_SPEED                  ; increase the speed of the game
     inc     LEVEL_LENGTH                ; increase the length of the level
     inc     LEVEL_LENGTH                ; increase the length of the level
+
+    ; change bit patterns of strips
+    ldy     #2
+strip_bit_bump
+    jsr     lfsr
+    lda     LFSR_ADDR                   ; grab the random value out of the lfsr
+    and     #%00001111                  ; bitmask out top 4 bits, leaving 0<=a<16
+    tax                                 ; flip to x to use as index
+    lda     #%11001100                  ; extra bits to turn on
+    ora     STRIPS,x                    ; add those bits to the pattern
+    sta     STRIPS,x
+    dey
+    bne     strip_bit_bump
 
     rts
 

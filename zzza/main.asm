@@ -197,7 +197,7 @@ collision_mask:
 ; -----------------------------------------------------------------------------
 random_seeds:
     dc.b #%00100101
-    dc.b #%10001001
+    dc.b #%00001001
     dc.b #%10011100
     dc.b #%01000100
     dc.b #%00011000
@@ -240,7 +240,6 @@ STRIPS
     dc.b #%00110000
     dc.b #%00011011
 
-
 TITLE_SCREEN
     dc.b $48,$20,$20,$20,$2E,$20,$20,$20,$20,$20,$48,$20,$20,$20,$20,$2E
     dc.b $50,$20,$51,$20,$20,$59,$20,$20,$2E,$20,$48,$20,$A0,$A0,$2E,$20
@@ -280,7 +279,7 @@ start
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    lda     #2                          ; set the length of the level
+    lda     #10                          ; set the length of the level
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
@@ -288,6 +287,8 @@ game
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
+    ; TODO: put this back to 0
+    lda     #0
     sta     CURRENT_LEVEL               ; CURRENT_LEVEL = 1 (game start)
 
     lda     #5                          ; delay speed for scrolling
@@ -361,7 +362,7 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     next_note
-    ldy     #5                          ; set desired delay 
+    ldy     GAME_SPEED                  ; set desired delay 
     jsr     delay                       ; jump to delay
 
         ; check if level is complete, if so don't scroll
@@ -415,7 +416,7 @@ end_loop
 
 housekeeping
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
-    ldy     #5                          ; set desired delay 
+    ldy     GAME_SPEED                  ; set desired delay 
     jsr     delay                       ; jump to delay
 
     jmp     end_loop  
