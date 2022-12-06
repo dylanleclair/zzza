@@ -128,4 +128,3 @@ string_clear                            ; clear the space on screen that we just
 
 string_writer_exit
     rts
-

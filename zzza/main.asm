@@ -268,7 +268,8 @@ start
 ; - changes text to "press any key"
 ; - waits for user input and goes to main game on any key press
 ; -----------------------------------------------------------------------------
-    jsr     screen_dim_title
+    lda     #%00100000                  ; bit pattern 00101000, bits 1to6 = 16
+    jsr     screen_dim
     jsr     draw_title_screen
     lda     #96                         ; empty character for the default charset
     sta     EMPTY_BLOCK                 ; set EMPTY_BLOCK for default scroll
@@ -313,7 +314,9 @@ game
     lda     #12                         ; black background, purple border
     sta     $900F                       ; set screen border color
 
-    jsr     screen_dim_game             ; setup dimensions for the rest of the game
+    lda     #%00100110                  ; bit pattern 00100110, bits 1to6 = 19 (screen = 16, hud = 3)
+    jsr     screen_dim                  ; setup dimensions for the rest of the game
+
 
 level_start
     jsr     set_default_charset         ; set the charset to default
@@ -403,7 +406,6 @@ end_loop
     sta     $1eef                       ; place it on the right side of the bottom of the screen
     lda     #1                          ; load 1 (white color)
     sta     $96ef                       ; make the door white
-    beq     housekeeping                ; if 0 (FALSE) then keep looping
     lda     X_COOR                      ; load the X-COOR to check when Eva gets to the door
     cmp     #14                         ; check if Eva is at the door
     bne     housekeeping                ; if Eva isn't at the door, keep looping
@@ -480,8 +482,7 @@ inc_lines_cleared                       ; if yes, increment the number of lines 
     cmp     LINES_CLEARED               ; check if we've cleared that many lines
     bne     game_over_exit              ; if no, exit
     
-    lda     #0                          ; if yes, reset LINES_CLEARED
-    sta     LINES_CLEARED
+    sta     LINES_CLEARED               ; else, A=0 (beq). store that in LINES_CLEARED to reset
 
 ; REMINDER: on account of only having 3 registers, the progress bar fills in backward from its bit pattern
 inc_progress

@@ -9,7 +9,6 @@
 ; - afterwards, we go ahead and advance each character being animated by n frames (where n is # of frames into current animation - see: DRAW_LEVEL)
 ; -----------------------------------------------------------------------------
 draw_master
-    ; check if level is complete, if so don't scroll
 
 draw_master_scroll
     jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
