@@ -27,7 +27,7 @@ CHARSET_CTRL = $9005                ; stores a pointer to the beginning of chara
 AUX_COLOR_ADDR = $900e
 
 ; SOUND REGISTERS
-S_VOL = $90e   ; volume control
+S_VOL = $900e   ; volume control
 S1 = $900a      ; sound channel 1
 S2 = $900b      ; sound channel 2
 S3 = $900c      ; sound channel 3

@@ -31,7 +31,7 @@ next_note
     inc SONG_CHUNK_INDEX
 skip_next_chunk
     lda SONG_CHUNK_INDEX
-    cmp #17                     ; 16 chunks in song, but must be 17 because of where it is incremented
+    cmp #17                             ; 16 chunks in song, but must be 17 because of where it is incremented
     bne skip_resets
 
     ; if at final chunk of song, reset chunk index.
@@ -89,8 +89,8 @@ soundon
     lda     S_VOL
     and     #%11110000
     eor     #15
-    ; adc 	#15 		; load 15 in the A register
-	sta		S_VOL		; set the volume to full for low voice (manual recommends it)
+    ; adc 	#15 		                ; load 15 in the A register
+	sta		S_VOL		                ; set the volume to full for low voice (manual recommends it)
     rts
 
 ; -----------------------------------------------------------------------------
@@ -98,7 +98,7 @@ soundon
 ;   * mutes sound input for the vic
 ; -----------------------------------------------------------------------------
 soundoff
-	lda		S_VOL			; load 0 into A register (volume off)
+	lda		S_VOL			            ; load 0 into A register (volume off)
     and     #%11110000
-    sta		S_VOL		; set volume to 0
+    sta		S_VOL		                ; set volume to 0
 	rts
