@@ -27,7 +27,7 @@ CHARSET_CTRL = $9005                ; stores a pointer to the beginning of chara
 AUX_COLOR_ADDR = $900e
 
 ; SOUND REGISTERS
-S_VOL = $90e   ; volume control
+S_VOL = $900e   ; volume control
 S1 = $900a      ; sound channel 1
 S2 = $900b      ; sound channel 2
 S3 = $900c      ; sound channel 3
@@ -399,7 +399,6 @@ end_loop
     sta     $1eef                       ; place it on the right side of the bottom of the screen
     lda     #1                          ; load 1 (white color)
     sta     $96ef                       ; make the door white
-    beq     housekeeping                ; if 0 (FALSE) then keep looping
     lda     X_COOR                      ; load the X-COOR to check when Eva gets to the door
     cmp     #14                         ; check if Eva is at the door
     bne     housekeeping                ; if Eva isn't at the door, keep looping
@@ -430,6 +429,7 @@ level_end_scroll
     jsr     horiz_screen_scroll         ; scroll the screen out
     lda     #0                          ; set A to 0 (0 = black for screen color change)
     jsr     char_color_change           ; change all characters to black
+    jsr     set_default_charset         ; set charset back to default for "thanks eva"
     jsr     thanks_eva                  ; display "THANKS EVA!!!"
 
 ; check level player is on to decide what to load next

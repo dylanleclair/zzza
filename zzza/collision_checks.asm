@@ -20,7 +20,7 @@ input_kill                              ; restart level immediately and removes 
     jmp     death_screen                ; immediately jump to death screen
 
 input_mute                              ; toggle sound on or off
-    cmp     #$77                        ; M key pressed?
+    cmp     #$4d                        ; M key pressed?
     bne     input_left                  ; if M key not pressed, keep checking input
     jsr     soundoff                    ; jump to the soundoff subroutine
     rts

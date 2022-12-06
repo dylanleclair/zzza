@@ -59,26 +59,3 @@ set_default_charset
     sta     CHARSET_CTRL ; store in register controlling base charset
     rts
 
-; -----------------------------------------------------------------------------
-; FLIP_CHARSET
-; - changes between the default and custom character set
-;------------------------------------------------------------------------------
-
-; -----------------------------------------------------------------------------
-; FLIP_CHARSET
-; - changes between the default and custom character set
-;------------------------------------------------------------------------------
-flip_charset 
-    lda     #$F0                        ; load CHARSET_CTRL
-    cmp     CHARSET_CTRL                ; check if it's the default charset
-    beq     flip_to_custom              ; if charset is default, flip to custom
-    sta     CHARSET_CTRL                ; flip to default charset
-    jmp     flip_exit                   ; exit the routine
-
-flip_to_custom
-    lda     #$FC                        ; load the custom charset location
-    sta     CHARSET_CTRL                ; set to custom charset
-
-flip_exit
-    rts
-
