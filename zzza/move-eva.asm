@@ -40,7 +40,7 @@ move_eva_exit
 
 ; this is the state where player tries to move left. check for collisions
 eva_left
-    lda     #$f0                        ; location of eva_left_sprite
+    lda     #$a0                        ; location of eva_left_sprite
     sta     CURRENT_PLAYER_CHAR         ; store it so that the hi-res draw can find it
 
     ; check if the sprite is moving off the left edge of the screen
@@ -57,7 +57,7 @@ eva_left
     
 ; this is the state where player tries to move right. check for collisions
 eva_right
-    lda     #$f8                        ; location of eva_right_sprite
+    lda     #$a8                        ; location of eva_right_sprite
     sta     CURRENT_PLAYER_CHAR         ; store it so that the hi-res draw can find it
 
     ; check if the sprite is moving off the right edge of the screen

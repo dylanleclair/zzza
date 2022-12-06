@@ -25,6 +25,12 @@ ROWS_ADDR = $9003                   ; stores the number of rows on screen
 
 CHARSET_CTRL = $9005                ; stores a pointer to the beginning of character memory
 AUX_COLOR_ADDR = $900e
+
+; SOUND REGISTERS
+S_VOL = $90e   ; volume control
+S1 = $900a      ; sound channel 1
+S2 = $900b      ; sound channel 2
+S3 = $900c      ; sound channel 3
 ; -----------------------------------------------------------------------------
 ; KERNAL ROUTINES
 ; -----------------------------------------------------------------------------
@@ -105,12 +111,6 @@ ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used 
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
 HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
 
-; SOUND REGISTERS
-S_VOL = $900E   ; volume control
-S1 = $900A      ; sound channel 1
-S2 = $900B      ; sound channel 2
-S3 = $900C      ; sound channel 3
-
     processor 6502
 ; -----------------------------------------------------------------------------
 ; BASIC STUB
@@ -119,7 +119,7 @@ S3 = $900C      ; sound channel 3
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "5049", 0
+    dc.b $9e, "4969", 0
 stubend
     dc.w 0
 
@@ -288,7 +288,6 @@ game
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
-    lda     #0                          ; set current level to 0
     sta     CURRENT_LEVEL               ; CURRENT_LEVEL = 1 (game start)
 
     lda     #5                          ; delay speed for scrolling
@@ -396,7 +395,7 @@ end_loop
     lda     Y_COOR                      ; load Eva's current Y coordinate
     cmp     #14                         ; check if Eva is on the bottom of the level
     bne     housekeeping                ; if no, keep looping normally
-    lda     #35                         ; else, load the door character
+    lda     #25                         ; else, load the door character
     sta     $1eef                       ; place it on the right side of the bottom of the screen
     lda     #1                          ; load 1 (white color)
     sta     $96ef                       ; make the door white
@@ -497,9 +496,9 @@ death_screen
 
     ldx     #0                          ; initialize loop ctr
 death_screen_loop
-    lda     #2                          ; colour for hi-res red
+    lda     #2                          ; colour for red
     sta     COLOR_ADDR,x
-    lda     #33                         ; load solid block
+    lda     #21                         ; load solid block
     sta     SCREEN_ADDR,x 
     inx 
     bne     death_screen_loop
