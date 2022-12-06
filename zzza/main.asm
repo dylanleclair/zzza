@@ -119,7 +119,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4969", 0
+    dc.b $9e, "4958", 0
 stubend
     dc.w 0
 
