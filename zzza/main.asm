@@ -133,7 +133,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "5094", 0
+    dc.b $9e, "4948", 0
 stubend
     dc.w 0
 
@@ -146,6 +146,12 @@ stubend
 
     ; REMINDER: because of alignment, start at character #2 instead of 0
     include "custom_charset.asm"
+
+ZX02_TITLE_SCREEN_DATA
+    incbin "title_screen.zx02"
+
+ZX02_DEATH_SCREEN_DATA
+    incbin "death_screen.zx02"
 
 ; -----------------------------------------------------------------------------
 ; Lookup table for "PRESS ANY KEY" used for title screen
@@ -251,15 +257,9 @@ STRIPS
     dc.b #%00110000
     dc.b #%00011011
 
-ZX02_TITLE_SCREEN_DATA
-    incbin "title_screen.zx02"
-
-ZX02_DEATH_SCREEN_DATA
-    incbin "death_screen.zx02"
-
     include "song.asm"
 
-start
+start_game
 ; -----------------------------------------------------------------------------
 ; TITLE_SCREEN
 ; - displays the title screen 
@@ -446,8 +446,7 @@ end_level_logic
     beq     next_level_logic            ; TODO: CHANGE THIS TO WIN GAME SCREEN!!!!
 next_level_logic
     inc     CURRENT_LEVEL               ; increment the current level
-    jmp     level_start                 ; RESTART THE GAME...CHANGE THIS LATER!!!!
-    jmp     level_start                 ; jump to the start of the next level
+    jmp     level_start                 ; go to the next level
 
 ; TODO: THIS WILL SET THE END GAME SCREEN (SEE 6 LINES ABOVE HERE)
 ; win_game_logic
@@ -523,10 +522,25 @@ death_screen_loop
 death_logic 
     lda     PLAYER_LIVES                ; load the number of lives the player has left
     bne     lives_left                  ; if lives !=0, jump over the restart
-    jmp     start                       ; TODO: GAME OVER SCREEN HERE
+
+    ; draw the game over screen
+    lda     #0                          ; load black color to set screen to black
+    jsr     char_color_change           ; set screen to black (to cover the charset change)
+    jsr     set_default_charset         ; set the charset to default for game over screen
+    jsr     init_hud                    ; set the hud to empty
+    lda     #$56                        ; SCREEN_LOAD: set lower byte for death screen load
+    sta     DECOMPRESS_LOW_BYTE         
+    lda     #$11                        ; SCREEN_LOAD: set high byyte for death screen load
+    sta     DECOMPRESS_HIGH_BYTE
+    jsr     zx02_decompress             ; draw the game over screen
+    lda     #4                          ; load purple color
+    jsr     char_color_change           ; set screen to purple
+    ldy     #$FF                        ; three seconds of delay
+    jsr     delay                         
+    jmp     start_game                  ; restart the game
 lives_left
     dec     PLAYER_LIVES                ; remove a life from the player
-    jmp     level_restart               ; restart the level (TODO: THIS ISN'T CORRECT!!!)
+    jmp     level_restart               ; restart the level
 
 ; -----------------------------------------------------------------------------
 ; Includes for all the individual subroutines that are called in the main loop

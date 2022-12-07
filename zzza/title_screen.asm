@@ -14,9 +14,9 @@ draw_title_screen
     lda     #4                          ; color code for purple
     jsr     char_color_change           ; set screen characters to purple
 
-    lda     #$12                        ; load high byte of title screen data
+    lda     #$10                        ; SCREEN_LOAD: load high byte of title screen data
     sta     DECOMPRESS_HIGH_BYTE
-    lda     #$48                        ; low byte of the title screen data 
+    lda     #$d0                        ; SCREEN_LOAD: low byte of the title screen data 
     sta     DECOMPRESS_LOW_BYTE         
     jsr     zx02_decompress             ; decompress the screen
 
