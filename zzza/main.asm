@@ -564,7 +564,7 @@ death_logic
     ; draw the game over screen
     jsr     draw_robini
 
-    lda     #$d5                        ; lo byte of 'order up' string's location
+    lda     #$d5                        ; lo byte of 'new gig kid' string's location
     sta     STRING_LOCATION             ; store in 0 page for string writer to find
     ldx     #$c1                        ; desired screen offset for string
     jsr     string_writer               ; jump to string writer to put text under robo
