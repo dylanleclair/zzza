@@ -20,36 +20,36 @@ init_sound
 ;   * switches active note to the next note in the song
 ; -----------------------------------------------------------------------------
 next_note
-    lda SONG_INDEX
+    lda     SONG_INDEX
 
-    cmp #16
-    bne skip_resets
+    cmp     #16
+    bne     skip_resets
 
     ; if not, we are at the end of the chunk. increment chunk index, reset song index.
-    lda #0
-    sta SONG_INDEX
-    inc SONG_CHUNK_INDEX
+    lda     #0
+    sta     SONG_INDEX
+    inc     SONG_CHUNK_INDEX
 skip_next_chunk
-    lda SONG_CHUNK_INDEX
-    cmp #17                             ; 16 chunks in song, but must be 17 because of where it is incremented
-    bne skip_resets
+    lda     SONG_CHUNK_INDEX
+    cmp     #17                             ; 16 chunks in song, but must be 17 because of where it is incremented
+    bne     skip_resets
 
     ; if at final chunk of song, reset chunk index.
-    lda #0
-    sta SONG_CHUNK_INDEX
+    lda     #0
+    sta     SONG_CHUNK_INDEX
     
 skip_resets
-    ldy SONG_CHUNK_INDEX
+    ldy     SONG_CHUNK_INDEX
 
     ; play (change note for) channel A
-    lda SONG_CHUNKS_A,y
+    lda     SONG_CHUNKS_A,y
 
     jsr     music_fetch_index
     lda     SONG_NOTES,x
     sta     S3
 
     ; play (change note for) channel B
-    lda SONG_CHUNKS_B,y
+    lda     SONG_CHUNKS_B,y
 
     jsr     music_fetch_index
     lda     SONG_NOTES,X

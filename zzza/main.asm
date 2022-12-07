@@ -34,7 +34,7 @@ S3 = $900c      ; sound channel 3
 ; -----------------------------------------------------------------------------
 ; KERNAL ROUTINES
 ; -----------------------------------------------------------------------------
-GETIN = $FFE4                   ; KERNAL routine to get keyboard input
+GETIN = $FFE4                       ; KERNAL routine to get keyboard input
 
 ; -----------------------------------------------------------------------------
 ; ZERO-PAGE MEMORY LOCATIONS
@@ -295,7 +295,7 @@ start_game
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    lda     #10                         ; set the length of the level
+    lda     #2                         ; set the length of the level
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
@@ -466,7 +466,7 @@ level_end_scroll
 ; check level player is on to decide what to load next
 end_level_logic
     lda     CURRENT_LEVEL               ; load the current level
-    cmp     #0                          ; check if the last level was just finished
+    cmp     #15                         ; check if the last level was just finished
     beq     win_game_logic
 next_level_logic
     inc     CURRENT_LEVEL               ; increment the current level
@@ -535,14 +535,15 @@ game_over_exit
 ; fill screen with all red
 death_screen
     jsr     soundoff
-    lda     #2                          ; colour for red
+    lda     #2                          ; colour for red    
     jsr     init_hud                    ; clear data out of the HUD
 
     ldx     #0                          ; initialize loop ctr
+
 death_screen_loop
     lda     #2                          ; colour for red
     sta     COLOR_ADDR,x
-    lda     #21                         ; load solid block
+    lda     #23                         ; load solid block
     sta     SCREEN_ADDR,x 
     inx 
     bne     death_screen_loop

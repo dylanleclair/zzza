@@ -108,15 +108,50 @@ string_writer
 string_writer_loop
     lda     (STRING_LOCATION),y         ; grab a byte of the string         
     cmp     #0                          ; check for null terminator
-    beq     string_writer_delay         ; if terminator, stop writing
+    beq     level_display               ; if terminator, stop writing
     sta     SCREEN_ADDR,x               ; else, store in desired screen location
-    lda     #4                          ; set colour to purple
-    sta     COLOR_ADDR,x                ; and store in colour mem
+    lda     #4                          ; set colour to purple TODO: CAN WE ERASE THESE?
+    sta     COLOR_ADDR,x                ; and store in colour mem TODO: CAN WE ERASE THESE?
 
     iny                                 ; set up y to grab next piece of string
     inx                                 ; set up x to write to new location
     jmp     string_writer_loop          ; and go again
 
+level_display
+    ; check if level needs to be displayed for "ORDER UP" screen
+
+    lda     STRING_LOCATION             ; check if STRING_LOCATION = #$b7 (ORDER UP SCREEN)
+    cmp     #$b7                        ; check if ORDER UP SCREEN BEING LOADED
+    bne     string_writer_delay         ; if not, skip lvl display
+
+    ; set the screen to purple for this part
+    lda     #4                          ; purple
+    jsr     char_color_change           ; set the screen to purple chars
+
+    lda     #12                         ; L for LVL
+    sta     $1e96
+    sta     $1e94
+
+    lda     #22                         ; V for LVL
+    sta     $1e95
+
+    ldx     CURRENT_LEVEL               ; load the current level into Y register
+    inx                                 ; increment it b/c we index levels at 0 (not 1 - BECAUSE WE LIVE IN A SOCIETY!)
+    txa                                 ; put x back into A
+    cmp     #10                         ; check if the 10s digit needs to be set
+    bmi     single_digit                ; if value is minus, only the 1s digit is set
+
+    ldx     #49                         ; char value for 1
+    stx     $1e98                       ; store in the 10s place
+    sec                                 ; set carry for subtraction
+    sbc     #10                         ; subtract 10 to setup for dealing with 1s position
+
+single_digit
+    clc
+    adc     #48                         ; 48 is the char 0, we add it to our desired value to get our character
+    sta     $1e99                       ; store it on the screen
+
+; delay for the displayed strings
 string_writer_delay                     ; give time for string to display on screen
     ldy     #$b4                        ; 3 second delay
     jsr     delay
