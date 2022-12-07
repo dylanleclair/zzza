@@ -92,13 +92,6 @@ get_data_index_exit
 ; - uses 0x00 as a null terminator because we all need a bit more C in our lives
 ;------------------------------------------------------------------------------
 string_writer
-    ; clear the screen before writing
-    pha                                 ; store A's value before jumping to empty_screen
-    lda     #96                         ; load the code for an empty character into a
-    jsr     empty_screen                ; set the screen to empty
-    pla                                 ; retrieve A's value
-    tax                                 ; and flip to X
-
     ldy     #0                          ; initialize index into string
 string_writer_loop
     lda     (STRING_LOCATION),y         ; grab a byte of the string         

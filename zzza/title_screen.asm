@@ -72,3 +72,21 @@ clear_bottom_line_loop
     dex                             ; decrement x
     bne     clear_bottom_line_loop  ; if x != 0, keep looping
     rts
+
+;------------------------------------------------------------------------------
+; DRAW_ROBINI
+; - draw a base robini with angee eyebrows
+;------------------------------------------------------------------------------
+draw_robini 
+    lda     #0                          ; load black color to set screen to black
+    jsr     char_color_change           ; set screen to black (to cover the charset change)
+    jsr     set_default_charset         ; set the charset to default for game over screen
+    jsr     init_hud                    ; set the hud to empty
+    lda     #$56                        ; SCREEN_LOAD: set lower byte for death screen load
+    sta     DECOMPRESS_LOW_BYTE         
+    lda     #$11                        ; SCREEN_LOAD: set high byyte for death screen load
+    sta     DECOMPRESS_HIGH_BYTE
+    jsr     zx02_decompress             ; draw the game over screen
+    lda     #4                          ; load purple color
+    jsr     char_color_change           ; set screen to purple
+    rts
