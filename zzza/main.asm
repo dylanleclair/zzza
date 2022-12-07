@@ -444,17 +444,18 @@ level_end_scroll
 ; check level player is on to decide what to load next
 end_level_logic
     lda     CURRENT_LEVEL               ; load the current level
-    cmp     #16                         ; check if the last level was just finished
-    beq     next_level_logic            ; TODO: CHANGE THIS TO WIN GAME SCREEN!!!!
+    cmp     #1                          ; check if the last level was just finished
+    beq     win_game_logic
 next_level_logic
     inc     CURRENT_LEVEL               ; increment the current level
     jmp     level_start                 ; go to the next level
 
-; TODO: THIS WILL SET THE END GAME SCREEN (SEE 6 LINES ABOVE HERE)
-; win_game_logic
-;     jsr     win_game_screen             ; load the win game screen
-;     jmp     start                       ; reinitialize the game to the start screen
-
+win_game_logic
+    jsr     draw_robini
+    ldy     #$FF                        ; three seconds of delay
+    jsr     delay
+    jsr     any_key_loop                ; wait for user input                         
+    jmp     start_game                  ; restart the game on any input
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_OVER_CHECK
@@ -526,17 +527,7 @@ death_logic
     bne     lives_left                  ; if lives !=0, jump over the restart
 
     ; draw the game over screen
-    lda     #0                          ; load black color to set screen to black
-    jsr     char_color_change           ; set screen to black (to cover the charset change)
-    jsr     set_default_charset         ; set the charset to default for game over screen
-    jsr     init_hud                    ; set the hud to empty
-    lda     #$56                        ; SCREEN_LOAD: set lower byte for death screen load
-    sta     DECOMPRESS_LOW_BYTE         
-    lda     #$11                        ; SCREEN_LOAD: set high byyte for death screen load
-    sta     DECOMPRESS_HIGH_BYTE
-    jsr     zx02_decompress             ; draw the game over screen
-    lda     #4                          ; load purple color
-    jsr     char_color_change           ; set screen to purple
+    jsr     draw_robini
     ldy     #$FF                        ; three seconds of delay
     jsr     delay                         
     jmp     start_game                  ; restart the game
