@@ -118,6 +118,10 @@ string_writer_loop
     jmp     string_writer_loop          ; and go again
 
 ; check if level needs to be displayed for "ORDER UP" screen
+    ; set the screen to purple for this part
+    lda     #4                          ; purple
+    jsr     char_color_change           ; set the screen to purple chars
+
     lda     STRING_LOCATION             ; check if STRING_LOCATION = #$b7 (ORDER UP SCREEN)
     bne     string_writer_delay         ; if not, skip lvl display
 level_display

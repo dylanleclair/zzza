@@ -34,7 +34,7 @@ S3 = $900c      ; sound channel 3
 ; -----------------------------------------------------------------------------
 ; KERNAL ROUTINES
 ; -----------------------------------------------------------------------------
-GETIN = $FFE4                   ; KERNAL routine to get keyboard input
+GETIN = $FFE4                       ; KERNAL routine to get keyboard input
 
 ; -----------------------------------------------------------------------------
 ; ZERO-PAGE MEMORY LOCATIONS
