@@ -152,9 +152,7 @@ backup_scrolling
     ; top row of hi res
     ldy     #0
 
-    jsr     backup_helper
-    jsr     backup_helper
-    jsr     backup_helper
+    jsr     triple_backup_helper
 
     ; middle row of high res
 
@@ -162,25 +160,21 @@ backup_scrolling
     jsr     get_position
     ldy     #3
 
-    jsr     backup_helper
-    jsr     backup_helper
-    jsr     backup_helper
-
+    jsr     triple_backup_helper
 
     ; bottom row of high res
     inc     Y_COOR
     jsr     get_position
     ldy     #6
 
-    jsr     backup_helper
-    jsr     backup_helper
-    jsr     backup_helper
+    jsr     triple_backup_helper
 
     ; restore position
     dec     Y_COOR
     inc     X_COOR
 
     rts
+
 
 
 backup_helper
@@ -190,6 +184,11 @@ backup_helper
     iny
     rts
 
+triple_backup_helper
+    jsr     backup_helper
+    jsr     backup_helper
+    jsr     backup_helper
+    rts
 
 
 ; -----------------------------------------------------------------------------
@@ -213,27 +212,22 @@ restore_scrolling
     ldy     #0  ; reset y to 0
 
     ; top row
-    jsr     restore_helper
-    jsr     restore_helper
-    jsr     restore_helper
+    jsr     triple_restore_helper
 
     ; shift to middle row
     inc     Y_COOR
     jsr     get_position
     ldy     #3
     
-    jsr     restore_helper
-    jsr     restore_helper
-    jsr     restore_helper
+    jsr     triple_restore_helper
+
     
     ; shift to bottom row
     inc     Y_COOR
     jsr     get_position
     ldy     #6
 
-    jsr     restore_helper
-    jsr     restore_helper
-    jsr     restore_helper
+    jsr     triple_restore_helper
 
     ; restore position (VERY IMPORTANT !!!)
     dec     Y_COOR
@@ -249,6 +243,12 @@ restore_helper
 
     inx
     iny
+    rts
+
+triple_restore_helper
+    jsr     restore_helper
+    jsr     restore_helper
+    jsr     restore_helper
     rts
 
 ; -----------------------------------------------------------------------------
