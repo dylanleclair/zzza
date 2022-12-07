@@ -196,12 +196,15 @@ collision_mask:
 ; TODO: THESE ALL ARE RANDOM AND PROBABLY SUCK
 ; -----------------------------------------------------------------------------
 random_seeds:
-    dc.b #%00100101
-    dc.b #%00001001
-    dc.b #%10011100
-    dc.b #%01000100
-    dc.b #%00011000
-    dc.b #%10011000
+    dc.b #%00100101 ; good
+    dc.b #%01001001 ; good
+    dc.b #%10010100 ; good
+    dc.b #%01110100 ; good
+
+    ; < strip get shuffled >
+
+    dc.b #%10011001
+    dc.b #%01111000
     dc.b #%10011000
     dc.b #%10011000
     dc.b #%10011000
@@ -227,7 +230,7 @@ STRIPS
     dc.b #%00000000
     dc.b #%01100100
     dc.b #%00110000
-    dc.b #%10011000
+    dc.b #%00011000
     dc.b #%00000011
     dc.b #%00000000
     dc.b #%11100001
@@ -281,14 +284,14 @@ start
 game
     lda     #10                          ; set the length of the level
     sta     LEVEL_LENGTH
-    lda     #2                          ; because of the BNE statement, 2 = 3 lives
+    lda     #100                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
 
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
     ; TODO: put this back to 0
-    lda     #0
+    lda     #3
     sta     CURRENT_LEVEL               ; CURRENT_LEVEL = 1 (game start)
 
     lda     #5                          ; delay speed for scrolling

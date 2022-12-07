@@ -19,16 +19,37 @@ begin_level
 
     ; change bit patterns of strips
     ldy     #2
+
 strip_bit_bump
+
+    lda     #0
+    sta     LOOP_CTR
+strip_bit_bump_loop
     jsr     lfsr
     lda     LFSR_ADDR                   ; grab the random value out of the lfsr
     and     #%00001111                  ; bitmask out top 4 bits, leaving 0<=a<16
-    tax                                 ; flip to x to use as index
-    lda     #%11001100                  ; extra bits to turn on
-    ora     STRIPS,x                    ; add those bits to the pattern
+    tax
+    
+    jsr     lfsr
+    lda     LFSR_ADDR
+    and     #%00001111
+    tay
+
+    lda     STRIPS,y
     sta     STRIPS,x
-    dey
-    bne     strip_bit_bump
+
+strip_bit_bump_test
+    inc     LOOP_CTR
+    lda     LOOP_CTR
+    cmp     #4
+    bne     strip_bit_bump_loop 
+
+    ; tax                                 ; flip to x to use as index
+    ; lda     #%01000101                  ; extra bits to turn on
+    ; ora     STRIPS,x                    ; add those bits to the pattern
+    ; sta     STRIPS,x
+    ; dey
+    ; bne     strip_bit_bump
 
     rts
 
