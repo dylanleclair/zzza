@@ -115,4 +115,8 @@ endless_mode
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
 
+    lda     $a2                         ; get the current value of the clock (ticks every 1/60th of a second)
+    sta     random_seeds                ; use it as the LFSR seed (generate random level)
+
+
     jmp     endless_start
