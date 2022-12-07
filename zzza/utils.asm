@@ -128,6 +128,13 @@ level_display
     lda     #4                          ; purple
     jsr     char_color_change           ; set the screen to purple chars
 
+    lda     #12                         ; L for LVL
+    sta     $1e96
+    sta     $1e94
+
+    lda     #22                         ; V for LVL
+    sta     $1e95
+
     ldx     CURRENT_LEVEL               ; load the current level into Y register
     inx                                 ; increment it b/c we index levels at 0 (not 1 - BECAUSE WE LIVE IN A SOCIETY!)
     txa                                 ; put x back into A
@@ -135,14 +142,14 @@ level_display
     bmi     single_digit                ; if value is minus, only the 1s digit is set
 
     ldx     #49                         ; char value for 1
-    stx     $1e96                       ; store in the 10s place
+    stx     $1e98                       ; store in the 10s place
     sec                                 ; set carry for subtraction
     sbc     #10                         ; subtract 10 to setup for dealing with 1s position
 
 single_digit
     clc
     adc     #48                         ; 48 is the char 0, we add it to our desired value to get our character
-    sta     $1e97                       ; store it on the screen
+    sta     $1e99                       ; store it on the screen
 
 ; delay for the displayed strings
 string_writer_delay                     ; give time for string to display on screen
