@@ -11,16 +11,14 @@ draw_title_screen
     lda     #$f0                        ; set location of charset to default
     sta     CHARSET_CTRL                ; store in register controlling base charset
 
-title_draw_init
-    ldy     #0                          ; zero out y register
+    lda     #4                          ; color code for purple
+    jsr     char_color_change           ; set screen characters to purple
 
-title_draw
-    lda     TITLE_SCREEN,y              ; load title screen data
-    sta     SCREEN_ADDR,y               ; store on the screen
-    lda     #4                          ; colour code for purple
-    sta     COLOR_ADDR,y                ; store colour code
-    iny                                 ; increment y
-    bne    title_draw                   ; if X != 0 we haven't filled the screen yet
+    lda     #$10                        ; SCREEN_LOAD: load high byte of title screen data
+    sta     DECOMPRESS_HIGH_BYTE
+    lda     #$d0                        ; SCREEN_LOAD: low byte of the title screen data 
+    sta     DECOMPRESS_LOW_BYTE         
+    jsr     zx02_decompress             ; decompress the screen
 
 title_delay1
     ldy     #$78                        ; desired wait time (78 = 2 seconds)
