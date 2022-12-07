@@ -212,10 +212,10 @@ random_seeds:
     dc.b #%01101100
     
     ; < strip get shuffled > 
-    ; green
+    ; blue
 
-    dc.b #%10011000
-    dc.b #%10011000
+    dc.b #%11110010
+    dc.b #%01011000
     dc.b #%10111010
     dc.b #%11011000
     
@@ -295,14 +295,14 @@ start
 game
     lda     #10                          ; set the length of the level
     sta     LEVEL_LENGTH
-    lda     #100                          ; because of the BNE statement, 2 = 3 lives
-    sta     PLAYER_LIVES
+    ; lda     #3                          ; because of the BNE statement, 2 = 3 lives
+    ; sta     PLAYER_LIVES
 
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
     ; TODO: put this back to 0
-    lda     #3
+    lda     #0
     sta     CURRENT_LEVEL               ; CURRENT_LEVEL = 1 (game start)
 
     lda     #5                          ; delay speed for scrolling

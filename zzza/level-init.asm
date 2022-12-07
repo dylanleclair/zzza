@@ -4,12 +4,16 @@
 ;   difficulty, level strip offsets (for generating levels), speed
 ; -----------------------------------------------------------------------------
 begin_level
+
+
     lda     CURRENT_LEVEL               ; load the current level
     
     beq     level_changes_exit          ; level is zero, don't change anything
     and     #3                          ; mask out all but the bottom 2 bits
     bne     level_changes_exit          ; if not 0, not a multiple of 4, exit
 
+    lda     #2                          ; 2 = 3 lives
+    sta     PLAYER_LIVES
     ; update border colour
     inc     $900F                       ; change the border to the next color
     
