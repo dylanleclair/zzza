@@ -5,6 +5,7 @@
 ; -----------------------------------------------------------------------------
 begin_level
     lda     CURRENT_LEVEL               ; load the current level
+    
     beq     level_changes_exit          ; level is zero, don't change anything
     and     #3                          ; mask out all but the bottom 2 bits
     bne     level_changes_exit          ; if not 0, not a multiple of 4, exit
@@ -29,13 +30,14 @@ strip_bit_bump_loop
     lda     LFSR_ADDR                   ; grab the random value out of the lfsr
     and     #%00001111                  ; bitmask out top 4 bits, leaving 0<=a<16
     tax
-    
+
     jsr     lfsr
     lda     LFSR_ADDR
     and     #%00001111
     tay
 
     lda     STRIPS,y
+    ora     LEVEL_STIR_IN
     sta     STRIPS,x
 
 strip_bit_bump_test
@@ -43,13 +45,6 @@ strip_bit_bump_test
     lda     LOOP_CTR
     cmp     #4
     bne     strip_bit_bump_loop 
-
-    ; tax                                 ; flip to x to use as index
-    ; lda     #%01000101                  ; extra bits to turn on
-    ; ora     STRIPS,x                    ; add those bits to the pattern
-    ; sta     STRIPS,x
-    ; dey
-    ; bne     strip_bit_bump
 
     rts
 

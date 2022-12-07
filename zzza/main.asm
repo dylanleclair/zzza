@@ -114,6 +114,8 @@ ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used 
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
 HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
 
+LEVEL_STIR_IN = $80
+
     processor 6502
 ; -----------------------------------------------------------------------------
 ; BASIC STUB
@@ -201,20 +203,29 @@ random_seeds:
     dc.b #%10010100 ; good
     dc.b #%01110100 ; good
 
-    ; < strip get shuffled >
+    ; < strip get shuffled > 
+    ; green
 
     dc.b #%10011001
     dc.b #%01111000
     dc.b #%10011000
-    dc.b #%10011000
+    dc.b #%01101100
+    
+    ; < strip get shuffled > 
+    ; green
+
     dc.b #%10011000
     dc.b #%10011000
     dc.b #%10111010
     dc.b #%11011000
-    dc.b #%00101000
-    dc.b #%00101110
-    dc.b #%00101011
-    dc.b #%10000011
+    
+    ; < strip get shuffled > 
+    ; green
+    
+    dc.b #%00100101 ; good
+    dc.b #%01001001 ; good
+    dc.b #%10010100 ; good
+    dc.b #%01110100 ; good
 
 ; -----------------------------------------------------------------------------
 ; the patterns that can be used as level data. Each 8-bit strip will be translated into 8 spaces of on-screen
@@ -321,6 +332,8 @@ game
     lda     #%00100110                  ; bit pattern 00100110, bits 1to6 = 19 (screen = 16, hud = 3)
     jsr     screen_dim                  ; setup dimensions for the rest of the game
 
+    lda     #%11000100
+    sta     LEVEL_STIR_IN
 
 level_start
     jsr     set_default_charset         ; set the charset to default
@@ -330,7 +343,15 @@ level_start
     lda     #$51                        ; desired screen offset for string
     jsr     string_writer               ; display order_up screen
 
+
+    lda     CURRENT_LEVEL
+    cmp     #12
+    bne     skip_skip_stir_in
+    lda     #0
+    sta     LEVEL_STIR_IN
+skip_skip_stir_in
     jsr     begin_level                 ; set new-level data
+
 
 level_restart
     jsr     set_custom_charset          ; change to the custom charset
