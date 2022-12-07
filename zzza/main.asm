@@ -133,7 +133,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4949", 0
+    dc.b $9e, "4980", 0
 stubend
     dc.w 0
 
@@ -179,6 +179,10 @@ thanks_eva_text: dc.b #20, #8, #1, #14, #11, #19, #32, #5, #22, #1, #33, #33, #3
 game_over_text_1
     dc.b #$14, #$09, #$0D, #$05, #$20, #$14, #$0F, #$20, #$06, #$09, #$0E, #$04, #$20, #$01, #$20, #$20
     dc.b #$0E, #$05, #$17, #$20, #$07, #$09, #$07, #$2C, #$20, #$0B, #$09, #$04, #$21, #$21, #0
+
+game_win_text_1
+    dc.b #$20, #$01, #$20, #$12, #$01, #$09, #$13, #$05, #$3F, #$3F, #$20, #$08, #$0F, #$17, #$20, #$20
+    dc.b #$02, #$0F, #$15, #$14, #$01, #$20, #$03, #$0F, #$04, #$05, #$3A, #$20, #$05, #$16, #$01, #0
 
 ; -----------------------------------------------------------------------------
 ; Lookup table for the y-coordinates on the screen. Multiples of 16
@@ -455,17 +459,30 @@ level_end_scroll
 ; check level player is on to decide what to load next
 end_level_logic
     lda     CURRENT_LEVEL               ; load the current level
-    cmp     #1                          ; check if the last level was just finished
+    cmp     #0                          ; check if the last level was just finished
     beq     win_game_logic
 next_level_logic
     inc     CURRENT_LEVEL               ; increment the current level
     jmp     level_start                 ; go to the next level
 
 win_game_logic
+    lda     #4                          ; loop ctr
+    sta     $0                          ; all 0-page is fair game at this point
+
+win_game_loop
     jsr     draw_robini
-    ldy     #$FF                        ; three seconds of delay
-    jsr     delay
-    jsr     any_key_loop                ; wait for user input                         
+
+    lda     #$27                        ; change his brows
+    sta     $1e67
+    sta     $1e6a
+
+    lda     #$f4                        ; lo byte of 'order up' string's location
+    sta     STRING_LOCATION             ; store in 0 page for string writer to find
+    ldx     #$c1                        ; desired screen offset for string
+    jsr     string_writer               ; display order_up screen
+    dec     $0                          ; decrement loop counter
+    bne     win_game_loop
+                       
     jmp     start_game                  ; restart the game on any input
 
 ; -----------------------------------------------------------------------------
