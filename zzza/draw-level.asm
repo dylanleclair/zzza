@@ -113,7 +113,7 @@ draw_level_exit
 ; - this has the effect of drawing the appropriate level data around EVA! 
 ; -----------------------------------------------------------------------------
 mask_level_onto_hi_res
-    lda     #9
+    lda     #8
     sta     LOOP_CTR
 
 mask_level_loop
@@ -276,7 +276,7 @@ xor_character_to_high_res
     ; multiply by 8! (convert from character code to start offset from $1000 (start of character set))
     tax 
 
-    lda #0
+    lda #7
     sta INNER_LOOP_CTR
 mask_loop
 
@@ -288,10 +288,8 @@ mask_loop
 
 mask_loop_test
 
-    inc INNER_LOOP_CTR
-    lda INNER_LOOP_CTR
-    cmp #8
-    bne mask_loop
+    dec INNER_LOOP_CTR
+    bpl mask_loop
 
     rts
 
