@@ -254,6 +254,9 @@ STRIPS
 ZX02_TITLE_SCREEN_DATA
     incbin "title_screen.zx02"
 
+ZX02_DEATH_SCREEN_DATA
+    incbin "death_screen.zx02"
+
     include "song.asm"
 
 start
