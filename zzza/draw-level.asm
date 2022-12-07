@@ -212,27 +212,22 @@ restore_scrolling
     ldy     #0  ; reset y to 0
 
     ; top row
-    jsr     restore_helper
-    jsr     restore_helper
-    jsr     restore_helper
+    jsr     triple_restore_helper
 
     ; shift to middle row
     inc     Y_COOR
     jsr     get_position
     ldy     #3
     
-    jsr     restore_helper
-    jsr     restore_helper
-    jsr     restore_helper
+    jsr     triple_restore_helper
+
     
     ; shift to bottom row
     inc     Y_COOR
     jsr     get_position
     ldy     #6
 
-    jsr     restore_helper
-    jsr     restore_helper
-    jsr     restore_helper
+    jsr     triple_restore_helper
 
     ; restore position (VERY IMPORTANT !!!)
     dec     Y_COOR
@@ -248,6 +243,12 @@ restore_helper
 
     inx
     iny
+    rts
+
+triple_restore_helper
+    jsr     restore_helper
+    jsr     restore_helper
+    jsr     restore_helper
     rts
 
 ; -----------------------------------------------------------------------------
