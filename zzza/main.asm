@@ -119,6 +119,7 @@ DECOMPRESS_LOW_BYTE = $87           ; the low byte of the screen that ZX02 wants
 STRING_LOCATION = $88               ; 1 byte: used for indirect addressing of string locations
 STRING_LOCATION_HI = $89            ; 1 byte: used for indirect addressing of string locations
 
+SNEAKY_CODE = $8a                   ; 1 byte: used to track if the endless mode code has been entered
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
@@ -169,7 +170,7 @@ title_year: dc.b #50, #48, #50, #50, #0
 order_up_text: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33, #0
 
 ; -----------------------------------------------------------------------------
-; Lookup table for "THANKS EVA!!!" used for start of game
+; Lookup table for "THANKS EVA!!!" used the end of a level
 ; -----------------------------------------------------------------------------
 thanks_eva_text: dc.b #20, #8, #1, #14, #11, #19, #32, #5, #22, #1, #33, #33, #33, #0
 
@@ -282,6 +283,8 @@ start_game
 ; -----------------------------------------------------------------------------
     lda     #%00100000                  ; bit pattern 00101000, bits 1to6 = 16
     jsr     screen_dim
+    lda     #0                          ; set sneaky code to 0
+    sta     SNEAKY_CODE                 ; set sneaky code to 0
     jsr     draw_title_screen
     lda     #96                         ; empty character for the default charset
     sta     EMPTY_BLOCK                 ; set EMPTY_BLOCK for default scroll
@@ -292,21 +295,20 @@ start_game
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    lda     #10                          ; set the length of the level
+    lda     #10                         ; set the length of the level
     sta     LEVEL_LENGTH
-    lda     #100                          ; because of the BNE statement, 2 = 3 lives
+    lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES
 
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
-    ; TODO: put this back to 0
-    lda     #3
-    sta     CURRENT_LEVEL               ; CURRENT_LEVEL = 1 (game start)
+    sta     CURRENT_LEVEL               ; CURRENT_LEVEL = 0 (game start)
 
     lda     #5                          ; delay speed for scrolling
     sta     GAME_SPEED                  ; set the game speed to delays of #5
-    
+
+endless_start
     jsr     init_sound
 
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
@@ -596,4 +598,10 @@ lives_left
     include "screen-init.asm"
     include "zx02.asm"
 
+
 ; -----------------------------------------------------------------------------
+
+    if . >= $1e00
+        echo "YOU SHOULDN'T BE HERE!"
+        err
+    endif

@@ -121,3 +121,16 @@ string_clear                            ; clear the space on screen that we just
 
 string_writer_exit
     rts
+
+;------------------------------------------------------------------------------
+; SUBROUTINE: GET_KEY_INPUT
+; - sets up a kernal call to GETTIN to grab a key from the keyboard buffer
+; - WE CALCULATED THAT DOING IT THIS WAY SAVES US 2 WHOLE BYTES!  WAHOO!
+;
+;   RETURNS
+;   - A: value of key pressed
+;------------------------------------------------------------------------------
+get_key_input
+    ldx     #00                         ; set x to 0 for GETTIN kernal call
+    jsr     GETIN                       ; get 1 bytes from keyboard buffer
+    rts

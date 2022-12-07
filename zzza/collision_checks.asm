@@ -11,8 +11,7 @@
 ; - Returns to calling code if neither left nor right was pressed
 ; -----------------------------------------------------------------------------
 get_input
-    ldx     #00                         ; set x to 0 for GETTIN kernal call
-    jsr     GETIN                       ; get 1 bytes from keyboard buffer
+    jsr     get_key_input               ; get keyboard input
 
 input_kill                              ; restart level immediately and removes a life
     cmp     #$4b                        ; K key pressed?

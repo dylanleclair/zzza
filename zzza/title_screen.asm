@@ -52,9 +52,18 @@ draw_prompt
     bne     draw_prompt                 ; draw_prompt
 
 any_key_loop
-    ldx     #00                         ; set x to 0 for GETTIN kernal call
-    jsr     GETIN                       ; get 1 bytes from keyboard buffer
+    jsr     get_key_input               ; kernal call to GETTIN
+    cmp     #$45
+    bne     any_key_end                 ; E not pressed, check for other keys
+    jsr     get_key_input               ; kernal call to GETTIN
+    cmp     #$56       
+    bne     any_key_end                 ; V not pressed, check for other keys
+    jsr     get_key_input               ; kernal call to GETTIN
+    cmp     #$41       
+    bne     any_key_end                 ; A not pressed, check for other keys
+    jmp     endless_mode                ; EVA pressed, goto endless loop
 
+any_key_end
     cmp     #$00                        ; 00 = no key pressed
     beq     any_key_loop                ; keep waiting for a key to be pressed
 
@@ -90,3 +99,20 @@ draw_robini
     lda     #4                          ; load purple color
     jsr     char_color_change           ; set screen to purple
     rts
+
+;------------------------------------------------------------------------------
+; ENDLESS_MODE
+; - sets up endless mode to play!
+;------------------------------------------------------------------------------
+endless_mode
+    lda     #0                          ; set lives to 1
+    sta     PLAYER_LIVES                ; set lives to 1
+    lda     #$FF                        ; set level length to something insane
+    sta     LEVEL_LENGTH                ; set level length to something insane
+    lda     #3                          ; set game speed to 3
+    sta     GAME_SPEED                  ; set game speed to 3
+    lda     #0
+    sta     WORKING_COOR                ; lo byte of working coord
+    sta     WORKING_COOR_HI             ; hi byte of working coord
+
+    jmp     endless_start
