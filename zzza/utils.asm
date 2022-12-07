@@ -83,6 +83,18 @@ get_data_index_exit
     rts
 
 ;------------------------------------------------------------------------------
+; SUBROUTINE: GET_SCREEN_OFFSET
+; - returns in x register the index to draw on screen given a particular set of x,y
+; - expects X to already have the desired y coordinate
+;------------------------------------------------------------------------------
+get_block_screen_offset
+    lda     y_lookup,x 
+    clc
+    adc     NEW_BLOCK_X
+    tax
+    rts
+
+;------------------------------------------------------------------------------
 ; SUBROUTINE: STRING_WRITER
 ; - displays a given string on screen
 ; - expects that the character set is in DEFAULT mode
@@ -92,13 +104,6 @@ get_data_index_exit
 ; - uses 0x00 as a null terminator because we all need a bit more C in our lives
 ;------------------------------------------------------------------------------
 string_writer
-    ; clear the screen before writing
-    pha                                 ; store A's value before jumping to empty_screen
-    lda     #96                         ; load the code for an empty character into a
-    jsr     empty_screen                ; set the screen to empty
-    pla                                 ; retrieve A's value
-    tax                                 ; and flip to X
-
     ldy     #0                          ; initialize index into string
 string_writer_loop
     lda     (STRING_LOCATION),y         ; grab a byte of the string         
@@ -127,4 +132,17 @@ string_clear                            ; clear the space on screen that we just
     bne     string_clear                ; while y != 0, keep clearing
 
 string_writer_exit
+    rts
+
+;------------------------------------------------------------------------------
+; SUBROUTINE: GET_KEY_INPUT
+; - sets up a kernal call to GETTIN to grab a key from the keyboard buffer
+; - WE CALCULATED THAT DOING IT THIS WAY SAVES US 2 WHOLE BYTES!  WAHOO!
+;
+;   RETURNS
+;   - A: value of key pressed
+;------------------------------------------------------------------------------
+get_key_input
+    ldx     #00                         ; set x to 0 for GETTIN kernal call
+    jsr     GETIN                       ; get 1 bytes from keyboard buffer
     rts
