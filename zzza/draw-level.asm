@@ -113,13 +113,13 @@ draw_level_exit
 ; - this has the effect of drawing the appropriate level data around EVA! 
 ; -----------------------------------------------------------------------------
 mask_level_onto_hi_res
-    lda     #0
+    lda     #8
     sta     LOOP_CTR
 
 mask_level_loop
 
-    ldy     LOOP_CTR
     lda     LOOP_CTR
+    tay
     clc
     adc     #11                         ; base hi-res target character code + loop index = target character code 
     tax                                 ; hi-res character code gets passed in thru x register
@@ -127,10 +127,10 @@ mask_level_loop
     lda     BACKUP_HIGH_RES_SCROLL,y    ; character code to XOR onto hi-res character goes into acc
     jsr     xor_character_to_high_res
 
-    inc     LOOP_CTR
-    ldy     LOOP_CTR
-    cpy     #9                          ; run 8 times
-    bne     mask_level_loop
+    dec     LOOP_CTR
+    ; ldy     LOOP_CTR
+    ; cpy     #9                          ; run 8 times
+    bpl     mask_level_loop
 
     rts
 
@@ -276,7 +276,7 @@ xor_character_to_high_res
     ; multiply by 8! (convert from character code to start offset from $1000 (start of character set))
     tax 
 
-    lda #0
+    lda #7
     sta INNER_LOOP_CTR
 mask_loop
 
@@ -288,10 +288,8 @@ mask_loop
 
 mask_loop_test
 
-    inc INNER_LOOP_CTR
-    lda INNER_LOOP_CTR
-    cmp #8
-    bne mask_loop
+    dec INNER_LOOP_CTR
+    bpl mask_loop
 
     rts
 
