@@ -11,14 +11,16 @@ draw_title_screen
     lda     #$f0                        ; set location of charset to default
     sta     CHARSET_CTRL                ; store in register controlling base charset
 
-    lda     #4                          ; color code for purple
-    jsr     char_color_change           ; set screen characters to purple
+title_draw_init
+    ldy     #0                          ; zero out y register
 
-    lda     #$10                        ; SCREEN_LOAD: load high byte of title screen data
-    sta     DECOMPRESS_HIGH_BYTE
-    lda     #$d0                        ; SCREEN_LOAD: low byte of the title screen data 
-    sta     DECOMPRESS_LOW_BYTE         
-    jsr     zx02_decompress             ; decompress the screen
+title_draw
+    lda     TITLE_SCREEN,y              ; load title screen data
+    sta     SCREEN_ADDR,y               ; store on the screen
+    lda     #4                          ; colour code for purple
+    sta     COLOR_ADDR,y                ; store colour code
+    iny                                 ; increment y
+    bne    title_draw                   ; if X != 0 we haven't filled the screen yet
 
 title_delay1
     ldy     #$78                        ; desired wait time (78 = 2 seconds)
@@ -52,18 +54,9 @@ draw_prompt
     bne     draw_prompt                 ; draw_prompt
 
 any_key_loop
-    jsr     get_key_input               ; kernal call to GETTIN
-    cmp     #$45
-    bne     any_key_end                 ; E not pressed, check for other keys
-    jsr     get_key_input               ; kernal call to GETTIN
-    cmp     #$56       
-    bne     any_key_end                 ; V not pressed, check for other keys
-    jsr     get_key_input               ; kernal call to GETTIN
-    cmp     #$41       
-    bne     any_key_end                 ; A not pressed, check for other keys
-    jmp     endless_mode                ; EVA pressed, goto endless loop
+    ldx     #00                         ; set x to 0 for GETTIN kernal call
+    jsr     GETIN                       ; get 1 bytes from keyboard buffer
 
-any_key_end
     cmp     #$00                        ; 00 = no key pressed
     beq     any_key_loop                ; keep waiting for a key to be pressed
 
@@ -81,38 +74,3 @@ clear_bottom_line_loop
     dex                             ; decrement x
     bne     clear_bottom_line_loop  ; if x != 0, keep looping
     rts
-
-;------------------------------------------------------------------------------
-; DRAW_ROBINI
-; - draw a base robini with angee eyebrows
-;------------------------------------------------------------------------------
-draw_robini 
-    lda     #0                          ; load black color to set screen to black
-    jsr     char_color_change           ; set screen to black (to cover the charset change)
-    jsr     set_default_charset         ; set the charset to default for game over screen
-    jsr     init_hud                    ; set the hud to empty
-    lda     #$56                        ; SCREEN_LOAD: set lower byte for death screen load
-    sta     DECOMPRESS_LOW_BYTE         
-    lda     #$11                        ; SCREEN_LOAD: set high byyte for death screen load
-    sta     DECOMPRESS_HIGH_BYTE
-    jsr     zx02_decompress             ; draw the game over screen
-    lda     #4                          ; load purple color
-    jsr     char_color_change           ; set screen to purple
-    rts
-
-;------------------------------------------------------------------------------
-; ENDLESS_MODE
-; - sets up endless mode to play!
-;------------------------------------------------------------------------------
-endless_mode
-    lda     #0                          ; set lives to 1
-    sta     PLAYER_LIVES                ; set lives to 1
-    lda     #$FF                        ; set level length to something insane
-    sta     LEVEL_LENGTH                ; set level length to something insane
-    lda     #3                          ; set game speed to 3
-    sta     GAME_SPEED                  ; set game speed to 3
-    lda     #0
-    sta     WORKING_COOR                ; lo byte of working coord
-    sta     WORKING_COOR_HI             ; hi byte of working coord
-
-    jmp     endless_start
