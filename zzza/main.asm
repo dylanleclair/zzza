@@ -169,9 +169,14 @@ title_year: dc.b #50, #48, #50, #50, #0
 order_up_text: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21, #16, #33, #0
 
 ; -----------------------------------------------------------------------------
-; Lookup table for "THANKS EVA!!!" used for start of game
+; Lookup table for "THANKS EVA!!!" used the end of a level
 ; -----------------------------------------------------------------------------
 thanks_eva_text: dc.b #20, #8, #1, #14, #11, #19, #32, #5, #22, #1, #33, #33, #33, #0
+
+; -----------------------------------------------------------------------------
+; Lookup table for "LVL" used to display the current level
+; -----------------------------------------------------------------------------
+lvl: dc.b #12,#22,#12,#0
 
 ; -----------------------------------------------------------------------------
 ; Lookup table for the y-coordinates on the screen. Multiples of 16
@@ -286,7 +291,7 @@ game
     lda     #0
     sta     WORKING_COOR                ; lo byte of working coord
     sta     WORKING_COOR_HI             ; hi byte of working coord
-    sta     CURRENT_LEVEL               ; CURRENT_LEVEL = 1 (game start)
+    sta     CURRENT_LEVEL               ; CURRENT_LEVEL = 0 (game start)
 
     lda     #5                          ; delay speed for scrolling
     sta     GAME_SPEED                  ; set the game speed to delays of #5
