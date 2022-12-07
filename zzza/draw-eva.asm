@@ -271,7 +271,7 @@ shift_up_column
 
 ; shift the 8 bytes in a character up
 shift_character_up
-    lda     #0
+    lda     #2
     sta     INNER_LOOP_CTR
 
 shift_character_up_loop
@@ -287,10 +287,8 @@ shift_character_up_loop
     iny
 
     ; load byte 
-    inc     INNER_LOOP_CTR
-    lda     INNER_LOOP_CTR
-    cmp     #3
-    bne     shift_character_up_loop  ; loop until whole character shifted
+    dec     INNER_LOOP_CTR
+    bpl     shift_character_up_loop  ; loop until whole character shifted
 
     rts
 
@@ -351,7 +349,7 @@ shift_down_column
 
 ; shift the 8 bytes in a character up
 shift_character_down
-    lda     #0
+    lda     #6
     sta     INNER_LOOP_CTR
 
 shift_character_down_loop
@@ -367,10 +365,8 @@ shift_character_down_loop
     dey
 
     ; load byte 
-    inc     INNER_LOOP_CTR
-    lda     INNER_LOOP_CTR
-    cmp     #7
-    bne     shift_character_down_loop  ; loop until whole character shifted
+    dec     INNER_LOOP_CTR
+    bpl     shift_character_down_loop  ; loop until whole character shifted
 
     rts
 
