@@ -133,7 +133,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4917", 0
+    dc.b $9e, "4949", 0
 stubend
     dc.w 0
 
@@ -172,6 +172,13 @@ order_up_text: dc.b #5, #22, #1, #33, #33, #32, #15, #18, #4, #5, #18, #32, #21,
 ; Lookup table for "THANKS EVA!!!" used for start of game
 ; -----------------------------------------------------------------------------
 thanks_eva_text: dc.b #20, #8, #1, #14, #11, #19, #32, #5, #22, #1, #33, #33, #33, #0
+
+; -----------------------------------------------------------------------------
+; Text for 'Time to get a new gig, kid'
+; -----------------------------------------------------------------------------
+game_over_text_1
+    dc.b #$14, #$09, #$0D, #$05, #$20, #$14, #$0F, #$20, #$06, #$09, #$0E, #$04, #$20, #$01, #$20, #$20
+    dc.b #$0E, #$05, #$17, #$20, #$07, #$09, #$07, #$2C, #$20, #$0B, #$09, #$04, #$21, #$21, #0
 
 ; -----------------------------------------------------------------------------
 ; Lookup table for the y-coordinates on the screen. Multiples of 16
@@ -320,10 +327,12 @@ game
 
 level_start
     jsr     set_default_charset         ; set the charset to default
-
-    lda     #$d6                        ; lo byte of 'order up' string's location
+    lda     #96                         ; load the code for an empty character into a
+    jsr     empty_screen                ; set the screen to empty
+    
+    lda     #$b7                        ; lo byte of 'order up' string's location
     sta     STRING_LOCATION             ; store in 0 page for string writer to find
-    lda     #$51                        ; desired screen offset for string
+    ldx     #$51                        ; desired screen offset for string
     jsr     string_writer               ; display order_up screen
 
     jsr     begin_level                 ; set new-level data
@@ -435,11 +444,13 @@ level_end_scroll
     jsr     char_color_change           ; change all characters to black
 
     jsr     set_default_charset         ; flip charset before writing to screen
-    lda     #$e6                        ; lo byte of 'order up' string's location
+    lda     #96                         ; load the code for an empty character into a
+    jsr     empty_screen                ; set the screen to empty
+    
+    lda     #$c7                        ; lo byte of 'order up' string's location
     sta     STRING_LOCATION             ; store in 0 page for string writer to find
-    lda     #$51                        ; desired screen offset for string
-    jsr     string_writer               ; display order_up screen
-
+    ldx     #$51                        ; desired screen offset for string
+    jsr     string_writer               ; display thanks_eva screen
 
 ; check level player is on to decide what to load next
 end_level_logic
@@ -528,6 +539,12 @@ death_logic
 
     ; draw the game over screen
     jsr     draw_robini
+
+    lda     #$d5                        ; lo byte of 'order up' string's location
+    sta     STRING_LOCATION             ; store in 0 page for string writer to find
+    ldx     #$c1                        ; desired screen offset for string
+    jsr     string_writer               ; jump to string writer to put text under robo
+
     ldy     #$FF                        ; three seconds of delay
     jsr     delay                         
     jmp     start_game                  ; restart the game
