@@ -80,10 +80,6 @@ FRAMES_SINCE_MOVE = $67             ; 1 byte:
 CURRENT_PLAYER_CHAR = $68           ; 1 byte: pointer to the character that should be drawn in hires bitmap
 CURRENT_PLAYER_CHAR_HI = $69
 
-STRING_LOCATION = $68               ; 1 byte: used for indirect addressing of string locations
-STRING_LOCATION_HI = $69            ; 1 byte: used for indirect addressing of string locations
-
-
 LINES_CLEARED = $6a                 ; 1 byte: number of lines the player has cleared
 LEVEL_LENGTH = $6b                  ; 1 byte: player needs to clear 8*LEVEL_LENGTH to complete level
 LEVEL_CLEARED = $6c                 ; 1 byte: flag indicating whether the current level is over
@@ -119,6 +115,10 @@ PNTR    = ZX02_DATA+7
 
 DECOMPRESS_HIGH_BYTE = $86          ; the high byte of the screen that ZX02 wants to decompress
 DECOMPRESS_LOW_BYTE = $87           ; the low byte of the screen that ZX02 wants to decompress
+
+STRING_LOCATION = $88               ; 1 byte: used for indirect addressing of string locations
+STRING_LOCATION_HI = $89            ; 1 byte: used for indirect addressing of string locations
+
 
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
@@ -296,8 +296,10 @@ game
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
 
-    lda     #$10                        ; hi byte of player sprite's char will always be 0x10
-    sta     CURRENT_PLAYER_CHAR_HI      ; note: this is also STRING_LOCATION!
+    ldx     #$10                        ; hi byte of player sprite's char will always be 0x10
+    stx     CURRENT_PLAYER_CHAR_HI
+    inx                                 ; hi byte of string will always be 0x11
+    stx     STRING_LOCATION_HI
 
     lda     #128                        ; 128 = repeat all keys
     sta     KEY_REPEAT                  ; sets all keys to repeat
@@ -319,7 +321,7 @@ game
 level_start
     jsr     set_default_charset         ; set the charset to default
 
-    lda     #$e2                        ; lo byte of 'order up' string's location
+    lda     #$d6                        ; lo byte of 'order up' string's location
     sta     STRING_LOCATION             ; store in 0 page for string writer to find
     lda     #$51                        ; desired screen offset for string
     jsr     string_writer               ; display order_up screen
@@ -433,7 +435,7 @@ level_end_scroll
     jsr     char_color_change           ; change all characters to black
 
     jsr     set_default_charset         ; flip charset before writing to screen
-    lda     #$f2                        ; lo byte of 'order up' string's location
+    lda     #$e6                        ; lo byte of 'order up' string's location
     sta     STRING_LOCATION             ; store in 0 page for string writer to find
     lda     #$51                        ; desired screen offset for string
     jsr     string_writer               ; display order_up screen
