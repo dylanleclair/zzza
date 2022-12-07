@@ -295,7 +295,7 @@ start_game
 ; - sets up all values that need to be set once per game
 ; -----------------------------------------------------------------------------
 game
-    lda     #10                         ; set the length of the level
+    lda     #2                         ; set the length of the level
     sta     LEVEL_LENGTH
     lda     #2                          ; because of the BNE statement, 2 = 3 lives
     sta     PLAYER_LIVES

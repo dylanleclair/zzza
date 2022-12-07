@@ -110,21 +110,24 @@ string_writer_loop
     cmp     #0                          ; check for null terminator
     beq     level_display               ; if terminator, stop writing
     sta     SCREEN_ADDR,x               ; else, store in desired screen location
-    lda     #4                          ; set colour to purple
-    sta     COLOR_ADDR,x                ; and store in colour mem
+    lda     #4                          ; set colour to purple TODO: CAN WE ERASE THESE?
+    sta     COLOR_ADDR,x                ; and store in colour mem TODO: CAN WE ERASE THESE?
 
     iny                                 ; set up y to grab next piece of string
     inx                                 ; set up x to write to new location
     jmp     string_writer_loop          ; and go again
 
-; check if level needs to be displayed for "ORDER UP" screen
+level_display
+    ; check if level needs to be displayed for "ORDER UP" screen
+
+    lda     STRING_LOCATION             ; check if STRING_LOCATION = #$b7 (ORDER UP SCREEN)
+    cmp     #$b7                        ; check if ORDER UP SCREEN BEING LOADED
+    bne     string_writer_delay         ; if not, skip lvl display
+
     ; set the screen to purple for this part
     lda     #4                          ; purple
     jsr     char_color_change           ; set the screen to purple chars
 
-    lda     STRING_LOCATION             ; check if STRING_LOCATION = #$b7 (ORDER UP SCREEN)
-    bne     string_writer_delay         ; if not, skip lvl display
-level_display
     ldx     CURRENT_LEVEL               ; load the current level into Y register
     inx                                 ; increment it b/c we index levels at 0 (not 1 - BECAUSE WE LIVE IN A SOCIETY!)
     txa                                 ; put x back into A
