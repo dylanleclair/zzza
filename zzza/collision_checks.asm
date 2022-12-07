@@ -152,16 +152,9 @@ check_block_down
     lda     (WORKING_COOR),y            ; get the y coord
 
     clc                                 ; beacuse.you.always.have.to!
-    adc     #1                          ; add 2 to the level byte (we want the level piece under us)
+    adc     #1                          ; add 1 to the level byte (we want the level piece under us)
     jsr     get_data_index_sneeky       ; get the index into LEVEL_DATA
 skip_y_inc
     lda     collision_mask,x            ; get the bit pattern for the player's position
     and     LEVEL_DATA,y                ; do an AND on the collision mask and lvl data to see if there's something under you
-    bne     block_under                 ; if result != 0, your bit had a block in it
-
-    lda     #0                          ; return value of 0 indicates there's nothing underneath
-    rts
-
-block_under
-    lda     #1                          ; return value of 1 indicates there's something underneath
-    rts
+    rts                                 ; return with whatever is in A (zero or nonzero)

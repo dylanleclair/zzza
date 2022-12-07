@@ -83,6 +83,18 @@ get_data_index_exit
     rts
 
 ;------------------------------------------------------------------------------
+; SUBROUTINE: GET_SCREEN_OFFSET
+; - returns in x register the index to draw on screen given a particular set of x,y
+; - expects X to already have the desired y coordinate
+;------------------------------------------------------------------------------
+get_block_screen_offset
+    lda     y_lookup,x 
+    clc
+    adc     NEW_BLOCK_X
+    tax
+    rts
+
+;------------------------------------------------------------------------------
 ; SUBROUTINE: STRING_WRITER
 ; - displays a given string on screen
 ; - expects that the character set is in DEFAULT mode
