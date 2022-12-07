@@ -1,4 +1,4 @@
-;------------------------------------------------------------------------------
+;-----------------------------------------------------------------------------
 ;  Program to decompress title screen data for Zzza using the ZX02 compression
 ;  code found at https://github.com/dmsc/zx02.  Program includes the compressed
 ;  data for both screen characters and colour data.  Screen characters are
@@ -269,4 +269,5 @@ finish_check
     jmp     colour_setup        ; setup colour variables and decompress the colour data
     
 finish_loop
-    jmp     finish_loop         ; loop endlessly
+    jmp     finish_loop         ; loop endlessly 0000 0000 0000 0a                        .......
+

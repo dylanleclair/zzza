@@ -80,10 +80,6 @@ FRAMES_SINCE_MOVE = $67             ; 1 byte:
 CURRENT_PLAYER_CHAR = $68           ; 1 byte: pointer to the character that should be drawn in hires bitmap
 CURRENT_PLAYER_CHAR_HI = $69
 
-STRING_LOCATION = $68               ; 1 byte: used for indirect addressing of string locations
-STRING_LOCATION_HI = $69            ; 1 byte: used for indirect addressing of string locations
-
-
 LINES_CLEARED = $6a                 ; 1 byte: number of lines the player has cleared
 LEVEL_LENGTH = $6b                  ; 1 byte: player needs to clear 8*LEVEL_LENGTH to complete level
 LEVEL_CLEARED = $6c                 ; 1 byte: flag indicating whether the current level is over
@@ -109,6 +105,21 @@ EMPTY_BLOCK = $79                   ; 1 byte: stores the char value of the curre
 
 GAME_SPEED = $7a                    ; 1 byte: controls the speed of the scrolling in the game
 
+ZX02_DATA = $7b                    ; 9 bytes: variables for ZX02 decompression
+
+OFFSET  = ZX02_DATA+0
+ZX0_SRC = ZX02_DATA+2
+ZX0_DST = ZX02_DATA+4
+BITR    = ZX02_DATA+6
+PNTR    = ZX02_DATA+7
+
+DECOMPRESS_HIGH_BYTE = $86          ; the high byte of the screen that ZX02 wants to decompress
+DECOMPRESS_LOW_BYTE = $87           ; the low byte of the screen that ZX02 wants to decompress
+
+STRING_LOCATION = $88               ; 1 byte: used for indirect addressing of string locations
+STRING_LOCATION_HI = $89            ; 1 byte: used for indirect addressing of string locations
+
+
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
@@ -122,7 +133,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4960", 0
+    dc.b $9e, "4917", 0
 stubend
     dc.w 0
 
@@ -135,6 +146,12 @@ stubend
 
     ; REMINDER: because of alignment, start at character #2 instead of 0
     include "custom_charset.asm"
+
+ZX02_TITLE_SCREEN_DATA
+    incbin "title_screen.zx02"
+
+ZX02_DEATH_SCREEN_DATA
+    incbin "death_screen.zx02"
 
 ; -----------------------------------------------------------------------------
 ; Lookup table for "PRESS ANY KEY" used for title screen
@@ -243,27 +260,9 @@ STRIPS
     dc.b #%00110000
     dc.b #%00011011
 
-TITLE_SCREEN
-    dc.b $48,$20,$20,$20,$2E,$20,$20,$20,$20,$20,$48,$20,$20,$20,$20,$2E
-    dc.b $50,$20,$51,$20,$20,$59,$20,$20,$2E,$20,$48,$20,$A0,$A0,$2E,$20
-    dc.b $3A,$74,$20,$20,$20,$59,$20,$20,$20,$A0,$BA,$20,$BA,$A0,$20,$20
-    dc.b $3A,$74,$20,$20,$A0,$A0,$BA,$20,$6F,$BA,$A0,$20,$A0,$BA,$59,$20
-    dc.b $3A,$74,$A0,$A0,$A0,$D4,$BA,$6A,$20,$2E,$A0,$20,$A0,$BA,$AE,$20
-    dc.b $20,$A0,$A0,$D4,$BA,$D4,$A0,$BA,$2E,$20,$A0,$20,$AE,$C2,$A0,$6F
-    dc.b $3A,$BA,$A0,$3A,$3A,$2E,$A0,$A0,$2E,$20,$A0,$A0,$A0,$6F,$6F,$3A
-    dc.b $3A,$20,$BA,$20,$3A,$CF,$D0,$C7,$20,$2E,$BA,$BA,$3A,$20,$20,$74
-    dc.b $63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63
-    dc.b $A0,$A0,$A0,$60,$A0,$A0,$A0,$60,$A0,$A0,$A0,$60,$60,$A0,$60,$60
-    dc.b $60,$60,$A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$A0,$60,$A0,$60
-    dc.b $60,$A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$60,$A0,$A0,$A0,$60
-    dc.b $A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$A0,$60
-    dc.b $A0,$A0,$A0,$60,$A0,$A0,$A0,$60,$A0,$A0,$A0,$20,$A0,$60,$A0,$20
-    dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-    dc.b $60,$12,$15,$0E,$14,$09,$0D,$05,$20,$14,$05,$12,$12,$0F,$12,$20
-
     include "song.asm"
 
-start
+start_game
 ; -----------------------------------------------------------------------------
 ; TITLE_SCREEN
 ; - displays the title screen 
@@ -302,8 +301,10 @@ game
     lda     #$1e                        ; hi byte of screen memory will always be 0x1e
     sta     WORKING_SCREEN_HI
 
-    lda     #$10                        ; hi byte of player sprite's char will always be 0x10
-    sta     CURRENT_PLAYER_CHAR_HI      ; note: this is also STRING_LOCATION!
+    ldx     #$10                        ; hi byte of player sprite's char will always be 0x10
+    stx     CURRENT_PLAYER_CHAR_HI
+    inx                                 ; hi byte of string will always be 0x11
+    stx     STRING_LOCATION_HI
 
     lda     #128                        ; 128 = repeat all keys
     sta     KEY_REPEAT                  ; sets all keys to repeat
@@ -325,7 +326,7 @@ game
 level_start
     jsr     set_default_charset         ; set the charset to default
 
-    lda     #$e2                        ; lo byte of 'order up' string's location
+    lda     #$d6                        ; lo byte of 'order up' string's location
     sta     STRING_LOCATION             ; store in 0 page for string writer to find
     lda     #$51                        ; desired screen offset for string
     jsr     string_writer               ; display order_up screen
@@ -386,9 +387,6 @@ game_loop_continue
 ; - logic for ending a level
 ; -----------------------------------------------------------------------------
 end_loop_entrance                       ; need to run the draw scroll 3 more times to update the screen to match the level data
-    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
-    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
-    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
     lda     #3                          ; load end animation loop value
     sta     ANIMATION_FRAME
     
@@ -442,7 +440,7 @@ level_end_scroll
     jsr     char_color_change           ; change all characters to black
 
     jsr     set_default_charset         ; flip charset before writing to screen
-    lda     #$f2                        ; lo byte of 'order up' string's location
+    lda     #$e6                        ; lo byte of 'order up' string's location
     sta     STRING_LOCATION             ; store in 0 page for string writer to find
     lda     #$51                        ; desired screen offset for string
     jsr     string_writer               ; display order_up screen
@@ -455,8 +453,7 @@ end_level_logic
     beq     next_level_logic            ; TODO: CHANGE THIS TO WIN GAME SCREEN!!!!
 next_level_logic
     inc     CURRENT_LEVEL               ; increment the current level
-    jmp     level_start                 ; RESTART THE GAME...CHANGE THIS LATER!!!!
-    jmp     level_start                 ; jump to the start of the next level
+    jmp     level_start                 ; go to the next level
 
 ; TODO: THIS WILL SET THE END GAME SCREEN (SEE 6 LINES ABOVE HERE)
 ; win_game_logic
@@ -532,10 +529,25 @@ death_screen_loop
 death_logic 
     lda     PLAYER_LIVES                ; load the number of lives the player has left
     bne     lives_left                  ; if lives !=0, jump over the restart
-    jmp     start                       ; TODO: GAME OVER SCREEN HERE
+
+    ; draw the game over screen
+    lda     #0                          ; load black color to set screen to black
+    jsr     char_color_change           ; set screen to black (to cover the charset change)
+    jsr     set_default_charset         ; set the charset to default for game over screen
+    jsr     init_hud                    ; set the hud to empty
+    lda     #$56                        ; SCREEN_LOAD: set lower byte for death screen load
+    sta     DECOMPRESS_LOW_BYTE         
+    lda     #$11                        ; SCREEN_LOAD: set high byyte for death screen load
+    sta     DECOMPRESS_HIGH_BYTE
+    jsr     zx02_decompress             ; draw the game over screen
+    lda     #4                          ; load purple color
+    jsr     char_color_change           ; set screen to purple
+    ldy     #$FF                        ; three seconds of delay
+    jsr     delay                         
+    jmp     start_game                  ; restart the game
 lives_left
     dec     PLAYER_LIVES                ; remove a life from the player
-    jmp     level_restart               ; restart the level (TODO: THIS ISN'T CORRECT!!!)
+    jmp     level_restart               ; restart the level
 
 ; -----------------------------------------------------------------------------
 ; Includes for all the individual subroutines that are called in the main loop
@@ -557,5 +569,6 @@ lives_left
     include "move-eva.asm"
     include "move-block.asm"
     include "screen-init.asm"
+    include "zx02.asm"
 
 ; -----------------------------------------------------------------------------
