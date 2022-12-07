@@ -109,6 +109,17 @@ EMPTY_BLOCK = $79                   ; 1 byte: stores the char value of the curre
 
 GAME_SPEED = $7a                    ; 1 byte: controls the speed of the scrolling in the game
 
+ZX02_DATA = $7b                    ; 9 bytes: variables for ZX02 decompression
+
+OFFSET  = ZX02_DATA+0
+ZX0_SRC = ZX02_DATA+2
+ZX0_DST = ZX02_DATA+4
+BITR    = ZX02_DATA+6
+PNTR    = ZX02_DATA+7
+
+DECOMPRESS_HIGH_BYTE = $86          ; the high byte of the screen that ZX02 wants to decompress
+DECOMPRESS_LOW_BYTE = $87           ; the low byte of the screen that ZX02 wants to decompress
+
 ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
 ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
 HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
@@ -122,7 +133,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
     
     dc.w stubend ; define a constant to be address @ stubend
     dc.w 12345 
-    dc.b $9e, "4960", 0
+    dc.b $9e, "5094", 0
 stubend
     dc.w 0
 
@@ -240,24 +251,8 @@ STRIPS
     dc.b #%00110000
     dc.b #%00011011
 
-
-TITLE_SCREEN
-    dc.b $48,$20,$20,$20,$2E,$20,$20,$20,$20,$20,$48,$20,$20,$20,$20,$2E
-    dc.b $50,$20,$51,$20,$20,$59,$20,$20,$2E,$20,$48,$20,$A0,$A0,$2E,$20
-    dc.b $3A,$74,$20,$20,$20,$59,$20,$20,$20,$A0,$BA,$20,$BA,$A0,$20,$20
-    dc.b $3A,$74,$20,$20,$A0,$A0,$BA,$20,$6F,$BA,$A0,$20,$A0,$BA,$59,$20
-    dc.b $3A,$74,$A0,$A0,$A0,$D4,$BA,$6A,$20,$2E,$A0,$20,$A0,$BA,$AE,$20
-    dc.b $20,$A0,$A0,$D4,$BA,$D4,$A0,$BA,$2E,$20,$A0,$20,$AE,$C2,$A0,$6F
-    dc.b $3A,$BA,$A0,$3A,$3A,$2E,$A0,$A0,$2E,$20,$A0,$A0,$A0,$6F,$6F,$3A
-    dc.b $3A,$20,$BA,$20,$3A,$CF,$D0,$C7,$20,$2E,$BA,$BA,$3A,$20,$20,$74
-    dc.b $63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63,$63
-    dc.b $A0,$A0,$A0,$60,$A0,$A0,$A0,$60,$A0,$A0,$A0,$60,$60,$A0,$60,$60
-    dc.b $60,$60,$A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$A0,$60,$A0,$60
-    dc.b $60,$A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$60,$A0,$A0,$A0,$60
-    dc.b $A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$60,$60,$A0,$60,$A0,$60
-    dc.b $A0,$A0,$A0,$60,$A0,$A0,$A0,$60,$A0,$A0,$A0,$20,$A0,$60,$A0,$20
-    dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-    dc.b $60,$12,$15,$0E,$14,$09,$0D,$05,$20,$14,$05,$12,$12,$0F,$12,$20
+ZX02_TITLE_SCREEN_DATA
+    incbin "title_screen.zx02"
 
     include "song.asm"
 
@@ -382,9 +377,6 @@ game_loop_continue
 ; - logic for ending a level
 ; -----------------------------------------------------------------------------
 end_loop_entrance                       ; need to run the draw scroll 3 more times to update the screen to match the level data
-    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
-    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
-    jsr     draw_master_scroll          ; update the blocks on screen one more time to reflect level data
     lda     #3                          ; load end animation loop value
     sta     ANIMATION_FRAME
     
@@ -553,5 +545,6 @@ lives_left
     include "move-eva.asm"
     include "move-block.asm"
     include "screen-init.asm"
+    include "zx02.asm"
 
 ; -----------------------------------------------------------------------------
