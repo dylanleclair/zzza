@@ -105,8 +105,8 @@ EMPTY_BLOCK = $79                   ; 1 byte: stores the char value of the curre
 
 GAME_SPEED = $7a                    ; 1 byte: controls the speed of the scrolling in the game
 
-ZX02_DATA = $7b                    ; 9 bytes: variables for ZX02 decompression
-
+; ZX02 VARIABLES
+ZX02_DATA = $7b                     ; 9 bytes: variables for ZX02 decompression
 OFFSET  = ZX02_DATA+0
 ZX0_SRC = ZX02_DATA+2
 ZX0_DST = ZX02_DATA+4
@@ -132,7 +132,7 @@ HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen addr
 ; -----------------------------------------------------------------------------
     org $1001
     
-    dc.w stubend ; define a constant to be address @ stubend
+    dc.w stubend                    ; define a constant to be address @ stubend
     dc.w 12345 
     dc.b $9e, "4980", 0
 stubend
@@ -283,8 +283,6 @@ start_game
 ; -----------------------------------------------------------------------------
     lda     #%00100000                  ; bit pattern 00101000, bits 1to6 = 16
     jsr     screen_dim
-    lda     #0                          ; set sneaky code to 0
-    sta     SNEAKY_CODE                 ; set sneaky code to 0
     jsr     draw_title_screen
     lda     #96                         ; empty character for the default charset
     sta     EMPTY_BLOCK                 ; set EMPTY_BLOCK for default scroll
@@ -308,6 +306,9 @@ game
     lda     #5                          ; delay speed for scrolling
     sta     GAME_SPEED                  ; set the game speed to delays of #5
 
+; jump here in endless mode to bypass resetting the lives, length, and speed
+; endless mode is a VERY long level, with 1 life, and a random seed for the level
+; that we pull from the jiffy clock
 endless_start
     jsr     init_sound
 
@@ -335,7 +336,7 @@ endless_start
     lda     #%00100110                  ; bit pattern 00100110, bits 1to6 = 19 (screen = 16, hud = 3)
     jsr     screen_dim                  ; setup dimensions for the rest of the game
 
-
+; jump here to start a new level
 level_start
     jsr     set_default_charset         ; set the charset to default
     lda     #96                         ; load the code for an empty character into a
@@ -348,6 +349,7 @@ level_start
 
     jsr     begin_level                 ; set new-level data
 
+; jump here to restart a level you've alreading started
 level_restart
     jsr     set_custom_charset          ; change to the custom charset
     jsr     main_game_screen            ; set color to cyan (multicolor) and empty custom blocks
@@ -357,11 +359,10 @@ level_restart
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_LOOP
 ; - the main game loop
-; - TODO: should keep track of the current animation counter
 ; -----------------------------------------------------------------------------
 game_loop_reset_scroll
     lda     #0
-    sta     ANIMATION_FRAME
+    sta     ANIMATION_FRAME             ; initialize animation frame to 0
 
 game_loop
     ; GAME LOGIC: update the states of all the game elements (sprites, level data, etc)
@@ -401,8 +402,8 @@ game_loop_continue
 ; SUBROUTINE: END_GAME_LOOP
 ; - logic for ending a level
 ; -----------------------------------------------------------------------------
-end_loop_entrance                       ; need to run the draw scroll 3 more times to update the screen to match the level data
-    lda     #3                          ; load end animation loop value
+end_loop_entrance                       
+    lda     #3                          ; hard code the animation frame to 3 so we can keep block pushing but stop scrolling
     sta     ANIMATION_FRAME
     
 end_loop
@@ -479,7 +480,7 @@ win_game_logic
 win_game_loop
     jsr     draw_robini
 
-    lda     #$27                        ; change his brows
+    lda     #$27                        ; change his brows from angry to surprised!
     sta     $1e67
     sta     $1e6a
 

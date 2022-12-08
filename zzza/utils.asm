@@ -46,8 +46,8 @@ empty_hud_loop
 ; - changes between the default and custom character set
 ;------------------------------------------------------------------------------
 set_custom_charset
-    lda     #$fc         ; set location of charset to 7168 ($1c00)
-    sta     CHARSET_CTRL ; store in register controlling base charset
+    lda     #$fc                        ; set location of charset to 7168 ($1c00)
+    sta     CHARSET_CTRL                ; store in register controlling base charset
     rts
 
 ; -----------------------------------------------------------------------------
@@ -55,8 +55,8 @@ set_custom_charset
 ; - changes between the default and custom character set
 ;------------------------------------------------------------------------------
 set_default_charset
-    lda     #$f0         ; set location of charset to 7168 ($1c00)
-    sta     CHARSET_CTRL ; store in register controlling base charset
+    lda     #$f0                        ; set location of charset to 7168 ($1c00)
+    sta     CHARSET_CTRL                ; store in register controlling base charset
     rts
 
 ;------------------------------------------------------------------------------
@@ -110,8 +110,8 @@ string_writer_loop
     cmp     #0                          ; check for null terminator
     beq     level_display               ; if terminator, stop writing
     sta     SCREEN_ADDR,x               ; else, store in desired screen location
-    lda     #4                          ; set colour to purple TODO: CAN WE ERASE THESE?
-    sta     COLOR_ADDR,x                ; and store in colour mem TODO: CAN WE ERASE THESE?
+    lda     #4                          ; set colour to purple
+    sta     COLOR_ADDR,x                ; and store in colour mem
 
     iny                                 ; set up y to grab next piece of string
     inx                                 ; set up x to write to new location

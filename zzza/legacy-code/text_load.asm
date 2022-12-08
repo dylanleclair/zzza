@@ -3,6 +3,9 @@
 ; - draws the numbers for the current level on screen
 ; - used for the the "ORDER UP" screen to display the level
 ;
+;   - NOTE: THIS WAS INSERTED DIRECTLY INSTEAD OF INCLUDED TO SAVE A FEW BYTES
+;               WHEN WE WERE TRYING TO OPTIMIZE FOR EXTRA BYTES IN THE LAST
+;               HOURS
 ; -----------------------------------------------------------------------------
 
 level_display
