@@ -3,15 +3,15 @@ Term project for CPSC 599.82: Retrogames.  Fall 2022.  Dr. John Aycock.
 
 Written for the Commodore VIC-20 by Runtime Terror.
 
-![title-screen](assets/title-screen.png)
+![title-screen](zzza/assets/title-screen.png)
 
 
 ## How To Play
 Your goal is to get to the bottom of the level without falling off the bottom or getting pushed off the top of the screen.
-Once you reach the bottom of the level, a door will appear where Eva will deliver the pizza and adcance to the next level!
+Once you reach the bottom of the level, a door will appear where Eva will deliver the pizza and advance to the next level!
 Push and stomp blocks to get out of tricky spots and keep moving.
 
-The game has 16 levels, with 4 different environments.
+The game has 16 levels in total, with 4 different environments (consisting of four levels each).
 ### Key Map
 * **A**: Moves Eva left
     - if Eva is colliding with a block, will also try to push the block left if possible
@@ -75,7 +75,7 @@ If you get stuck, please refer to your copy of the game manual.
 
 * There can only be one moving block at a time. If no block is in the air, the block X,Y are set to 0xFF
 
-* Blocks can be stomped at any time, but can only be pushed on specific frames. This helps ensure that the moving block can be drawn cleanly without causing artifacting in surrounding spaces.t 
+* Blocks can be stomped at any time, but can only be pushed on specific frames. This helps ensure that the moving block can be drawn cleanly without causing artifacting in surrounding spaces.t the byte of level data where it landed, and it is XOR
 
 ### Music
 
@@ -93,7 +93,10 @@ If you get stuck, please refer to your copy of the game manual.
 * The function [next_note](https://gitlab.cpsc.ucalgary.ca/emily.baird/cpsc-599-retrogames/-/blob/main/zzza/sound.asm#L22) (which simply moves the next note of the chunk being played into the sound registers) is called once every iteration of the game loop, resulting in the music matching the pace of the game (each section of levels plays the music at a different speed)!
 
 ### HUD (Heads Up Display)
-* The playfield is 16x16, which means the entire playfield is 256 bytes of screen data (allowing us to use a single counter to loop over the entire screen and know its done when it overflows).
+* The playfield is 16x16, which means the entire playfield is 256 bytes of screen data (allowing us to use one counter to loop over the entire screen and know its done when it overflows).
+
 * The HUD is a 16x3 area under the playfield.  It contains:
     - A progress bar telling you how far through the level you are
-    - Pizza slice icons to incidcate how many lives the player has left
+    - "Pizza" icons to determine the number of remaining lives
+
+* The progress bar is represented in memory as a single byte. With each incrementation, the carry is set and the byte is rotated left. This essentially fills in the byte with 1's from the lsb toward the msb.
