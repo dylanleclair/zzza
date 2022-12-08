@@ -9,29 +9,29 @@
 ; -----------------------------------------------------------------------------
 move_block
     ; there can only be one moving block at a time. check if a block is moving
-    lda     NEW_BLOCK_X             ; block coors == 0xff? 
-    bmi     create_block            ; if so, no blocks onscreen. we can create one
+    lda     NEW_BLOCK_X                 ; block coors == 0xff? 
+    bmi     create_block                ; if so, no blocks onscreen. we can create one
 
 ; if a block already exists, update its direction
 update_block_position
     ; first, ensure the block stays in sync with autoscroll
-    lda     ANIMATION_FRAME         ; check animation frame
-    bne     check_block_overflow    ; if !frame 0, free to check for normal collisions
-    dec     NEW_BLOCK_Y             ; else, level is advancing. adjust Y coor appropriately
+    lda     ANIMATION_FRAME             ; check animation frame
+    bne     check_block_overflow        ; if !frame 0, free to check for normal collisions
+    dec     NEW_BLOCK_Y                 ; else, level is advancing. adjust Y coor appropriately
     
 check_block_overflow
     ; next, check if the block is going off the edge of the screen
     lda     NEW_BLOCK_Y
-    cmp     #16                     ; 16 in NEW_Y indicates block is about to go offscreen
-    bpl     reset_block_coors       ; if new_y == 16, block should be removed from game
+    cmp     #16                         ; 16 in NEW_Y indicates block is about to go offscreen
+    bpl     reset_block_coors           ; if new_y == 16, block should be removed from game
 
 check_block_drop
     ; if block is onscreen, check if it's falling or landed
-    lda     #$51                    ; 0x51 is where block's new x, new y are stored
-    sta     WORKING_COOR            ; store it so collision check can use it as an indirect addr
-    jsr     check_block_down        ; check for a collision below the block
-    bne     block_landed            ; if collision, place the block back into level
-    inc     NEW_BLOCK_Y             ; else, increment y coord so that block falls
+    lda     #$51                        ; 0x51 is where block's new x, new y are stored
+    sta     WORKING_COOR                ; store it so collision check can use it as an indirect addr
+    jsr     check_block_down            ; check for a collision below the block
+    bne     block_landed                ; if collision, place the block back into level
+    inc     NEW_BLOCK_Y                 ; else, increment y coord so that block falls
     rts
 
 block_landed
@@ -82,13 +82,13 @@ move_block_exit
 create_block
     ; check if the player tried to push or stomp a block
     lda     CURRENT_INPUT
-    cmp     #$53                    ; check if input was S
-    beq     block_down              ; if so, try to stomp
-    cmp     #$41                    ; check if input was A
-    beq     block_push_left         ; if so, try to push block left
-    cmp     #$44                    ; check if input was D
-    beq     block_push_right        ; if so, try to push block right
-    rts                             ; otherwise, exit
+    cmp     #$53                        ; check if input was S
+    beq     block_down                  ; if so, try to stomp
+    cmp     #$41                        ; check if input was A
+    beq     block_push_left             ; if so, try to push block left
+    cmp     #$44                        ; check if input was D
+    beq     block_push_right            ; if so, try to push block right
+    rts                                 ; otherwise, exit
 
 ; deals with block stomp
 block_down
