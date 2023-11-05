@@ -45,6 +45,8 @@ Your goal is to clear all the rows of each level without falling off the bottom 
 - `K`: restart the level and lose a life
 
 
+A gameplay demo video can be found here: https://youtu.be/CN-KgvXDPuY
+
 ## Development
 ZZZA was written over the course of four months, from September to December 2022.
 
