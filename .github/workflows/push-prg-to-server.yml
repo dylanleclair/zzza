@@ -18,7 +18,7 @@ jobs:
 
       - name: Check file structure
         run: |
-        ls -lR
+          ls -lR
 
       - name: Decompress DASM
         run: |
