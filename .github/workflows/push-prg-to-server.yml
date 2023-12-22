@@ -33,6 +33,7 @@ jobs:
       - name: Make zzza
         working-directory: /home/runner/work/zzza/zzza
         run: |
+          pwd
           make
 
       - name: Upload to remove server
