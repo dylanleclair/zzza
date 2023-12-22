@@ -108,78 +108,32 @@ get_position
     rts                                 ; return to caller function
 
 ;----------------------------------------------------------------------------------
-;   Shift the entire framebuffer DOWN one bit
+; rotate the entire column down by one bit
 ;----------------------------------------------------------------------------------
-
 shift_down
-    ldx     #54
-    ldy     #55
-    jsr     shift_down_column
 
+    ldx     #22                 ; location of part of the square below eva
+    ldy     #23                 ; location of part of the square below eva
 
-    ldx     #62
-    ldy     #63
-    jsr     shift_down_column
-
-    ldx     #70
-    ldy     #71
-    jsr     shift_down_column
-
-    rts
-
-shift_down_column
-    ; rotate the entire column down
-
-    jsr     shift_character_down
-    ; at the end of this character.
-    ; need to:
-    ;   - move first byte of next character to this one
-    ;   - switch to next character
-    jsr     wrap_char_down
-    jsr     shift_character_down
-    jsr     wrap_char_down
-    jsr     shift_character_down
-
-    rts
-
-
-; shift the 8 bytes in a character up
-shift_character_down
-    lda     #6
+    txa                         ; we want 22 in the accumulator as well for some reason
     sta     INNER_LOOP_CTR
 
+; copy next byte of character to current
 shift_character_down_loop
 
-    ; copy next byte of character to current
-    ; repeat this 7 times to do the whole character!
-
+    ; take what was in offset x and store it in offset y
+    ; thereby moving the byte over by one memory location
     lda     hi_res_0_0,x
     sta     hi_res_0_0,y
 
-    ; increment both
+    ; decrement both registers so that we can indirect address into a slightly
+    ; different location in memory
     dex
     dey
 
-    ; load byte 
+    ; load the next byte 
     dec     INNER_LOOP_CTR
     bpl     shift_character_down_loop  ; loop until whole character shifted
-
-    rts
-
-wrap_char_down
-    ; subtract 16 to the variable in y (target location)
-    ; this is to transition into the next row!!
-    txa
-    clc
-    adc     #-16
-    tax
-
-    lda     hi_res_0_0,x    ; load the last byte of character above this one (row above)
-    sta     hi_res_0_0,y    ; store it in first byte of new (row moving to)
-    
-    txa ; put x to byte character of next character
-    tay
-    dex ; increment y
 
     rts
 

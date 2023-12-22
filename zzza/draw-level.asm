@@ -113,7 +113,7 @@ draw_level_exit
 ; - this has the effect of drawing the appropriate level data around EVA! 
 ; -----------------------------------------------------------------------------
 mask_level_onto_hi_res
-    lda     #3
+    lda     #2
     sta     LOOP_CTR
 
 mask_level_loop
@@ -223,16 +223,19 @@ xor_character_to_high_res
 ; assume: character code of character to XOR is in acc
 ; also assume: character code of high-res target character is in x
     
+    ; convert from character code indices, to start offset from $1000 (start of character set)
+
+    ; multiply acc by 8, place value in y (memory offset of character to project onto hi-res)
     asl
     asl 
     asl
     tay
 
+    ; multiply x by 8 (memory offset of hi-res target location)
     txa
     asl
     asl 
     asl
-    ; multiply by 8! (convert from character code to start offset from $1000 (start of character set))
     tax 
 
     lda #7
@@ -266,15 +269,15 @@ mask_loop_test
 ; -----------------------------------------------------------------------------
 reset_high_res
     ; set all chars back to 0
-    ldy #0
+    ldy     #0
 zero_hi_res_loop
-    lda #0
-    sta hi_res_0_0,y
-    sta hi_res_0_2,y
+    lda     #0
+    sta     hi_res_0_0,y
+    sta     hi_res_0_2,y
 
     iny
-    cpy #8
-    bne zero_hi_res_loop 
+    cpy     #8                          ; loop 8 times to reset all 8 bytes of the char
+    bne     zero_hi_res_loop 
 
     dey
 ; draw a desired custom character into the centre of the bitmap
@@ -283,7 +286,7 @@ custom_char_hi_res_loop
     lda     (CURRENT_PLAYER_CHAR),y
     sta     hi_res_0_1,y
 
-    dey
+    dey                                 ; loop 8 times to reset all 8 bytes of the char
     bpl     custom_char_hi_res_loop
 
     rts
