@@ -32,7 +32,7 @@ jobs:
 
       - name: Make zzza
         run: |
-          make
+          cd zzza/zzza && make
 
       - name: Upload to remove server
         uses: garygrossgarten/github-action-scp@release
