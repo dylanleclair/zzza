@@ -31,8 +31,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Make zzza
+        working-directory: /home/runner/work/zzza/zzza
         run: |
-          cd zzza/zzza && make
+          make
 
       - name: Upload to remove server
         uses: garygrossgarten/github-action-scp@release
