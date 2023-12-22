@@ -34,6 +34,7 @@ jobs:
         working-directory: /home/runner/work/zzza/zzza
         run: |
           pwd
+          ls -la
           make
 
       - name: Upload to remove server
