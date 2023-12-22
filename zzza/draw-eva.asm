@@ -18,52 +18,16 @@ draw_eva
 
 draw_sprite
 
-    ; need to draw the keyframes for moving eva along !!!
-
-    ; essentially, we re-draw hi-res buffer 4/8 times very very fast
-    ; shifting eva a tiny bit in target direction.
-    ; at end, we are done!
-
     lda     #0
     sta     FRAMES_SINCE_MOVE
 
     ; calculate direction for animation
     jsr     update_sprite_direction
 
-; quick animation to draw EVA moving without having to worry about actually syncing it with the level
-draw_quick_loop
+; need to 
+; 1. reset buffer
+; 2. shift high res graphics 
 
-    jsr     reset_high_res              ; clear high res graphics
-    
-    ; once the direction is set...
-    ; draw EVA at the appropriate position in buffer
-    jsr     draw_shift_horizontal       ; draw the appropriate shift left/right
-    jsr     draw_shift_vertical         ; draw the appropriate shift up/down
-
-    jsr     mask_level_onto_hi_res      ; once EVA is in correct position, fill in the level from adjacent level data 
-    
-    jsr     draw_high_res               ; draw high-res buffer to EVA's position on the screen
-
-    ; extremely stupid way of adding delay between each frame
-    ldy #6
-draw_frame_delay
-    dey
-    bne draw_frame_delay
-    
-
-draw_quick_test
-    inc     FRAMES_SINCE_MOVE
-    lda     FRAMES_SINCE_MOVE
-
-    cmp     #3
-    bne     draw_quick_loop
-
-    ; high res graphics are now in new position!
-    ; need to 
-    ; 1. reset buffer
-    ; 2. shift high res graphics 
-
-update_sprite_diff
     ; must restore scrolling data before moving so data is not garbled/invalid when EVA's position changes
     jsr     restore_scrolling
 
@@ -107,7 +71,6 @@ x_dir_right
     ; else move right
     inc     MOVE_DIR_X              ; set x move direction to 1
 
-
 set_y_dir
     lda     Y_COOR                  ; grab the old y coord
     cmp     NEW_Y_COOR              ; check if there is any difference
@@ -130,7 +93,6 @@ y_dir_down
 update_position_cleanup
     rts
 
-
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GET_POSITION
 ; - uses X_COOR and Y_COOR to calculate the character offset from screen memory
@@ -144,92 +106,6 @@ get_position
     adc     X_COOR                      ; add the X coordinate to the position
     tax                                 ; transfer the position to the X register
     rts                                 ; return to caller function
-
-;==================================================================================
-;----------------------------------------------------------------------------------
-;   High resolution shifts (see custom_charset.asm for a brief on high-res buffer)
-;----------------------------------------------------------------------------------
-; 
-; uh please don't touch these i know they need to be optimized but they are 
-; *very* particular and order is important and most importantly they work okay
-; 
-;==================================================================================
-
-;----------------------------------------------------------------------------------
-;   Shift the entire framebuffer right one bit
-;----------------------------------------------------------------------------------
-
-shift_right
-    ldx     #0                              ; loop count in this code is the row of bytes being shifted
-    
-    ; for now just assume rightmost bit in section does not need to be rotated (pretty safe bet)
-shift_right_loop
-    ; first row
-    clc
-; rotate ENTIRE hi res buffer to the right
-    ror     hi_res_0_0,x
-    ror     hi_res_0_1,x
-    ror     hi_res_0_2,x
-
-    ; second row
-
-    clc
-
-    ror     hi_res_1_0,x
-    ror     hi_res_1_1,x
-    ror     hi_res_1_2,x
-
-    ; third row
-    clc
-
-    ror     hi_res_2_0,x
-    ror     hi_res_2_1,x
-    ror     hi_res_2_2,x
-
-    inx
-
-    cpx     #8
-    bne     shift_right_loop
-
-    rts
-
-
-
-;----------------------------------------------------------------------------------
-;   Shift the entire framebuffer right one bit
-;----------------------------------------------------------------------------------
-shift_left
-    ldx     #0                              ; loop count in this code is the row of bytes being shifted
-    
-    ; for now just assume rightmost bit in section does not need to be rotated (pretty safe bet)
-shift_left_loop
-    ; first row
-    clc
-; rotate ENTIRE hi res buffer to the right
-    rol     hi_res_0_2,x
-    rol     hi_res_0_1,x
-    rol     hi_res_0_0,x
-
-    ; second row
-
-    clc
-    rol     hi_res_1_2,x
-    rol     hi_res_1_1,x
-    rol     hi_res_1_0,x
-
-    ; third row
-    clc
-    rol     hi_res_2_2,x
-    rol     hi_res_2_1,x
-    rol     hi_res_2_0,x
-
-
-    inx
-
-    cpx     #8
-    bne     shift_left_loop
-
-    rts
 
 ;----------------------------------------------------------------------------------
 ;   Shift the entire framebuffer up one bit
@@ -309,8 +185,6 @@ wrap_char
 
     rts
 
-
-
 ;----------------------------------------------------------------------------------
 ;   Shift the entire framebuffer DOWN one bit
 ;----------------------------------------------------------------------------------
@@ -387,82 +261,6 @@ wrap_char_down
 
     rts
 
-
-
-; -----------------------------------------------------------------------------
-; SUBROUTINE: DRAW_SHIFT_VERTICAL
-; - uses FRAMES_SINCE_MOVE as the loop counter to shift EVA into position
-; - currently shifts twice for every iteration (frames go in jumps of 2)
-; - ex. if EVA is three frames into animation, this will run three times, 
-;   and position her at 3/4 towards next block in y-axis
-; -----------------------------------------------------------------------------
-draw_shift_vertical
-
-    ; guard clause: don't worry about shifting vertically if grounded
-    ; since you cannot be falling & grounded at the same time!
-    lda     IS_GROUNDED
-    bne     draw_shift_vertical_return
-
-    ldx     #0
-    stx     LOOP_CTR
-    jmp     draw_shift_vertical_test
-draw_shift_vertical_loop
-    ldy     MOVE_DIR_Y
-    cpy     #0
-    beq     eva_move_done
-    bmi     eva_move_up
-eva_move_down
-    jsr     shift_down
-    jsr     shift_down
-    jmp     eva_move_done
-eva_move_up
-    jsr     shift_up
-    jsr     shift_up
-
-eva_move_done
-    inc     LOOP_CTR
-    ldx     LOOP_CTR
-draw_shift_vertical_test
-    cpx     FRAMES_SINCE_MOVE
-    bne     draw_shift_vertical_loop 
-draw_shift_vertical_return
-    rts
-
-
-; -----------------------------------------------------------------------------
-; SUBROUTINE: DRAW_SHIFT_HORIZONTAL
-; - uses FRAMES_SINCE_MOVE as the loop counter to shift EVA into position
-; - currently shifts twice for every iteration (frames go in jumps of 2)
-; - ex. if EVA is three frames into animation, this will run three times, 
-;   and position her at 3/4 towards next block in x-axis
-; -----------------------------------------------------------------------------
-draw_shift_horizontal
-    ldx     #0
-    stx     LOOP_CTR
-    jmp     draw_shift_horizontal_test
-draw_shift_horizontal_loop
-    ldy     MOVE_DIR_X
-    cpy     #0
-    beq     eva_move_horizontal_done
-    bmi     eva_move_left
-eva_move_right
-    jsr     shift_right
-    jsr     shift_right
-    jmp     eva_move_horizontal_done
-eva_move_left
-    jsr     shift_left
-    jsr     shift_left
-
-eva_move_horizontal_done
-    inc     LOOP_CTR
-    ldx     LOOP_CTR
-draw_shift_horizontal_test
-    cpx     FRAMES_SINCE_MOVE
-    bne     draw_shift_horizontal_loop 
-draw_shift_horizontal_return
-    rts
-
-
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: DRAW_SHIFT_IS_GROUND
 ; - i'm shocked this works. it's ugly af tho. like most of my code.
@@ -504,9 +302,8 @@ draw_shift_is_grounded_return
     rts                             ; return!
 
 reset_is_grounded
-    ; should only ever be called on last animation frame of draw_shift_is_grounded
-    ldx     #0                      ; set IS_GROUNDED to zero & exit
-    stx     IS_GROUNDED
+    ; should only ever be called on last animation frame of draw_shift_is_grounded when A=0
+    sta     IS_GROUNDED             ; set IS_GROUNDED to zero and exit
     rts
 
 

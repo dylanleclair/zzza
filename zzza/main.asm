@@ -446,11 +446,10 @@ level_end_scroll_setup
     lda     #2                          ; load an empty block
     sta     $1eee                       ; disappear EVA
     sta     $1eef                       ; disappear the door
+    sta     EMPTY_BLOCK                 ; store the empty block character
 
 level_end_scroll
     jsr     soundoff
-    lda     #2                          ; empty block for horizontal screen scroll
-    sta     EMPTY_BLOCK                 ; store the empty block character
     jsr     horiz_screen_scroll         ; scroll the screen out
     lda     #0                          ; set A to 0 (0 = black for screen color change)
     jsr     char_color_change           ; change all characters to black
