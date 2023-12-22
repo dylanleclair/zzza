@@ -25,7 +25,7 @@ jobs:
           tar -xvf dasm/dasm.tar.gz --directory dasm
 
       - name: Move DASM to /usr/bin to use with Make
-        run: sudo ln -s ./dasm/dasm /usr/bin/dasm
+        run: sudo ln -s `pwd`/dasm/dasm /usr/bin/dasm
 
       - name: Checkout zzza repo
         uses: actions/checkout@v4
