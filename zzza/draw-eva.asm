@@ -29,7 +29,7 @@ draw_sprite
 ; 2. shift high res graphics 
 
     ; must restore scrolling data before moving so data is not garbled/invalid when EVA's position changes
-    jsr     restore_scrolling
+    jsr     restore_scrolling_2
 
     ; once animation is complete, update the sprite!
     lda     NEW_X_COOR              ; update the old x coordinate
@@ -38,7 +38,7 @@ draw_sprite
     sta     Y_COOR
 
     ; EXTREMELY IMPORTANT:
-    jsr     backup_scrolling        ; backup the scrolling data in new position!!!!!!
+    jsr     backup_scrolling_2        ; backup the scrolling data in new position!!!!!!
 
 draw_eva_exit
     rts
