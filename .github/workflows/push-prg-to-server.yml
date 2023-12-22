@@ -40,7 +40,7 @@ jobs:
       - name: Upload to remove server
         uses: garygrossgarten/github-action-scp@release
         with:
-          local: /zzza/zzza/zzza.prg
+          local: /home/runner/work/zzza/zzza/zzza/main.prg
           remote: ${{ secrets.SERVER_PRG_FOLDER_PATH }}/zzza.prg
           host: caskaydia.com
           username: dylan
