@@ -31,7 +31,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Make zzza
-        working-directory: zzza/zzza
         run: |
           make
 
