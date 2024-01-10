@@ -82,28 +82,6 @@ music_fetch_index
     rts
 
 ; -----------------------------------------------------------------------------
-; FUNCTION: SOUND_ON
-;   * turns on sound for the VIC
-; -----------------------------------------------------------------------------
-soundon
-    lda     S_VOL
-    and     #%11110000
-    eor     #15
-    ; adc 	#15 		                ; load 15 in the A register
-	sta		S_VOL		                ; set the volume to full for low voice (manual recommends it)
-    rts
-
-; -----------------------------------------------------------------------------
-; FUNCTION: SOUND_OFF
-;   * mutes sound input for the vic
-; -----------------------------------------------------------------------------
-soundoff
-	lda		S_VOL			            ; load 0 into A register (volume off)
-    and     #%11110000
-    sta		S_VOL		                ; set volume to 0
-	rts
-
-; -----------------------------------------------------------------------------
 ; FUNCTION: SAVE_SOUND
 ;   * saves the volume for reload at start of level and shuts sound off for
 ;   level end
