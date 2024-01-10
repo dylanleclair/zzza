@@ -11,7 +11,7 @@ begin_level
 
     ; update border colour
     inc     $900F                       ; change the border to the next color
-    
+
     ; increase speed and make level longer
     dec     GAME_SPEED                  ; increase the speed of the game
     inc     LEVEL_LENGTH                ; increase the length of the level
@@ -29,7 +29,7 @@ strip_bit_bump_loop
     lda     LFSR_ADDR                   ; grab the random value out of the lfsr
     and     #%00001111                  ; bitmask out top 4 bits, leaving 0<=a<16
     tax
-    
+
     jsr     lfsr
     lda     LFSR_ADDR
     and     #%00001111
@@ -42,7 +42,7 @@ strip_bit_bump_test
     inc     LOOP_CTR
     lda     LOOP_CTR
     cmp     #4
-    bne     strip_bit_bump_loop 
+    bne     strip_bit_bump_loop
 
     ; tax                                 ; flip to x to use as index
     ; lda     #%01000101                  ; extra bits to turn on
@@ -56,11 +56,11 @@ strip_bit_bump_test
 restart_level
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: LEVEL_INIT
-; - sets up all values that need to be initialized on a per-level basis 
+; - sets up all values that need to be initialized on a per-level basis
 ; -----------------------------------------------------------------------------
 level_init
     ldx     CURRENT_LEVEL               ; get the current level
-    ; seed the lfsr 
+    ; seed the lfsr
     lda     random_seeds,x              ; get random_seeds[x]
     sta     LFSR_ADDR
 
@@ -68,7 +68,7 @@ level_init
     ; reset counters and such
     lda     #00                         ; initialize lots of stuff to 0
     sta     END_LEVEL_INIT              ; set END_LEVEL_INIT to FALSE
-    sta     ANIMATION_FRAME             ; set the animation frame to 0                
+    sta     ANIMATION_FRAME             ; set the animation frame to 0
     sta     PROGRESS_BAR                ; set progress bar to empty
     sta     WORKING_SCREEN              ; lo byte of screen memory should start at 0x00
     sta     LINES_CLEARED
@@ -83,7 +83,7 @@ level_init
     lda     #$7
     sta     X_COOR                      ; set the x coordinate to 7
     sta     NEW_X_COOR                  ; set the x coordinate to 7
-    
+
     lda     #$1
     sta     Y_COOR                      ; set the y coordinate to 1
     sta     NEW_Y_COOR                  ; set the y coordinate to 1
@@ -103,7 +103,7 @@ level_init
     sta     MOVE_DIR_Y
 
     lda     #1                          ; colour for white
-    jsr     init_hud 
+    jsr     init_hud
 
     ; draw lives onto HUD
     jsr     draw_lives
@@ -119,8 +119,8 @@ level_changes_exit
 ; SUBROUTINE: INIT_LEVEL_DATA
 ; - initializes the values of LEVEL_DATA with whitespace
 ; - also initializes the onscreen characters to all be zeroed out
-; - this subroutine can be optimized quite a bit, but it's been left big for now
-;   so that it's more readable
+; - TODO: this subroutine can be optimized quite a bit, but it's been left big
+;   for now so that it's more readable
 ; -----------------------------------------------------------------------------
 init_level_data
     lda     #0                          ; the level starts out empty so fill with pattern 0
