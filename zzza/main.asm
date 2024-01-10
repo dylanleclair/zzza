@@ -310,8 +310,6 @@ game
 
     lda     #5                          ; delay speed for scrolling
     sta     GAME_SPEED                  ; set the game speed to delays of #5
-    lda     #15                         ; load #15 into A
-    sta     MUSIC_VOLUME                ; initialize the music volume to 15 (on) for level start
 
 ; jump here in endless mode to bypass resetting the lives, length, and speed
 ; endless mode is a VERY long level, with 1 life, and a random seed for the level
@@ -333,8 +331,10 @@ endless_start
     ; set the auxilliary colour code. aux colour is in the high 4 bits of the address
     lda     #$0f                        ; bitmask to remove value of top 4 bits
     and     AUX_COLOR_ADDR              ; grab lower 4 bits of aux colour addr
-    ora     #$10                        ; place our desired value in top 4 bits
+    ora     #$1f                        ; place our desired value in top 4 bits
     sta     AUX_COLOR_ADDR
+    lda     #15                         ; load sound on value into MUSIC_VOLUME
+    sta     MUSIC_VOLUME                ; set the music volume to 15 to initiate game
 
     ; SET SCREEN BORDER TO PURPLE
     lda     #12                         ; black background, purple border
@@ -363,6 +363,7 @@ level_restart
     jsr     restart_level               ; set the values to restart the level
 
     lda     MUSIC_VOLUME                ; load the stored music volume to start the level
+    ora     S_VOL                       ; xor music volume with actual volume
     sta     S_VOL                       ; save the music volume back to the volume setting
 
 ; -----------------------------------------------------------------------------
