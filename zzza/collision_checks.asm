@@ -21,7 +21,7 @@ input_kill                              ; restart level immediately and removes 
 input_mute                              ; toggle sound on or off
     cmp     #$4d                        ; M key pressed?
     bne     input_left                  ; if M key not pressed, keep checking input
-    jsr     soundoff                    ; jump to the soundoff subroutine
+    jsr     toggle_sound                ; toggle sound on or off
     rts
 
 input_left
@@ -38,13 +38,13 @@ input_stomp
     cmp     #$53                        ; S key pressed?
     bne     no_key_pressed              ; if S wasn't pressed, exit
     jmp     store_input
-    
+
 no_key_pressed
     lda     #0                          ; if no valid key input, store 0
 
 store_input
     sta     CURRENT_INPUT               ; store the result on 0 page
-    rts 
+    rts
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: COLLISION_LEFT
@@ -72,7 +72,7 @@ check_left
     bne     same_byte_left              ; we're in the same byte as the level data we're checking against
     eor     #129                        ; AND the collision_mask with 1000 0001 to reverse the position of the set bit
     dey                                 ; decrement y to the piece of level data to the left of us
-    jmp     and_check_left              ; jump over the asl used for non-boundary checks 
+    jmp     and_check_left              ; jump over the asl used for non-boundary checks
 same_byte_left
     asl                                 ; shift one bit left so that we check the thing to our left
 and_check_left
@@ -88,7 +88,7 @@ and_check_left
 collision_right
     lda     NEW_X_COOR                  ; get player's x coord
     beq     check_right                 ; terrible overflow things happen when x=0
-    
+
     ; check for collision with in-air block
     sec
     sbc     NEW_BLOCK_X                 ; make sure player isn't about to hit a block
