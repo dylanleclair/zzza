@@ -110,7 +110,7 @@ level_init
 
     ; initialize data
     jsr     init_level_data              ; ensure that there's valid level data ready to go
-    jsr     backup_scrolling             ; make sure hi-res is backed up properly
+    jsr     backup_scrolling_2             ; make sure hi-res is backed up properly
 
 
 level_changes_exit

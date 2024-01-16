@@ -11,10 +11,10 @@
 draw_master
 
 draw_master_scroll
-    jsr     restore_scrolling           ; restore the scrolling data (s.t. screen is same state as previous)
+    jsr     restore_scrolling_2           ; restore the scrolling data (s.t. screen is same state as previous)
     jsr     draw_level                  ; do scrolly scroll
     jsr     draw_block                  ; draw any falling blocks
-    jsr     backup_scrolling            ; back it up again (so we can overwrite EVA with high res buffer)
+    jsr     backup_scrolling_2            ; back it up again (so we can overwrite EVA with high res buffer)
 
 draw_master_hi_res
     jsr     reset_high_res              ; clear high res graphics
@@ -113,7 +113,7 @@ draw_level_exit
 ; - this has the effect of drawing the appropriate level data around EVA! 
 ; -----------------------------------------------------------------------------
 mask_level_onto_hi_res
-    lda     #8
+    lda     #2
     sta     LOOP_CTR
 
 mask_level_loop
@@ -128,13 +128,9 @@ mask_level_loop
     jsr     xor_character_to_high_res
 
     dec     LOOP_CTR
-    ; ldy     LOOP_CTR
-    ; cpy     #9                          ; run 8 times
     bpl     mask_level_loop
 
     rts
-
-
 
 
 ; -----------------------------------------------------------------------------
@@ -144,50 +140,33 @@ mask_level_loop
 ; - this is so that we can restore it and proceed with scrolling as usual!
 ; - it also makes it easier to mask the level adjacent to EVA onto her high-res buffer
 ; -----------------------------------------------------------------------------
-backup_scrolling
+backup_scrolling_2
+    ; backup square above eva
     dec     Y_COOR
-    dec     X_COOR
     jsr     get_position
-
-    ; top row of hi res
     ldy     #0
+    jsr     backup_helper
 
-    jsr     triple_backup_helper
-
-    ; middle row of high res
-
+    ; eva's square
     inc     Y_COOR
     jsr     get_position
-    ldy     #3
+    iny
+    jsr     backup_helper
 
-    jsr     triple_backup_helper
-
-    ; bottom row of high res
+    ; square below eva
     inc     Y_COOR
     jsr     get_position
-    ldy     #6
+    iny
+    jsr     backup_helper
 
-    jsr     triple_backup_helper
-
-    ; restore position
+    ; restore coord
     dec     Y_COOR
-    inc     X_COOR
 
     rts
-
-
 
 backup_helper
     lda     SCREEN_ADDR,x
     sta     BACKUP_HIGH_RES_SCROLL,y
-    inx
-    iny
-    rts
-
-triple_backup_helper
-    jsr     backup_helper
-    jsr     backup_helper
-    jsr     backup_helper
     rts
 
 
@@ -201,54 +180,34 @@ triple_backup_helper
 ;   - ...                       (operations on high res characters)
 ;   - jsr draw_high_res         (draw high res characters to screen)
 ; -----------------------------------------------------------------------------
-restore_scrolling
-
-
-    ; start in top left corner of the hi-res graphics buffer
+restore_scrolling_2
+    ; restore square above eva
     dec     Y_COOR
-    dec     X_COOR
     jsr     get_position
+    ldy     #0
+    jsr     restore_helper
 
-    ldy     #0  ; reset y to 0
-
-    ; top row
-    jsr     triple_restore_helper
-
-    ; shift to middle row
+    ; then eva's square
     inc     Y_COOR
     jsr     get_position
-    ldy     #3
-    
-    jsr     triple_restore_helper
+    iny
+    jsr     restore_helper
 
-    
-    ; shift to bottom row
+    ; then the one below her
     inc     Y_COOR
     jsr     get_position
-    ldy     #6
+    iny
+    jsr     restore_helper
 
-    jsr     triple_restore_helper
-
-    ; restore position (VERY IMPORTANT !!!)
+    ; reset coord
     dec     Y_COOR
-    inc     X_COOR
-
 
     rts
-
 
 restore_helper
     lda     BACKUP_HIGH_RES_SCROLL,y
     sta     SCREEN_ADDR,x
 
-    inx
-    iny
-    rts
-
-triple_restore_helper
-    jsr     restore_helper
-    jsr     restore_helper
-    jsr     restore_helper
     rts
 
 ; -----------------------------------------------------------------------------
@@ -264,16 +223,19 @@ xor_character_to_high_res
 ; assume: character code of character to XOR is in acc
 ; also assume: character code of high-res target character is in x
     
+    ; convert from character code indices, to start offset from $1000 (start of character set)
+
+    ; multiply acc by 8, place value in y (memory offset of character to project onto hi-res)
     asl
     asl 
     asl
     tay
 
+    ; multiply x by 8 (memory offset of hi-res target location)
     txa
     asl
     asl 
     asl
-    ; multiply by 8! (convert from character code to start offset from $1000 (start of character set))
     tax 
 
     lda #7
@@ -307,36 +269,24 @@ mask_loop_test
 ; -----------------------------------------------------------------------------
 reset_high_res
     ; set all chars back to 0
-    ldy #0
+    ldy     #0
 zero_hi_res_loop
-    lda #0
-    sta hi_res_0_0,y
-    sta hi_res_0_1,y
-    sta hi_res_0_2,y
-    
-    sta hi_res_1_0,y
-    sta hi_res_1_2,y
-
-    sta hi_res_2_0,y
-    sta hi_res_2_1,y
-    sta hi_res_2_2,y
+    lda     #0
+    sta     hi_res_0_0,y
+    sta     hi_res_0_2,y
 
     iny
-    cpy #8
-    bne zero_hi_res_loop 
-
-    ; lda     #$50                ; location of the eva_front char
-    ; sta     CURRENT_PLAYER_CHAR ; store it so the next loop can use it
+    cpy     #8                          ; loop 8 times to reset all 8 bytes of the char
+    bne     zero_hi_res_loop 
 
     dey
-    ; ldy     #0
 ; draw a desired custom character into the centre of the bitmap
 custom_char_hi_res_loop
     ; expects that the desired char's address is stored in CURRENT_PLAYER_CHAR
     lda     (CURRENT_PLAYER_CHAR),y
-    sta     hi_res_1_1,y
+    sta     hi_res_0_1,y
 
-    dey
+    dey                                 ; loop 8 times to reset all 8 bytes of the char
     bpl     custom_char_hi_res_loop
 
     rts
@@ -351,55 +301,28 @@ draw_high_res
     
     ; start in top left corner of the hi-res graphics buffer
     dec Y_COOR
-    dec X_COOR
 
-    jsr get_position ; top left corner of high res graphics
+    jsr get_position
 
-    ; top row
-    lda #11         ; character code representing top left of buffer (macros wouldnt work for literals???)
-    sta $1e00,x
-    inx
-
-    lda #12         ; character code representing top middle of buffer (macros wouldnt work for literals???)
-    sta $1e00,x
-    inx
-
-    lda #13         ; character code representing top right of buffer (macros wouldnt work for literals???)
+    lda #11         ; character code representing top middle of buffer (macros wouldnt work for literals???)
     sta $1e00,x
 
     ; shift to middle row
     inc Y_COOR
     jsr get_position
 
-    lda #14         ; middle row left col
-    sta $1e00,x
-    inx
-
-    lda #15         ; middle row middle col
-    sta $1e00,x
-    inx
-
-    lda #16         ; middle row right col
+    lda #12         ; middle row middle col
     sta $1e00,x
 
     ; shift to bottom row
     inc Y_COOR
     jsr get_position
 
-    lda #17         ; ...
-    sta $1e00,x
-    inx
-
-    lda #18
-    sta $1e00,x
-    inx
-
-    lda #19
+    lda #13
     sta $1e00,x
 
     ; reset position to proper value (VERY IMPORTANT !!!)
     dec Y_COOR
-    inc X_COOR
 
     rts 
 
