@@ -37,7 +37,7 @@ skip_next_chunk
     ; if at final chunk of song, reset chunk index.
     lda     #0
     sta     SONG_CHUNK_INDEX
-    
+
 skip_resets
     ldy     SONG_CHUNK_INDEX
 
@@ -78,27 +78,27 @@ music_fetch_index
 
     clc
     adc     SONG_INDEX
-    tax 
+    tax
     rts
 
 ; -----------------------------------------------------------------------------
-; FUNCTION: SOUNDON
-;   * turns on sound for the VIC
+; FUNCTION: SAVE_SOUND
+;   * saves the volume for reload at start of level and shuts sound off for
+;   level end
 ; -----------------------------------------------------------------------------
-soundon
-    lda     S_VOL
-    and     #%11110000
-    eor     #15
-    ; adc 	#15 		                ; load 15 in the A register
-	sta		S_VOL		                ; set the volume to full for low voice (manual recommends it)
+save_sound
+    lda     S_VOL                       ; load the volume value
+    sta     MUSIC_VOLUME                ; store it in the current music volume
+    and     #%11110000                  ; turn off the lower 4 bit (volume)
+    sta     S_VOL                       ; store back in volume location
     rts
 
 ; -----------------------------------------------------------------------------
-; FUNCTION: SOUNDOFF
-;   * mutes sound input for the vic
+; FUNCTION: TOGGLE_SOUND
+;   * toggles sound on and off
 ; -----------------------------------------------------------------------------
-soundoff
-	lda		S_VOL			            ; load 0 into A register (volume off)
-    and     #%11110000
-    sta		S_VOL		                ; set volume to 0
-	rts
+toggle_sound
+    lda     S_VOL                       ; load the volume value
+    eor     #%00001111                  ; xor to flip volume between 0 and 15 (off and on)
+    sta     S_VOL                       ; store the value back into volume location
+    RTS

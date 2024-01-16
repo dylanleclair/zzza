@@ -26,11 +26,14 @@ ROWS_ADDR = $9003                   ; stores the number of rows on screen
 CHARSET_CTRL = $9005                ; stores a pointer to the beginning of character memory
 AUX_COLOR_ADDR = $900e
 
-; SOUND REGISTERS
+; -----------------------------------------------------------------------------
+; SOUND LOCATIONS
+; -----------------------------------------------------------------------------
 S_VOL = $900e   ; volume control
 S1 = $900a      ; sound channel 1
 S2 = $900b      ; sound channel 2
 S3 = $900c      ; sound channel 3
+
 ; -----------------------------------------------------------------------------
 ; KERNAL ROUTINES
 ; -----------------------------------------------------------------------------
@@ -55,6 +58,11 @@ X_COOR = $49                        ; 1 byte: X coordinate of the player charact
 Y_COOR = $4a                        ; 1 byte: Y coordinate of the player character
 NEW_X_COOR = $4b                    ; 1 byte: player character's new X position
 NEW_Y_COOR = $4c                    ; 1 byte: player character's new Y position
+
+ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
+ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
+HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
+HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
 
 SPRITE_POSITION = $4d               ; 1 byte: sprite position relative to screen start in memory
 
@@ -121,19 +129,16 @@ STRING_LOCATION_HI = $89            ; 1 byte: used for indirect addressing of st
 
 SNEAKY_CODE = $8a                   ; 1 byte: used to track if the endless mode code has been entered
 
-ENC_BYTE_INDEX_VAR = $49            ; temporary variable for title screen (used in the game for X_COOR)
-ENC_BYTE_VAR = $4a                  ; temporary variable for title screen (used in the game for Y_COOR)
-HORIZ_DELTA_BYTE = $49              ; temporary variable for storing level delta byte (used in the game for X_COOR)
-HORIZ_DELTA_ADDR = $4a              ; temporary variable for storing screen address (used in the game for Y_COOR)
+MUSIC_VOLUME = $8b                  ; stores volume value to be restored at start of level
 
     processor 6502
 ; -----------------------------------------------------------------------------
 ; BASIC STUB
 ; -----------------------------------------------------------------------------
     org $1001
-    
+
     dc.w stubend                    ; define a constant to be address @ stubend
-    dc.w 12345 
+    dc.w 12345
     dc.b $9e, "4980", 0
 stubend
     dc.w 0
@@ -220,7 +225,7 @@ collision_mask:
     dc.b #%00000001
 
 ; -----------------------------------------------------------------------------
-; Lookup table for level seeds. there are 16 levels and each one uses a different 
+; Lookup table for level seeds. there are 16 levels and each one uses a different
 ; start seed to control the onscreen data
 ; TODO: THESE ALL ARE RANDOM AND PROBABLY SUCK
 ; -----------------------------------------------------------------------------
@@ -277,7 +282,7 @@ STRIPS
 start_game
 ; -----------------------------------------------------------------------------
 ; TITLE_SCREEN
-; - displays the title screen 
+; - displays the title screen
 ; - changes text to "press any key"
 ; - waits for user input and goes to main game on any key press
 ; -----------------------------------------------------------------------------
@@ -326,8 +331,10 @@ endless_start
     ; set the auxilliary colour code. aux colour is in the high 4 bits of the address
     lda     #$0f                        ; bitmask to remove value of top 4 bits
     and     AUX_COLOR_ADDR              ; grab lower 4 bits of aux colour addr
-    ora     #$10                        ; place our desired value in top 4 bits
+    ora     #$1f                        ; place our desired value in top 4 bits
     sta     AUX_COLOR_ADDR
+    lda     #15                         ; load sound on value into MUSIC_VOLUME
+    sta     MUSIC_VOLUME                ; set the music volume to 15 to initiate game
 
     ; SET SCREEN BORDER TO PURPLE
     lda     #12                         ; black background, purple border
@@ -341,7 +348,7 @@ level_start
     jsr     set_default_charset         ; set the charset to default
     lda     #96                         ; load the code for an empty character into a
     jsr     empty_screen                ; set the screen to empty
-    
+
     lda     #$b7                        ; lo byte of 'order up' string's location
     sta     STRING_LOCATION             ; store in 0 page for string writer to find
     ldx     #$51                        ; desired screen offset for string
@@ -354,8 +361,11 @@ level_restart
     jsr     set_custom_charset          ; change to the custom charset
     jsr     main_game_screen            ; set color to cyan (multicolor) and empty custom blocks
     jsr     restart_level               ; set the values to restart the level
-    
-    jsr     soundon
+
+    lda     MUSIC_VOLUME                ; load the stored music volume to start the level
+    ora     S_VOL                       ; xor music volume with actual volume
+    sta     S_VOL                       ; save the music volume back to the volume setting
+
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: GAME_LOOP
 ; - the main game loop
@@ -382,7 +392,7 @@ game_loop
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
     inc     ANIMATION_FRAME             ; increment frame counter
     jsr     next_note
-    ldy     GAME_SPEED                  ; set desired delay 
+    ldy     GAME_SPEED                  ; set desired delay
     jsr     delay                       ; jump to delay
 
         ; check if level is complete, if so don't scroll
@@ -402,10 +412,10 @@ game_loop_continue
 ; SUBROUTINE: END_GAME_LOOP
 ; - logic for ending a level
 ; -----------------------------------------------------------------------------
-end_loop_entrance                       
+end_loop_entrance
     lda     #3                          ; hard code the animation frame to 3 so we can keep block pushing but stop scrolling
     sta     ANIMATION_FRAME
-    
+
 end_loop
     jsr     get_input                   ; check for user input and update player X,Y coords
     jsr     move_eva                    ; update player location based on input
@@ -433,10 +443,10 @@ end_loop
 
 housekeeping
     ; HOUSEKEEPING: keep track of counters, do loop stuff, etc
-    ldy     GAME_SPEED                  ; set desired delay 
+    ldy     GAME_SPEED                  ; set desired delay
     jsr     delay                       ; jump to delay
 
-    jmp     end_loop  
+    jmp     end_loop
 
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: LEVEL_END
@@ -446,10 +456,11 @@ level_end_scroll_setup
     lda     #2                          ; load an empty block
     sta     $1eee                       ; disappear EVA
     sta     $1eef                       ; disappear the door
-    sta     EMPTY_BLOCK                 ; store the empty block character
+    jsr     save_sound                  ; save the current volume and shut sound off
 
 level_end_scroll
-    jsr     soundoff
+    lda     #2                          ; empty block for horizontal screen scroll
+    sta     EMPTY_BLOCK                 ; store the empty block character
     jsr     horiz_screen_scroll         ; scroll the screen out
     lda     #0                          ; set A to 0 (0 = black for screen color change)
     jsr     char_color_change           ; change all characters to black
@@ -457,7 +468,7 @@ level_end_scroll
     jsr     set_default_charset         ; flip charset before writing to screen
     lda     #96                         ; load the code for an empty character into a
     jsr     empty_screen                ; set the screen to empty
-    
+
     lda     #$c7                        ; lo byte of 'order up' string's location
     sta     STRING_LOCATION             ; store in 0 page for string writer to find
     ldx     #$51                        ; desired screen offset for string
@@ -489,7 +500,7 @@ win_game_loop
     jsr     string_writer               ; display order_up screen
     dec     $0                          ; decrement loop counter
     bne     win_game_loop
-                       
+
     jmp     start_game                  ; restart the game on any input
 
 ; -----------------------------------------------------------------------------
@@ -513,13 +524,13 @@ inc_lines_cleared                       ; if yes, increment the number of lines 
     lda     LEVEL_LENGTH                ; level is x*8 where x=LEVEL_LENGTH
     cmp     LINES_CLEARED               ; check if we've cleared that many lines
     bne     game_over_exit              ; if no, exit
-    
+
     lda     #0
     sta     LINES_CLEARED               ; else reset lines cleared
 
 ; REMINDER: on account of only having 3 registers, the progress bar fills in backward from its bit pattern
 inc_progress
-    sec                                 ; set carry 
+    sec                                 ; set carry
     rol     PROGRESS_BAR                ; shift the progress bar over by 1, filling in lo bit with carry
 
 ; check if it's time to set END_LEVEL flag
@@ -534,8 +545,8 @@ game_over_exit
 ; -----------------------------------------------------------------------------
 ; fill screen with all red
 death_screen
-    jsr     soundoff
-    lda     #2                          ; colour for red    
+    jsr     save_sound                  ; save music setting for level restart
+    lda     #2                          ; colour for red
     jsr     init_hud                    ; clear data out of the HUD
 
     ldx     #0                          ; initialize loop ctr
@@ -544,8 +555,8 @@ death_screen_loop
     lda     #2                          ; colour for red
     sta     COLOR_ADDR,x
     lda     #23                         ; load solid block
-    sta     SCREEN_ADDR,x 
-    inx 
+    sta     SCREEN_ADDR,x
+    inx
     bne     death_screen_loop
 
     ldy     #$50                        ; delay for 1.5 seconds
@@ -558,7 +569,7 @@ death_screen_loop
 ;   - If lives remaining, restart the level
 ;   - If no lives remaining, goes back to the main menu screen
 ; -----------------------------------------------------------------------------
-death_logic 
+death_logic
     lda     PLAYER_LIVES                ; load the number of lives the player has left
     bne     lives_left                  ; if lives !=0, jump over the restart
 
@@ -571,7 +582,7 @@ death_logic
     jsr     string_writer               ; jump to string writer to put text under robo
 
     ldy     #$FF                        ; three seconds of delay
-    jsr     delay                         
+    jsr     delay
     jmp     start_game                  ; restart the game
 lives_left
     dec     PLAYER_LIVES                ; remove a life from the player
