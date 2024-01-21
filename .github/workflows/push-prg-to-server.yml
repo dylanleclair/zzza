@@ -7,6 +7,10 @@ on:
 
 jobs:
   build:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     runs-on: ubuntu-latest
     steps:
       - name: Download DASM
@@ -36,12 +40,24 @@ jobs:
           pwd
           ls -la
           make
-
-      - name: Upload to remove server
-        uses: garygrossgarten/github-action-scp@release
+          cp /home/runner/work/zzza/zzza/zzza/main.prg /home/runner/work/zzza/zzza/site
+                          
+      - name: Automatic Releases
+        uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
-          local: /home/runner/work/zzza/zzza/zzza/main.prg
-          remote: ${{ secrets.SERVER_PRG_FOLDER_PATH }}/zzza.prg
-          host: caskaydia.com
-          username: dylan
-          privateKey: ${{ secrets.SERVER_SSH_KEY }}
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            /home/runner/work/zzza/zzza/zzza/main.prg
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload site folder
+          path: '/home/runner/work/zzza/zzza/site'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
