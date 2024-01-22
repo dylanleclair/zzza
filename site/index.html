@@ -3,6 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="refresh" content="0; URL=https://zzza.xyz?file=main.prg" />
+    <script>
+      var url = window.location.href;
+      if(url.indexOf("?") == -1) {
+        url = url.substring(0, url.indexOf("?"));
+        url += "?file=main.prg";
+        window.location.replace(url);
+      }
+    </script>
     <title>Emscripten-Generated Code</title>
     <style>
       body {
