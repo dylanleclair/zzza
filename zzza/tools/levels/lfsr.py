@@ -7,6 +7,8 @@ state = seed
 def get_byte():
   global state
 
+  print(hex(state))
+
   # get bits at position 7 and 6
   bitSeven = (state >> 7) & 0b1
   bitSix = (state >> 6) & 0b1

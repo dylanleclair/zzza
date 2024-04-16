@@ -18,6 +18,9 @@ LEVEL_LENGTH_MULTIPLER = 8
 def lfsr():
   return get_byte()
 
+def level_length(level_num):
+  area_code = level_num // 4
+  return 8 * (10 + area_code * 2)
 
 strips = [ 
         0b00000000, # 0
@@ -60,17 +63,10 @@ def draw_level(seed, level):
           0b00011011, # 15
         ]
   
-  level_length = INITIAL_LEVEL_LENGTH
 
   # advance level by level times
   for i in range(level):
     simulate_advance_level()
-
-  rows = level_length * 8
-
-
-
-
 
   # generate enough level data to fit an image
   level_data = []
@@ -80,16 +76,36 @@ def draw_level(seed, level):
 
   SCREEN_HEIGHT = 16
   LEVEL_HEIGHT = SCREEN_HEIGHT + 1
-  for i in range((LEVEL_HEIGHT) * 2):
+  INITIAL_LEVEL_SIZE = LEVEL_HEIGHT * 2
+  for i in range(INITIAL_LEVEL_SIZE):
     level_data.append(0)
     level_draw_buffer.append(0)
 
+  level_size = level_length(0) # this is in rows
+  # rows = level_size
+  level_size_bytes = level_size * 2 + 20
 
-  while (len(level_draw_buffer) < rows):
+  iter_count = 0
+
+  
+
+  while (len(level_draw_buffer) < (level_size_bytes) + INITIAL_LEVEL_LENGTH):
+    print("iter count: " + str(iter_count))
+
+    # TODO: i suspect the level data may be corrupted / not stored the same ...
+    # 16 * 2 = 32, which could be where the error comes from ?
+
     # this is the very start of the actual game data!
     # the first thing we do whenever we get new data is call the LFSR
+
     lfsr_data = lfsr()
+    if (iter_count > 0):
+      # advance the level buffer / simulate scrolling
+      level_data = level_data[2:]
+      level_data.append(0)
+      level_data.append(0)
     advance_new(level_data, lfsr_data)
+
 
     # our goal is to just SIMULATE the level then draw it all at once.
     # therefore, we should copy the newly generated portion of the level
@@ -97,12 +113,17 @@ def draw_level(seed, level):
     last_two = level_data[-2:]
     for slice in last_two:
       level_draw_buffer.append(slice)
+    
+
+    iter_count += 1
+
 
   print(level_data)
 
   #region draw the output
 
   # now draw the actual level data
+  rows = len(level_draw_buffer) // 2
   width = WIDTH_TILES * TILE_RES
   height = rows * TILE_RES
 
@@ -116,7 +137,7 @@ def draw_level(seed, level):
   # render it
     draw_row(level_draw_buffer[index:index+2], index // 2, img1)
     index += 2
-  draw_tile(img1,0,0,"yellow")
+  #draw_tile(img1,0,0,"yellow")
   img.show() 
   #endregion
 
@@ -142,7 +163,7 @@ def draw_row(row_data, row_num, img):
     for j in range(8):
       if (lsb(strip >> j) == 1):
         col = (i * 8) + (7 - j)
-        draw_tile(img, col, row_num, "yellow")
+        draw_tile(img, col, row_num, "purple")
 
 def strip_bump(): 
   print("strip bump between levels - unimplemented")
@@ -153,13 +174,16 @@ def advance_new(level, lfsr_data):
   
   y = 33
   acc = lfsr_data
-  acc = acc & 15
+  acc = acc & 0xf
   x = acc
   stack.append(acc)
 
-  advance_level_gen(acc,x,y,stack,lfsr_data,level)
+  advance_level_gen(acc,x,y,stack,lfsr_data,level) # JMP in assembly (not a function call?)
   y -= 1
-  x -= 1
+  acc = stack.pop()
+  x = acc
+  if (x != 0):
+    x -= 1
   advance_level_gen(acc,x,y,stack,lfsr_data,level)
 
 def advance_level_gen(acc,x,y,stack,lfsr_data,level):
@@ -171,9 +195,10 @@ def advance_level_gen(acc,x,y,stack,lfsr_data,level):
   bit_8 = acc & 0b10000000 
   bit_7 = acc & 0b01000000
   if ((not (bit_7 > 0)) and (not (bit_8 > 0))):
+    print ("hit the if")
     acc = stack.pop()
-    neg_index = y - 34 # index into end of array
-    acc = acc ^ level[neg_index - 2] # shift up 2 (to get strip above it)
+    #neg_index = y - 34 # index into end of array
+    acc = acc | level[y - 2] # shift up 2 (to get strip above it)
   else:
     # otherwise, continue as normal
     acc = stack.pop()
@@ -183,15 +208,6 @@ def advance_level_gen(acc,x,y,stack,lfsr_data,level):
   
 # consider removing the x backup to stack in real code?
 
+draw_level(37, 0)
+#draw_level(0x1, 0)
 
-draw_level(0b00100101, 0)
-
-
-
-# approaches to testing
-# 1. create a sample assembly script with isolated function and see if output matches
-# 2. base the expected output off the game !!
-
-# we also need to sync up the new data generator thingy & the level
-# data rendering I hooked up as an example.
-# lets start with this lol
