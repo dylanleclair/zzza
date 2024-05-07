@@ -1,7 +1,6 @@
 # importing image object from PIL 
 from PIL import Image, ImageDraw 
 from lfsr import *
-from collections import deque
 
 TILE_RES = 20
 
@@ -22,6 +21,7 @@ def level_length(level_num):
   area_code = level_num // 4
   return 8 * (10 + area_code * 2)
 
+# the strips as they are set at the initialization of the game
 strips = [ 
         0b00000000, # 0
         0b00000000, # 1
@@ -43,61 +43,35 @@ strips = [
 
 def draw_level(seed, level):
 
-  # initial strips (these are modified at runtime if level > 0)
-  strips = [ 
-          0b00000000, # 0
-          0b00000000, # 1
-          0b01100100, # 2
-          0b00110000, # 3
-          0b00011000, # 4
-          0b00000011, # 5
-          0b00000000, # 6
-          0b11100001, # 7
-          0b00001100, # 8
-          0b10011100, # 9
-          0b11000110, # 10
-          0b00010011, # 11
-          0b10010000, # 12
-          0b11111100, # 13
-          0b00110000, # 14
-          0b00011011, # 15
-        ]
-  
-
   # advance level by level times
   for i in range(level):
-    simulate_advance_level()
+    simulate_advance_level(i)
 
   # generate enough level data to fit an image
   level_data = []
   level_draw_buffer = []
 
-  i = 0
-
   SCREEN_HEIGHT = 16
   LEVEL_HEIGHT = SCREEN_HEIGHT + 1
-  INITIAL_LEVEL_SIZE = LEVEL_HEIGHT * 2
+  INITIAL_LEVEL_SIZE = LEVEL_HEIGHT * 2 # because each row has 2 strips
+  
+  # start with a fully blanked out screen
   for i in range(INITIAL_LEVEL_SIZE):
     level_data.append(0)
     level_draw_buffer.append(0)
 
-  level_size = level_length(0) # this is in rows
-  # rows = level_size
-  level_size_bytes = level_size * 2 + 20
+  level_size = level_length(level) # this is in rows
+  level_size_bytes = level_size * 2 + 20  # because each row has two strips, plus space at top and bottom
 
   iter_count = 0
 
-  
-
+  # populate the draw buffer with data pulled from the strips array
   while (len(level_draw_buffer) < (level_size_bytes) + INITIAL_LEVEL_LENGTH):
     print("iter count: " + str(iter_count))
 
-    # TODO: i suspect the level data may be corrupted / not stored the same ...
-    # 16 * 2 = 32, which could be where the error comes from ?
-
     # this is the very start of the actual game data!
-    # the first thing we do whenever we get new data is call the LFSR
 
+    # the first thing we do whenever we get new data is call the LFSR
     lfsr_data = lfsr()
     if (iter_count > 0):
       # advance the level buffer / simulate scrolling
@@ -106,7 +80,6 @@ def draw_level(seed, level):
       level_data.append(0)
     advance_new(level_data, lfsr_data)
 
-
     # our goal is to just SIMULATE the level then draw it all at once.
     # therefore, we should copy the newly generated portion of the level
     # into the drawing buffer
@@ -114,13 +87,11 @@ def draw_level(seed, level):
     for slice in last_two:
       level_draw_buffer.append(slice)
     
-
     iter_count += 1
-
 
   print(level_data)
 
-  #region draw the output
+  # region draw the output
 
   # now draw the actual level data
   rows = len(level_draw_buffer) // 2
@@ -130,7 +101,6 @@ def draw_level(seed, level):
   img = Image.new("RGB", (width, height)) 
   # create rectangle image 
   img1 = ImageDraw.Draw(img)
-  
 
   index = 0
   while index < len(level_draw_buffer):
@@ -145,16 +115,6 @@ def draw_tile(image, x,y,color):
   shape = [(x * TILE_RES, y * TILE_RES), (x * TILE_RES + TILE_RES, y * TILE_RES + TILE_RES)]
   image.rectangle(shape, fill=color)
 
-def simulate_advance_level(level_length, strips):
-  strips.popleft()
-  strips.popleft()
-  strips.append(get_byte())
-  strips.append(get_byte())
-
-  level_length += LEVEL_LENGTH_INCREMENT
-
-  strip_bump()
-
 def draw_row(row_data, row_num, img):
   # row data is an array of two bytes
   for i in range(2):
@@ -165,8 +125,32 @@ def draw_row(row_data, row_num, img):
         col = (i * 8) + (7 - j)
         draw_tile(img, col, row_num, "purple")
 
-def strip_bump(): 
-  print("strip bump between levels - unimplemented")
+# set up the lfsr and strips to be in the right state to start a given level
+def simulate_advance_level(level_to_simulate):
+  # figure out how long the level is
+  length = level_length(level_to_simulate)
+
+  # figure out how many times we'd call advance_level based on the level length
+  num_of_rows = length * LEVEL_LENGTH_MULTIPLER  # todo: this is probably wrong
+
+  # don't actually do any strip manipulation, just call the lfsr that many times
+  for _ in range(num_of_rows):
+    lfsr()
+
+  # figure out if we need to shuffle strips? (once every 4 levels)
+  new_level_area = level_to_simulate > 0 and (level_to_simulate // 4 == 0)
+  if (new_level_area):
+    # if so, call the strip shuffle
+    strip_bump()
+
+# do the shuffling that occurs once every 4 levels
+# expects that the lfsr will be in the proper state
+def strip_bump():
+  for _ in range(4):
+    replacement = lfsr() & 15 # lfsr AND 0x00001111 to get a number between 0 and 15
+    to_replace = lfsr() & 15  # lfsr AND 0x00001111 to get a number between 0 and 15
+
+    strips[to_replace] = strips[replacement]
 
 # INTEGRATE THIS INTO THE MAIN CODE (PROBABLY TEST IT FIRST?)
 def advance_new(level, lfsr_data):
@@ -195,7 +179,6 @@ def advance_level_gen(acc,x,y,stack,lfsr_data,level):
   bit_8 = acc & 0b10000000 
   bit_7 = acc & 0b01000000
   if ((not (bit_7 > 0)) and (not (bit_8 > 0))):
-    print ("hit the if")
     acc = stack.pop()
     #neg_index = y - 34 # index into end of array
     acc = acc | level[y - 2] # shift up 2 (to get strip above it)
@@ -204,7 +187,6 @@ def advance_level_gen(acc,x,y,stack,lfsr_data,level):
     acc = stack.pop()
 
   level[y] = acc
-
   
 # consider removing the x backup to stack in real code?
 
