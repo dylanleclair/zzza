@@ -1,7 +1,7 @@
 ; -----------------------------------------------------------------------------
 ; SUBROUTINE: BEGIN_LEVEL
 ; - detects when the game is on a level multiple of 4 and updates values for
-;   difficulty, level strip offsets (for generating levels), speed
+;   difficulty, level data strips, speed, etc
 ; -----------------------------------------------------------------------------
 begin_level
     lda     CURRENT_LEVEL               ; load the current level
@@ -17,39 +17,30 @@ begin_level
     inc     LEVEL_LENGTH                ; increase the length of the level
     inc     LEVEL_LENGTH                ; increase the length of the level
 
-    ; change bit patterns of strips
-    ldy     #2
-
-strip_bit_bump
-
+; every 4 levels we shuffle the strips,
+; we'll grab the contents of one strip and move it somewhere else
+strip_shuffle
     lda     #0
     sta     LOOP_CTR
-strip_bit_bump_loop
+strip_shuffle_loop
     jsr     lfsr
     lda     LFSR_ADDR                   ; grab the random value out of the lfsr
     and     #%00001111                  ; bitmask out top 4 bits, leaving 0<=a<16
-    tax
+    tax                                 ; store it in x for later
 
     jsr     lfsr
-    lda     LFSR_ADDR
-    and     #%00001111
-    tay
+    lda     LFSR_ADDR                   ; grab the random value out of the lfsr
+    and     #%00001111                  ; bitmask out top 4 bits, leaving 0<=a<16
+    tay                                 ; store it in y for later
 
-    lda     STRIPS,y
-    sta     STRIPS,x
+    lda     STRIPS,y                    ; grab whatever was in STRIPS[y]
+    sta     STRIPS,x                    ; and place it in STRIPS[x]
 
-strip_bit_bump_test
+strip_shuffle_test
     inc     LOOP_CTR
     lda     LOOP_CTR
-    cmp     #4
-    bne     strip_bit_bump_loop
-
-    ; tax                                 ; flip to x to use as index
-    ; lda     #%01000101                  ; extra bits to turn on
-    ; ora     STRIPS,x                    ; add those bits to the pattern
-    ; sta     STRIPS,x
-    ; dey
-    ; bne     strip_bit_bump
+    cmp     #4                          ; repeat 4 times
+    bne     strip_shuffle_loop
 
     rts
 
