@@ -139,7 +139,7 @@ MUSIC_VOLUME = $8b                  ; stores volume value to be restored at star
 
     dc.w stubend                    ; define a constant to be address @ stubend
     dc.w 12345
-    dc.b $9e, "4980", 0
+    dc.b $9e, "4778", 0
 stubend
     dc.w 0
 

@@ -31,7 +31,7 @@ next_note
     inc     SONG_CHUNK_INDEX
 skip_next_chunk
     lda     SONG_CHUNK_INDEX
-    cmp     #17                             ; 16 chunks in song, but must be 17 because of where it is incremented
+    cmp     #4                             ; 16 chunks in song, but must be 17 because of where it is incremented
     bne     skip_resets
 
     ; if at final chunk of song, reset chunk index.
